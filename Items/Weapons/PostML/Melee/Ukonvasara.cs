@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.Items.Weapons.PostML.Melee
@@ -12,8 +13,8 @@ namespace Redemption.Items.Weapons.PostML.Melee
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Right-click to change attack modes");
-            SacrificeTotal = 1;
+            // Tooltip.SetDefault("Right-click to change attack modes");
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -32,7 +33,7 @@ namespace Redemption.Items.Weapons.PostML.Melee
             Item.autoReuse = true;
 
             // Weapon Properties
-            Item.damage = 250;
+            Item.damage = 420;
             Item.knockBack = 6;
             Item.noUseGraphic = true;
             Item.DamageType = DamageClass.Melee;
@@ -50,7 +51,7 @@ namespace Redemption.Items.Weapons.PostML.Melee
         {
             Point tileBelow = player.Bottom.ToTileCoordinates();
             Tile tile = Framing.GetTileSafely(tileBelow.X, tileBelow.Y);
-            if (player.altFunctionUse != 2 && AttackMode == 1 && tile.HasUnactuatedTile && Main.tileSolid[tile.TileType] && !Main.tileCut[tile.TileType])
+            if (player.altFunctionUse != 2 && AttackMode == 2 && tile.HasUnactuatedTile && Main.tileSolid[tile.TileType] && !Main.tileCut[tile.TileType])
                 return false;
             if (player.altFunctionUse == 2)
                 Item.UseSound = SoundID.Item37;
@@ -73,13 +74,13 @@ namespace Redemption.Items.Weapons.PostML.Melee
                 switch (AttackMode)
                 {
                     case 0:
-                        CombatText.NewText(player.getRect(), Color.LightCyan, "Sword Mode", true, false);
+                        CombatText.NewText(player.getRect(), Color.LightCyan, Language.GetTextValue("Mods.Redemption.Items.Ukonvasara.Mode1"), true, false);
                         break;
                     case 1:
-                        CombatText.NewText(player.getRect(), Color.LightCyan, "Hammer Mode", true, false);
+                        CombatText.NewText(player.getRect(), Color.LightCyan, Language.GetTextValue("Mods.Redemption.Items.Ukonvasara.Mode2"), true, false);
                         break;
                     case 2:
-                        CombatText.NewText(player.getRect(), Color.LightCyan, "Launch Mode", true, false);
+                        CombatText.NewText(player.getRect(), Color.LightCyan, Language.GetTextValue("Mods.Redemption.Items.Ukonvasara.Mode3"), true, false);
                         break;
                 }
             }
@@ -91,10 +92,10 @@ namespace Redemption.Items.Weapons.PostML.Melee
                         Projectile.NewProjectile(source, position, velocity, type, damage, knockback, player.whoAmI);
                         break;
                     case 1:
-                        Projectile.NewProjectile(source, position, velocity, ModContent.ProjectileType<Ukonvasara_Proj>(), damage, knockback, player.whoAmI);
+                        Projectile.NewProjectile(source, position, velocity, ModContent.ProjectileType<Ukonvasara_Proj2>(), (int)(damage * 1.3f), knockback, player.whoAmI);
                         break;
                     case 2:
-                        Projectile.NewProjectile(source, position, velocity, ModContent.ProjectileType<Ukonvasara_Proj2>(), damage, knockback, player.whoAmI);
+                        Projectile.NewProjectile(source, position, velocity, ModContent.ProjectileType<Ukonvasara_Axe>(), damage, knockback, player.whoAmI);
                         break;
 
                 }
@@ -107,13 +108,13 @@ namespace Redemption.Items.Weapons.PostML.Melee
             switch (AttackMode)
             {
                 case 0:
-                    shotType = "Sword Mode: Does a three combo slash before being thrown";
+                    shotType = Language.GetTextValue("Mods.Redemption.Items.Ukonvasara.SwordMode");
                     break;
                 case 1:
-                    shotType = "Hammer Mode: While airborne, the hammer will launch the player onto the ground, striking that location with lighting";
+                    shotType = Language.GetTextValue("Mods.Redemption.Items.Ukonvasara.HammerMode");
                     break;
                 case 2:
-                    shotType = "Launch Mode: Launches the player at cursor point, leaves an electric trail behind and strikes enemies hit by the weapon with lighting";
+                    shotType = Language.GetTextValue("Mods.Redemption.Items.Ukonvasara.AxeMode");
                     break;
             }
             TooltipLine line = new(Mod, "ShotName", shotType)
@@ -123,9 +124,7 @@ namespace Redemption.Items.Weapons.PostML.Melee
             tooltips.Add(line);
             if (Main.keyState.PressingShift())
             {
-                TooltipLine line2 = new(Mod, "Lore",
-                    "'The hammer of Ukko, crafted by his ancestors and refined by him. Upon his human death,\n" +
-                    "the hammer was laid atop his grave as is custom in local tradition. It is a great conductor of Thunder magic.'")
+                TooltipLine line2 = new(Mod, "Lore", Language.GetTextValue("Mods.Redemption.Items.Ukonvasara.Lore"))
                 {
                     OverrideColor = Color.LightGray
                 };
@@ -133,11 +132,26 @@ namespace Redemption.Items.Weapons.PostML.Melee
             }
             else
             {
-                TooltipLine line2 = new(Mod, "HoldShift", "Hold [Shift] to view lore")
+                TooltipLine line2 = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.SpecialTooltips.Viewer"))
                 {
                     OverrideColor = Color.Gray,
                 };
                 tooltips.Add(line2);
+            }
+            switch (AttackMode)
+            {
+                default:
+                    TooltipLine swordLine = new(Mod, "SlashBonus", Language.GetTextValue("Mods.Redemption.GenericTooltips.Bonuses.SlashBonus")) { OverrideColor = Colors.RarityOrange };
+                    tooltips.Add(swordLine);
+                    break;
+                case 1:
+                    TooltipLine hammerLine = new(Mod, "HammerBonus", Language.GetTextValue("Mods.Redemption.GenericTooltips.Bonuses.HammerBonus")) { OverrideColor = Colors.RarityOrange };
+                    tooltips.Add(hammerLine);
+                    break;
+                case 2:
+                    TooltipLine axeLine = new(Mod, "AxeBonus", Language.GetTextValue("Mods.Redemption.GenericTooltips.Bonuses.AxeBonus")) { OverrideColor = Colors.RarityOrange };
+                    tooltips.Add(axeLine);
+                    break;
             }
         }
     }

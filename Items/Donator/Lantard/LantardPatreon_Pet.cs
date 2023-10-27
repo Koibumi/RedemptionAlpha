@@ -1,7 +1,5 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Redemption.Base;
-using Redemption.Globals;
 using System;
 using Terraria;
 using Terraria.GameContent;
@@ -14,9 +12,11 @@ namespace Redemption.Items.Donator.Lantard
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Ralsei");
+            // DisplayName.SetDefault("Ralsei");
             Main.projFrames[Projectile.type] = 10;
             Main.projPet[Projectile.type] = true;
+            ProjectileID.Sets.CharacterPreviewAnimations[Projectile.type] = ProjectileID.Sets.SimpleLoop(1, 9, 5)
+                .WithOffset(2, 0).WithSpriteDirection(-1);
         }
 
         public override void SetDefaults()

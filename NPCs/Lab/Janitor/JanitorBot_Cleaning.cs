@@ -1,11 +1,14 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Redemption.Globals;
 using Redemption.Items.Usable;
-using Redemption.UI;
+using Redemption.Textures;
+using Redemption.UI.ChatUI;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent.UI;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.NPCs.Lab.Janitor
@@ -17,7 +20,7 @@ namespace Redemption.NPCs.Lab.Janitor
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("The Janitor");
+            // DisplayName.SetDefault("The Janitor");
             Main.npcFrameCount[NPC.type] = 5;
             NPCID.Sets.DontDoHardmodeScaling[Type] = true;
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0) { Hide = true };
@@ -38,13 +41,12 @@ namespace Redemption.NPCs.Lab.Janitor
             NPC.npcSlots = 0;
             NPC.netAlways = true;
         }
-
+        private static readonly SoundStyle voice = CustomSounds.Voice6 with { Pitch = 0.2f };
         public override void AI()
         {
             Player player = Main.player[RedeHelper.GetNearestAlivePlayer(NPC)];
             if (NPC.target < 0 || NPC.target == 255 || player.dead || !player.active)
                 NPC.TargetClosest();
-            SoundStyle voice = CustomSounds.Voice6 with { Pitch = 0.2f };
             switch (State)
             {
                 case 0:
@@ -59,25 +61,32 @@ namespace Redemption.NPCs.Lab.Janitor
                     break;
                 case 1:
                     AITimer++;
-                    if (AITimer == 30)
+                    if (AITimer == 30 && !Main.dedServ)
                     {
                         DialogueChain chain = new();
-                        chain.Add(new(NPC, "...Why did you have to barge in through the ventilation shaft?", Colors.RarityYellow, new Color(100, 86, 0), voice, 2, 100, 0, false)) // 224
-                             .Add(new(NPC, "Lost your access card huh?[30] Have mine and get out of my sight.", Colors.RarityYellow, new Color(100, 86, 0), voice, 2, 100, 0, false)) // 252
-                             .Add(new(NPC, "*Grumbles* Those darn careless bots losing their cards...", Colors.RarityYellow, new Color(100, 86, 0), voice, 2, 100, 30, true)); // 244
-                        TextBubbleUI.Visible = true;
-                        TextBubbleUI.Add(chain);
+                        chain.Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.Janitor.Start.R1"), Colors.RarityYellow, new Color(100, 86, 0), voice, .03f, 2f, 0, false)) // 224
+                             .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.Janitor.Start.R2"), Colors.RarityYellow, new Color(100, 86, 0), voice, .03f, 2f, 0, false)) // 252
+                             .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.Janitor.Start.R3"), Colors.RarityYellow, new Color(100, 86, 0), voice, .03f, 2f, .5f, true)); // 244
+                        chain.OnSymbolTrigger += Chain_OnSymbolTrigger;
+                        ChatUI.Visible = true;
+                        ChatUI.Add(chain);
                     }
-                    if (AITimer >= 506)
+                    if (AITimer >= 2000)
                     {
                         EmoteBubble.NewBubble(1, new WorldUIAnchor(NPC), 120);
 
                         if (!LabArea.labAccess[0])
                             Item.NewItem(NPC.GetSource_Loot(), (int)NPC.position.X, (int)NPC.position.Y, NPC.width, NPC.height, ModContent.ItemType<ZoneAccessPanel1>());
 
-                        NPC.SetEventFlagCleared(ref RedeBossDowned.downedJanitor, -1);
-                        if (Main.netMode == NetmodeID.Server)
-                            NetMessage.SendData(MessageID.WorldData);
+                        NPC nPC = new();
+                        nPC.SetDefaults(ModContent.NPCType<JanitorBot>());
+                        Main.BestiaryTracker.Kills.RegisterKill(nPC);
+                        if (Main.netMode != NetmodeID.MultiplayerClient)
+                        {
+                            RedeBossDowned.downedJanitor = true;
+                            if (Main.netMode == NetmodeID.Server)
+                                NetMessage.SendData(MessageID.WorldData);
+                        }
 
                         NPC.SetDefaults(ModContent.NPCType<JanitorBot_Defeated>());
                         NPC.ai[0] = 1;
@@ -86,24 +95,40 @@ namespace Redemption.NPCs.Lab.Janitor
                     break;
                 case 2:
                     AITimer++;
-                    if (AITimer == 30)
+                    if (AITimer == 30 && !Main.dedServ)
                     {
                         DialogueChain chain = new();
-                        chain.Add(new(NPC, "Oi![10] Don't go there,[10] the floor's wet.", Colors.RarityYellow, new Color(100, 86, 0), voice, 2, 100, 0, false)) // 172
-                             .Add(new(NPC, ".[10].[10].[10]", Colors.RarityYellow, new Color(100, 86, 0), voice, 2, 100, 0, false)) // 136
-                             .Add(new(NPC, "Wait...[30] You're a trespasser!", Colors.RarityYellow, new Color(100, 86, 0), voice, 2, 100, 30, true)); // 216
-                        TextBubbleUI.Visible = true;
-                        TextBubbleUI.Add(chain);
+                        chain.Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.Janitor.Start.1"), Colors.RarityYellow, new Color(100, 86, 0), voice, .03f, 2f, 0, false))
+                             .Add(new(NPC, ".[0.1].[0.1].[0.1]", Colors.RarityYellow, new Color(100, 86, 0), voice, .03f, 2f, 0, false))
+                             .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.Janitor.Start.2"), Colors.RarityYellow, new Color(100, 86, 0), voice, .03f, 2f, .5f, true, endID: 1));
+                        chain.OnSymbolTrigger += Chain_OnSymbolTrigger;
+                        chain.OnEndTrigger += Chain_OnEndTrigger;
+                        ChatUI.Visible = true;
+                        ChatUI.Add(chain);
                     }
-                    if (AITimer == 338)
-                        EmoteBubble.NewBubble(3, new WorldUIAnchor(NPC), 216);
-                    if (AITimer >= 544)
+                    if (AITimer >= 2000)
                     {
                         NPC.SetDefaults(ModContent.NPCType<JanitorBot>());
                         NPC.netUpdate = true;
                     }
                     break;
             }
+        }
+        private void Chain_OnSymbolTrigger(Dialogue dialogue, string signature)
+        {
+            switch (signature)
+            {
+                case "a":
+                    AITimer = 3000;
+                    break;
+                case "b":
+                    EmoteBubble.NewBubble(3, new WorldUIAnchor(NPC), 216);
+                    break;
+            }
+        }
+        private void Chain_OnEndTrigger(Dialogue dialogue, int ID)
+        {
+            AITimer = 3000;
         }
         public override void FindFrame(int frameHeight)
         {
@@ -114,7 +139,7 @@ namespace Redemption.NPCs.Lab.Janitor
             }
             if (State == 2)
             {
-                if ((AITimer >= 30 && AITimer < 202) || AITimer >= 338)
+                if ((AITimer >= 30 && AITimer < 226) || AITimer >= 380)
                 {
                     NPC.frame.Y = 4 * frameHeight;
                     return;
@@ -129,6 +154,6 @@ namespace Redemption.NPCs.Lab.Janitor
             }
         }
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => false;
-        public override bool? CanHitNPC(NPC target) => false;
+        public override bool CanHitNPC(NPC target) => false;
     }
 }

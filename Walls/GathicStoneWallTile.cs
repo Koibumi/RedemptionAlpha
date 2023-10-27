@@ -1,6 +1,5 @@
 using Microsoft.Xna.Framework;
 using Redemption.Dusts.Tiles;
-using Redemption.Items.Placeable.Tiles;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -12,7 +11,6 @@ namespace Redemption.Walls
 		{
             Main.wallHouse[Type] = false;
             DustType = ModContent.DustType<SlateDust>();
-			ItemDrop = ModContent.ItemType<GathicStoneWall>();
 			AddMapEntry(new Color(49, 43, 39));
 		}
     }
@@ -23,7 +21,6 @@ namespace Redemption.Walls
         {
             Main.wallHouse[Type] = true;
             DustType = ModContent.DustType<SlateDust>();
-            ItemDrop = ModContent.ItemType<GathicStoneWall>();
             AddMapEntry(new Color(49, 43, 39));
         }
     }

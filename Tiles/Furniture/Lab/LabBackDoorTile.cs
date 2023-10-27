@@ -1,8 +1,9 @@
 using Microsoft.Xna.Framework;
 using Redemption.Dusts.Tiles;
-using Redemption.Items.Placeable.Furniture.Lab;
 using Terraria;
 using Terraria.DataStructures;
+using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 
@@ -15,6 +16,7 @@ namespace Redemption.Tiles.Furniture.Lab
 			Main.tileFrameImportant[Type] = true;
 			Main.tileLavaDeath[Type] = false;
             Main.tileNoAttach[Type] = true;
+            TileID.Sets.FramesOnKillWall[Type] = true;
             TileObjectData.newTile.Width = 4;
             TileObjectData.newTile.Height = 4;
             TileObjectData.newTile.CoordinateHeights = new int[] { 16, 16, 16, 16 };
@@ -25,17 +27,12 @@ namespace Redemption.Tiles.Furniture.Lab
             TileObjectData.newTile.AnchorWall = true;
             TileObjectData.addTile(Type);
             DustType = ModContent.DustType<LabPlatingDust>();
-            MinPick = 500;
+            MinPick = 1000;
             MineResist = 13f;
-			ModTranslation name = CreateMapEntryName();
-            name.SetDefault("Laboratory Door");
+            LocalizedText name = CreateMapEntryName();
+            // name.SetDefault("Laboratory Door");
             AddMapEntry(new Color(189, 191, 200), name);
         }
-        public override void KillMultiTile(int i, int j, int frameX, int frameY)
-        {
-            Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 64, 64, ModContent.ItemType<LabBackDoor>());
-        }
-
         public override bool CanExplode(int i, int j) => false;
     }
     public class LabBackDoor2Tile : ModTile
@@ -58,15 +55,10 @@ namespace Redemption.Tiles.Furniture.Lab
             DustType = ModContent.DustType<LabPlatingDust>();
             MinPick = 200;
             MineResist = 13f;
-            ModTranslation name = CreateMapEntryName();
-            name.SetDefault("Laboratory Door");
+            LocalizedText name = CreateMapEntryName();
+            // name.SetDefault("Laboratory Door");
             AddMapEntry(new Color(189, 191, 200), name);
         }
-        public override void KillMultiTile(int i, int j, int frameX, int frameY)
-        {
-            Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 64, 64, ModContent.ItemType<LabBackDoor2>());
-        }
-
         public override bool CanExplode(int i, int j) => false;
     }
 }

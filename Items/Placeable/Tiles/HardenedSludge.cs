@@ -7,12 +7,16 @@ namespace Redemption.Items.Placeable.Tiles
 {
     public class HardenedSludge : ModItem
     {
+        public override void SetStaticDefaults()
+        {
+            ItemID.Sets.DisableAutomaticPlaceableDrop[Type] = true;
+        }
         public override void SetDefaults()
         {
             Item.DefaultToPlaceableTile(ModContent.TileType<HardenedSludgeTile>(), 0);
             Item.width = 16;
             Item.height = 16;
-            Item.maxStack = 9999;
+            Item.maxStack = Item.CommonMaxStack;
             Item.value = Item.buyPrice(0, 0, 2, 0);
             Item.rare = ItemRarityID.LightPurple;
         }

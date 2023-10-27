@@ -1,11 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
 using Terraria;
-using Terraria.ID;
 using Terraria.ModLoader;
 using System;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria.GameContent;
 using Redemption.Globals.NPC;
+using Redemption.Globals;
 
 namespace Redemption.Projectiles.Melee
 {
@@ -13,8 +13,9 @@ namespace Redemption.Projectiles.Melee
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Infectious Fist");
+            // DisplayName.SetDefault("Infectious Fist");
             Main.projFrames[Projectile.type] = 7;
+            ElementID.ProjPoison[Type] = true;
         }
 
         public override void SetDefaults()
@@ -26,6 +27,7 @@ namespace Redemption.Projectiles.Melee
             Projectile.penetrate = 1;
             Projectile.tileCollide = true;
             Projectile.timeLeft = 120;
+            Projectile.DamageType = DamageClass.Melee;
         }
         public override bool? CanHitNPC(NPC target) => Projectile.frame <= 3 ? null : false;
         public override void AI()
@@ -82,13 +84,10 @@ namespace Redemption.Projectiles.Melee
         private static void AdjustMagnitude(ref Vector2 vector)
         {
             float magnitude = (float)Math.Sqrt(vector.X * vector.X + vector.Y * vector.Y);
-            if (magnitude > 16f)
+            if (magnitude > 20f)
             {
-                vector *= 16f / magnitude;
+                vector *= 20f / magnitude;
             }
-        }
-        public override void Kill(int timeLeft)
-        {
         }
         public override bool PreDraw(ref Color lightColor)
         {

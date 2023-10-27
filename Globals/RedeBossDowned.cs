@@ -37,8 +37,13 @@ namespace Redemption.Globals
         public static bool downedPZ;
         public static bool downedNebuleus;
         public static bool downedADD;
+        public static int downedGGBossFirst;
+        public static bool downedFowlEmperor;
+        public static bool downedFowlMorning;
+        public static bool downedTreebark;
+        public static bool downedCalavia;
 
-        public override void OnWorldLoad()
+        public override void ClearWorld()
         {
             downedThorn = false;
             downedKeeper = false;
@@ -69,39 +74,11 @@ namespace Redemption.Globals
             downedPZ = false;
             downedNebuleus = false;
             downedADD = false;
-        }
-
-        public override void OnWorldUnload()
-        {
-            downedThorn = false;
-            downedKeeper = false;
-            downedSkullDigger = false;
-            downedSeed = false;
-            keeperSaved = false;
-            skullDiggerSaved = false;
-            downedSkeletonInvasion = false;
-            downedEaglecrestGolem = false;
-            foundNewb = false;
-            downedSlayer = false;
-            downedOmega1 = false;
-            downedOmega2 = false;
-            downedOmega3 = false;
-            downedErhan = false;
-            erhanDeath = 0;
-            slayerDeath = 0;
-            oblitDeath = 0;
-            nebDeath = 0;
-            ADDDeath = 0;
-            nukeDropped = false;
-            downedJanitor = false;
-            downedBehemoth = false;
-            downedBlisterface = false;
-            downedVolt = false;
-            downedMACE = false;
-            voltBegin = false;
-            downedPZ = false;
-            downedNebuleus = false;
-            downedADD = false;
+            downedGGBossFirst = 0;
+            downedFowlEmperor = false;
+            downedFowlMorning = false;
+            downedTreebark = false;
+            downedCalavia = false;
         }
 
         public override void SaveWorldData(TagCompound tag)
@@ -156,6 +133,14 @@ namespace Redemption.Globals
                 downed.Add("downedNebuleus");
             if (downedADD)
                 downed.Add("downedADD");
+            if (downedFowlEmperor)
+                downed.Add("downedFowlEmperor");
+            if (downedFowlMorning)
+                downed.Add("downedFowlMorning");
+            if (downedTreebark)
+                downed.Add("downedTreebark");
+            if (downedCalavia)
+                downed.Add("downedCalavia");
 
             tag["downed"] = downed;
             tag["erhanDeath"] = erhanDeath;
@@ -163,6 +148,7 @@ namespace Redemption.Globals
             tag["oblitDeath"] = oblitDeath;
             tag["nebDeath"] = nebDeath;
             tag["ADDDeath"] = ADDDeath;
+            tag["downedGGBossFirst"] = downedGGBossFirst;
         }
 
         public override void LoadWorldData(TagCompound tag)
@@ -179,8 +165,8 @@ namespace Redemption.Globals
             downedEaglecrestGolem = downed.Contains("downedEaglecrestGolem");
             foundNewb = downed.Contains("foundNewb");
             downedSlayer = downed.Contains("downedSlayer");
-            downedOmega3 = downed.Contains("downedOmega1");
-            downedOmega3 = downed.Contains("downedOmega2");
+            downedOmega1 = downed.Contains("downedOmega1");
+            downedOmega2 = downed.Contains("downedOmega2");
             downedOmega3 = downed.Contains("downedOmega3");
             downedErhan = downed.Contains("downedErhan");
             erhanDeath = tag.GetInt("erhanDeath");
@@ -198,6 +184,11 @@ namespace Redemption.Globals
             downedPZ = downed.Contains("downedPZ");
             downedNebuleus = downed.Contains("downedNebuleus");
             downedADD = downed.Contains("downedADD");
+            downedGGBossFirst = tag.GetInt("downedGGBossFirst");
+            downedFowlEmperor = downed.Contains("downedFowlEmperor");
+            downedFowlMorning = downed.Contains("downedFowlMorning");
+            downedTreebark = downed.Contains("downedTreebark");
+            downedCalavia = downed.Contains("downedCalavia");
         }
 
         public override void NetSend(BinaryWriter writer)
@@ -221,7 +212,7 @@ namespace Redemption.Globals
             flags2[5] = downedErhan;
             flags2[6] = nukeDropped;
             flags2[7] = downedJanitor;
-            writer.Write(flags2); 
+            writer.Write(flags2);
             var flags3 = new BitsByte();
             flags3[0] = downedBehemoth;
             flags3[1] = downedBlisterface;
@@ -232,12 +223,19 @@ namespace Redemption.Globals
             flags3[6] = downedNebuleus;
             flags3[7] = downedADD;
             writer.Write(flags3);
+            var flags4 = new BitsByte();
+            flags4[0] = downedFowlEmperor;
+            flags4[1] = downedFowlMorning;
+            flags4[2] = downedTreebark;
+            flags4[3] = downedCalavia;
+            writer.Write(flags4);
 
             writer.Write(erhanDeath);
             writer.Write(slayerDeath);
             writer.Write(oblitDeath);
             writer.Write(nebDeath);
             writer.Write(ADDDeath);
+            writer.Write(downedGGBossFirst);
         }
 
         public override void NetReceive(BinaryReader reader)
@@ -269,12 +267,18 @@ namespace Redemption.Globals
             downedPZ = flags3[5];
             downedNebuleus = flags3[6];
             downedADD = flags3[7];
+            BitsByte flags4 = reader.ReadByte();
+            downedFowlEmperor = flags4[0];
+            downedFowlMorning = flags4[1];
+            downedTreebark = flags4[2];
+            downedCalavia = flags4[3];
 
             erhanDeath = reader.ReadInt32();
             slayerDeath = reader.ReadInt32();
             oblitDeath = reader.ReadInt32();
             nebDeath = reader.ReadInt32();
             ADDDeath = reader.ReadInt32();
+            downedGGBossFirst = reader.ReadInt32();
         }
     }
 }

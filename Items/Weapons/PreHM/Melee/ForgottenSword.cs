@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.Items.Weapons.PreHM.Melee
@@ -10,10 +11,10 @@ namespace Redemption.Items.Weapons.PreHM.Melee
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Sword of the Forgotten");
-            Tooltip.SetDefault("Spins the blade around the player and sets ablaze, flinging embers in its wake");
+            // DisplayName.SetDefault("Sword of the Forgotten");
+            // Tooltip.SetDefault("Spins the blade around the player and sets ablaze, flinging embers in its wake");
 
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -47,10 +48,7 @@ namespace Redemption.Items.Weapons.PreHM.Melee
         {
             if (Main.keyState.PressingShift())
             {
-                TooltipLine line = new(Mod, "Lore",
-                    "'Found in the Demonhollow by a set of human explorers from Anglon. The weapon is crafted from bone and\n" +
-                    "a metal named \"Charred Iron\" by those whom discovered it, and was attributed to a fabled blacksmith named\n" +
-                    "Ophos due to its use of Firestorm magic. Yet the lack of many of his trademarks put doubt on that claim.'")
+                TooltipLine line = new(Mod, "Lore", Language.GetTextValue("Mods.Redemption.Items.ForgottenSword.Lore"))
                 {
                     OverrideColor = Color.LightGray
                 };
@@ -58,14 +56,14 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             }
             else
             {
-                TooltipLine line = new(Mod, "HoldShift", "Hold [Shift] to view lore")
+                TooltipLine line = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.SpecialTooltips.Viewer"))
                 {
                     OverrideColor = Color.Gray,
                 };
                 tooltips.Add(line);
             }
-            TooltipLine axeLine = new(Mod, "SharpBonus", "Slash Bonus: Small chance to decapitate skeletons, killing them instantly") { OverrideColor = Colors.RarityOrange };
-            tooltips.Add(axeLine);
+            TooltipLine slashLine = new(Mod, "SharpBonus", Language.GetTextValue("Mods.Redemption.GenericTooltips.Bonuses.SlashBonus")) { OverrideColor = Colors.RarityOrange };
+            tooltips.Add(slashLine);
         }
     }
 }

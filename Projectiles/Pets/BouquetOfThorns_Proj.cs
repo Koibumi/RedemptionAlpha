@@ -1,9 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Redemption.Base;
 using Redemption.Buffs.Pets;
-using Redemption.Globals;
-using System;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.ID;
@@ -15,12 +12,14 @@ namespace Redemption.Projectiles.Pets
 	{
 		public override void SetStaticDefaults()
 		{
-			DisplayName.SetDefault("Bouquet of Thorns");
+			// DisplayName.SetDefault("Bouquet of Thorns");
 			Main.projFrames[Projectile.type] = 6;
 			Main.projPet[Projectile.type] = true;
-		}
+            ProjectileID.Sets.CharacterPreviewAnimations[Projectile.type] = ProjectileID.Sets.SimpleLoop(1, Main.projFrames[Projectile.type], 5)
+                .WithOffset(2, 0).WithSpriteDirection(-1);
+        }
 
-		public override void SetDefaults()
+        public override void SetDefaults()
         {
             Projectile.CloneDefaults(ProjectileID.BabyDino);
             Projectile.width = 32;

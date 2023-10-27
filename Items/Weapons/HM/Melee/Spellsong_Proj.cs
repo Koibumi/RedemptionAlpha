@@ -16,9 +16,10 @@ namespace Redemption.Items.Weapons.HM.Melee
         public override string Texture => "Redemption/Items/Weapons/HM/Melee/Spellsong";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Spellsong, Core of the West");
+            // DisplayName.SetDefault("Spellsong, Core of the West");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 4;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjCelestial[Type] = true;
         }
 
         public override bool ShouldUpdatePosition() => false;
@@ -34,8 +35,10 @@ namespace Redemption.Items.Weapons.HM.Melee
             Rot = MathHelper.ToRadians(3);
             Projectile.usesLocalNPCImmunity = true;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            RedeProjectile.Decapitation(target, ref damageDone, ref hit.Crit);
+
             Projectile.localNPCImmunity[target.whoAmI] = 20;
             target.immune[Projectile.owner] = 0;
         }
@@ -49,10 +52,6 @@ namespace Redemption.Items.Weapons.HM.Melee
         private float SwingSpeed;
         public override void AI()
         {
-            for (int k = Projectile.oldPos.Length - 1; k > 0; k--)
-                oldrot[k] = oldrot[k - 1];
-            oldrot[0] = Projectile.rotation;
-
             Player player = Main.player[Projectile.owner];
             if (player.noItems || player.CCed || player.dead || !player.active)
                 Projectile.Kill();
@@ -191,15 +190,14 @@ namespace Redemption.Items.Weapons.HM.Melee
             }
             if (Timer > 1)
                 Projectile.alpha = 0;
+            for (int k = Projectile.oldPos.Length - 1; k > 0; k--)
+                oldrot[k] = oldrot[k - 1];
+            oldrot[0] = Projectile.rotation;
         }
 
         public override bool? CanHitNPC(NPC target)
         {
             return (Timer < 20 && Projectile.ai[0] == 2) || (Timer <= 8 && Projectile.ai[0] < 2) ? null : false;
-        }
-        public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
-        {
-            RedeProjectile.Decapitation(target, ref damage, ref crit);
         }
 
         public override bool PreDraw(ref Color lightColor)

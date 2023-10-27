@@ -18,9 +18,11 @@ namespace Redemption.Projectiles.Melee
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Ophos' Firestorm");
+            // DisplayName.SetDefault("Ophos' Firestorm");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 6;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjFire[Type] = true;
+            ElementID.ProjWind[Type] = true;
         }
 
         public override bool ShouldUpdatePosition() => false;
@@ -32,6 +34,7 @@ namespace Redemption.Projectiles.Melee
             Projectile.penetrate = -1;
             Projectile.alpha = 255;
             Projectile.tileCollide = false;
+            Projectile.DamageType = DamageClass.Melee;
             Projectile.usesIDStaticNPCImmunity = true;
             Projectile.idStaticNPCHitCooldown = 6;
             Projectile.scale = 1.5f;
@@ -85,7 +88,7 @@ namespace Redemption.Projectiles.Melee
                             continue;
 
                         target.immune[Projectile.whoAmI] = 20;
-                        int hitDirection = Projectile.Center.X > target.Center.X ? -1 : 1;
+                        int hitDirection = target.RightOfDir(Projectile);
                         BaseAI.DamageNPC(target, (int)(Projectile.damage * 1.5f), 20, hitDirection, Projectile, crit: Projectile.HeldItemCrit());
                         target.AddBuff(BuffID.OnFire3, 600);
                     }
@@ -108,7 +111,7 @@ namespace Redemption.Projectiles.Melee
                 ParticleManager.NewParticle(RedeHelper.RandAreaInEntity(Projectile), new Vector2(Main.rand.Next(-4, 5), 0), new EmberParticle(), Color.White, 2);
         }
         public override bool? CanHitNPC(NPC target) => Projectile.alpha <= 100 ? null : false;
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.OnFire3, 300);
         }

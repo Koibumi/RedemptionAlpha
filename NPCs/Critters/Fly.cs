@@ -12,6 +12,8 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Redemption.BaseExtension;
 using ReLogic.Utilities;
+using Terraria.Audio;
+using Terraria.Localization;
 
 namespace Redemption.NPCs.Critters
 {
@@ -38,15 +40,13 @@ namespace Redemption.NPCs.Critters
         public override void SetStaticDefaults()
         {
             Main.npcFrameCount[NPC.type] = 4;
+            NPCID.Sets.ShimmerTransformToNPC[NPC.type] = NPCID.Shimmerfly;
             NPCID.Sets.CountsAsCritter[Type] = true;
             NPCID.Sets.DontDoHardmodeScaling[Type] = true;
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    ModContent.BuffType<DevilScentedDebuff>(),
-                    BuffID.Confused
-                }
-            });
+
+            NPCID.Sets.SpecificDebuffImmunity[Type][ModContent.BuffType<DevilScentedDebuff>()] = true;
+            NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Confused] = true;
+
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0)
             {
                 Velocity = 1f
@@ -79,7 +79,7 @@ namespace Redemption.NPCs.Critters
                 NPC.scale = 1.2f;
 
             TimerRand = Main.rand.Next(240, 600);
-            NPC.velocity = RedeHelper.PolarVector(10, Main.rand.NextFloat(0, MathHelper.TwoPi));
+            NPC.velocity = RedeHelper.PolarVector(10, RedeHelper.RandomRotation());
         }
         public override void AI()
         {
@@ -108,7 +108,7 @@ namespace Redemption.NPCs.Critters
                     loopVolume = 1 * NPC.scale;
 
                     if (NPC.velocity.Length() < 4)
-                        NPC.velocity = RedeHelper.PolarVector(10, Main.rand.NextFloat(0, MathHelper.TwoPi));
+                        NPC.velocity = RedeHelper.PolarVector(10, RedeHelper.RandomRotation());
 
                     NPC.velocity = NPC.velocity.RotatedBy(Main.rand.NextFloat(-1f, 1f));
                     AITimer++;
@@ -170,7 +170,7 @@ namespace Redemption.NPCs.Critters
                     if (AITimer >= TimerRand)
                     {
                         NPC.velocity.Y -= 10;
-                        NPC.velocity = RedeHelper.PolarVector(10, Main.rand.NextFloat(0, MathHelper.TwoPi));
+                        NPC.velocity = RedeHelper.PolarVector(10, RedeHelper.RandomRotation());
                         AITimer = 0;
                         TimerRand = Main.rand.Next(240, 600);
                         AIState = ActionState.Flying;
@@ -179,7 +179,7 @@ namespace Redemption.NPCs.Critters
                     if (NPC.ClosestNPCToNPC(ref npcTarget, 100, NPC.Center) && npcTarget.lifeMax > 5 && !npcTarget.Redemption().invisible)
                     {
                         NPC.velocity.Y -= 10;
-                        NPC.velocity = RedeHelper.PolarVector(10, Main.rand.NextFloat(0, MathHelper.TwoPi));
+                        NPC.velocity = RedeHelper.PolarVector(10, RedeHelper.RandomRotation());
                         AITimer = 0;
                         TimerRand = Main.rand.Next(240, 600);
                         AIState = ActionState.Flying;
@@ -188,7 +188,7 @@ namespace Redemption.NPCs.Critters
                     if (NPC.DistanceSQ(player.Center) <= 100 * 100)
                     {
                         NPC.velocity.Y -= 10;
-                        NPC.velocity = RedeHelper.PolarVector(10, Main.rand.NextFloat(0, MathHelper.TwoPi));
+                        NPC.velocity = RedeHelper.PolarVector(10, RedeHelper.RandomRotation());
                         AITimer = 0;
                         TimerRand = Main.rand.Next(240, 600);
                         AIState = ActionState.Flying;
@@ -197,6 +197,14 @@ namespace Redemption.NPCs.Critters
                     break;
             }
             CustomSounds.UpdateLoopingSound(ref loop, CustomSounds.FlyBuzz with { MaxInstances = 3 }, loopVolume, 0, NPC.position);
+            if (NPC.wet)
+            {
+                Dust.NewDust(NPC.position + NPC.velocity, NPC.width, NPC.height, DustID.GreenBlood, NPC.velocity.X * 0.5f, NPC.velocity.Y * 0.5f);
+                SoundEngine.PlaySound(SoundID.NPCDeath1, NPC.position);
+                loopVolume = 0;
+                CustomSounds.UpdateLoopingSound(ref loop, CustomSounds.FlyBuzz with { MaxInstances = 3 }, loopVolume, 0, NPC.position);
+                NPC.active = false;
+            }
         }
 
         public void CheckNPCHit()
@@ -263,20 +271,20 @@ namespace Redemption.NPCs.Critters
             {
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Biomes.Caverns,
 
-                new FlavorTextBestiaryInfoElement("A pesky annoyance that only exists to ruin your day. They're attracted to rotting undead.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.Fly"))
             });
         }
 
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life < 0)
                 Dust.NewDust(NPC.position + NPC.velocity, NPC.width, NPC.height, DustID.GreenBlood,
                     NPC.velocity.X * 0.5f, NPC.velocity.Y * 0.5f);
         }
-        public override bool? CanHitNPC(NPC target) => false;
+        public override bool CanHitNPC(NPC target) => false;
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => Aggressive == 1 && !target.dontHurtCritters;
-        public override void ModifyHitPlayer(Player target, ref int damage, ref bool crit) => target.noKnockback = true;
-        public override void OnHitPlayer(Player target, int damage, bool crit)
+        public override void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers) => target.noKnockback = true;
+        public override void OnHitPlayer(Player target, Player.HurtInfo hurtInfo)
         {
             if (Main.rand.NextBool(3))
                 target.AddBuff(ModContent.BuffType<InfestedDebuff>(), Main.rand.Next(60, 180));

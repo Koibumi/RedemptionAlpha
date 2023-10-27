@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria.ID;
 using Redemption.Globals;
 using Terraria.GameContent;
+using Terraria.Localization;
 
 namespace Redemption.NPCs.Lab
 {
@@ -12,9 +13,10 @@ namespace Redemption.NPCs.Lab
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("");
+            // DisplayName.SetDefault("");
             NPCID.Sets.DontDoHardmodeScaling[Type] = true;
             NPCID.Sets.ActsLikeTownNPC[Type] = true;
+            NPCID.Sets.NoTownNPCHappiness[Type] = true;
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0)
             {
@@ -37,6 +39,7 @@ namespace Redemption.NPCs.Lab
             NPC.noTileCollide = false;
             NPC.dontTakeDamage = true;
             NPC.hide = true;
+            NPC.ShowNameOnHover = true;
         }
 
         public override void DrawBehind(int index)
@@ -52,7 +55,7 @@ namespace Redemption.NPCs.Lab
             Vector2 offset = Vector2.Zero;
             if (RedeBossDowned.downedOmega3)
             {
-                texture = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_OO").Value;
+                texture = ModContent.Request<Texture2D>(Texture + "_OO").Value;
                 int Height = texture.Height / 7;
                 int y = Height * AniFrameY;
                 rect = new(0, y, texture.Width, Height);
@@ -67,7 +70,7 @@ namespace Redemption.NPCs.Lab
         public override bool CanChat() => true;
         public override string GetChat()
         {
-            return RedeBossDowned.downedOmega3 ? "Oh hey, how are you holding up? BECAUSE I AM A TOASTER." : "Just a normal toaster.";
+            return RedeBossDowned.downedOmega3 ? Language.GetTextValue("Mods.Redemption.Dialogue.Toaster.2") : Language.GetTextValue("Mods.Redemption.Dialogue.Toaster.1");
         }
         public override void FindFrame(int frameHeight)
         {
@@ -91,6 +94,6 @@ namespace Redemption.NPCs.Lab
             AniFrameY = 0;
         }
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => false;
-        public override bool? CanHitNPC(NPC target) => false;
+        public override bool CanHitNPC(NPC target) => false;
     }
 }

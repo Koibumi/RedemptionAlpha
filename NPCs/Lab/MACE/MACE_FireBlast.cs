@@ -16,9 +16,10 @@ namespace Redemption.NPCs.Lab.MACE
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Fire Blast");
+            // DisplayName.SetDefault("Fire Blast");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 8;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjFire[Type] = true;
         }
 
         public override void SetDefaults()
@@ -77,17 +78,17 @@ namespace Redemption.NPCs.Lab.MACE
             Projectile.rotation += 0.1f;
             Lighting.AddLight(Projectile.Center, Projectile.Opacity * 0.9f, Projectile.Opacity * 0.5f, Projectile.Opacity * 0.5f);
         }
-        public override void OnHitPlayer(Player player, int damage, bool crit)
+        public override void OnHitPlayer(Player target, Player.HurtInfo info)
         {
-            player.AddBuff(BuffID.OnFire, 900);
+            target.AddBuff(BuffID.OnFire, 900);
         }
         public override bool PreDraw(ref Color lightColor)
         {
             int shader = GameShaders.Armor.GetShaderIdFromItemId(ItemID.SolarDye);
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
-            GameShaders.Armor.ApplySecondary(shader, Main.player[Main.myPlayer], null);
+            Main.spriteBatch.BeginAdditive(true);
+            GameShaders.Armor.ApplySecondary(shader, Main.LocalPlayer, null);
 
             Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
             Rectangle rect = new(0, 0, texture.Width, texture.Height);
@@ -102,7 +103,7 @@ namespace Redemption.NPCs.Lab.MACE
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, new Rectangle?(rect), Projectile.GetAlpha(Color.White), Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginAdditive();
 
             Texture2D flare = ModContent.Request<Texture2D>("Redemption/Textures/Star").Value;
             Rectangle rect2 = new(0, 0, flare.Width, flare.Height);
@@ -113,10 +114,10 @@ namespace Redemption.NPCs.Lab.MACE
                 Main.EntitySpriteDraw(flare, Projectile.Center - Main.screenPosition, new Rectangle?(rect2), Projectile.GetAlpha(Color.Orange) * 0.6f, -Projectile.rotation, origin2, Projectile.scale * 2.5f, SpriteEffects.None, 0);
             }
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginDefault();
             return false;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             for (int i = 0; i < 40; i++)
             {

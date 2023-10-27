@@ -6,10 +6,10 @@ namespace Redemption.Globals
         {
             BossSpawnFromClient,
             NPCSpawnFromClient,
-            NPCSpawnFromClient2,
+            SpawnNPCFromClient,
             SpawnTrail,
-            //StartChickArmy,
-            //ChickArmyData
+            StartFowlMorning,
+            FowlMorningData
         }
     }
 }

@@ -18,12 +18,12 @@ namespace Redemption.Items.Weapons.PostML.Summon
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Chains of the Cosmos");
-            Tooltip.SetDefault("20 summon tag damage\n" +
+            // DisplayName.SetDefault("Chains of the Cosmos");
+            /* Tooltip.SetDefault("20 summon tag damage\n" +
                 "10% summon tag critical strike chance\n" +
                 "Your summons will focus struck enemies\n" +
-                "Strike enemies to summon friendly cosmic eyes");
-            SacrificeTotal = 1;
+                "Strike enemies to summon friendly cosmic eyes"); */
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -50,8 +50,9 @@ namespace Redemption.Items.Weapons.PostML.Summon
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Chains of the Cosmos");
+            // DisplayName.SetDefault("Chains of the Cosmos");
             ProjectileID.Sets.IsAWhip[Type] = true;
+            ElementID.ProjCelestial[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -61,12 +62,12 @@ namespace Redemption.Items.Weapons.PostML.Summon
             Projectile.WhipSettings.RangeMultiplier = 2f;
             Projectile.Redemption().TechnicallyMelee = true;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Player player = Main.player[Projectile.owner];
             if (player.whoAmI == Main.myPlayer && player.ownedProjectileCounts[ModContent.ProjectileType<ChainsCosmicEye>()] < 4)
             {
-                Projectile.NewProjectile(Projectile.GetSource_FromAI(), target.Center + RedeHelper.PolarVector(Main.rand.Next(150, 351), Main.rand.NextFloat(0, MathHelper.TwoPi)), Vector2.Zero, ModContent.ProjectileType<ChainsCosmicEye>(), (int)(Projectile.damage * 0.5f), Projectile.knockBack, player.whoAmI, target.whoAmI);
+                Projectile.NewProjectile(Projectile.GetSource_FromAI(), target.Center + RedeHelper.PolarVector(Main.rand.Next(150, 351), RedeHelper.RandomRotation()), Vector2.Zero, ModContent.ProjectileType<ChainsCosmicEye>(), (int)(Projectile.damage * 0.5f), Projectile.knockBack, player.whoAmI, target.whoAmI);
             }
             target.AddBuff(BuffID.RainbowWhipNPCDebuff, 180);
             player.MinionAttackTargetNPC = target.whoAmI;
@@ -75,7 +76,7 @@ namespace Redemption.Items.Weapons.PostML.Summon
         public override void PostAI()
         {
             if (soundTimer++ == 18)
-                SoundEngine.PlaySound(SoundID.Item125, Projectile.position);
+                SoundEngine.PlaySound(SoundID.Item125 with { Volume = .5f }, Projectile.position);
         }
         private static void DrawLine(List<Vector2> list)
         {

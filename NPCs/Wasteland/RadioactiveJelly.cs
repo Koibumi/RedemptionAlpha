@@ -1,15 +1,17 @@
 using Redemption.Biomes;
 using Redemption.Buffs.Debuffs;
+using Redemption.Globals;
+using Redemption.Globals.NPC;
 using Redemption.Items.Armor.Vanity.Intruder;
 using Redemption.Items.Materials.HM;
 using Redemption.Items.Materials.PreHM;
 using Redemption.Items.Placeable.Banners;
 using Redemption.Items.Usable.Potions;
 using Terraria;
-using Terraria.DataStructures;
 using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.NPCs.Wasteland
@@ -18,21 +20,15 @@ namespace Redemption.NPCs.Wasteland
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Radioactive Physalia");
+            // DisplayName.SetDefault("Radioactive Physalia");
             Main.npcFrameCount[NPC.type] = 7;
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Poisoned,
-                    ModContent.BuffType<BileDebuff>(),
-                    ModContent.BuffType<GreenRashesDebuff>(),
-                    ModContent.BuffType<GlowingPustulesDebuff>(),
-                    ModContent.BuffType<FleshCrystalsDebuff>()
-                }
-            });
+            NPCID.Sets.ShimmerTransformToNPC[NPC.type] = NPCID.GreenJellyfish;
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Infected);
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0);
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
+            ElementID.NPCWater[Type] = true;
+            ElementID.NPCPoison[Type] = true;
         }
 
         public override void SetDefaults()
@@ -58,11 +54,10 @@ namespace Redemption.NPCs.Wasteland
         {
             bestiaryEntry.Info.AddRange(new IBestiaryInfoElement[]
             {
-                new FlavorTextBestiaryInfoElement(
-                    "The jellyfish seems to be unaware of its condition, of course that is to be expected when they don't have a brain.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.RadioactiveJelly"))
             });
         }
-        public override void ModifyHitPlayer(Player target, ref int damage, ref bool crit)
+        public override void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers)
         {
             if (Main.rand.NextBool(2) || Main.expertMode)
                 target.AddBuff(ModContent.BuffType<GreenRashesDebuff>(), Main.rand.Next(500, 900));
@@ -83,7 +78,7 @@ namespace Redemption.NPCs.Wasteland
                 npcLoot.Add(dropRule);
             }
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {

@@ -9,21 +9,20 @@ namespace Redemption.Items.Materials.PreHM
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Coast Scarab Shell");
-            Tooltip.SetDefault("'Glistens in water'");
-
-            SacrificeTotal = 3;
+            // DisplayName.SetDefault("Coast Scarab Shell");
+            // Tooltip.SetDefault("'Glistens in water'");
+            ItemID.Sets.ShimmerTransformToItem[Type] = ModContent.ItemType<TreeBugShell>();
+            Item.ResearchUnlockCount = 3;
         }
 
         public override void SetDefaults()
         {
             Item.width = 14;
             Item.height = 22;
-            Item.maxStack = 9999;
+            Item.maxStack = Item.CommonMaxStack;
             Item.value = Item.sellPrice(0, 0, 0, 75);
             Item.rare = ItemRarityID.White;
         }
-
         public override void PostUpdate()
         {
             if (!Item.wet || Item.lavaWet || Item.honeyWet || !Main.rand.NextBool(20))

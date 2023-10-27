@@ -17,12 +17,10 @@ namespace Redemption.Projectiles.Minions
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Tesla Field Generator");
-            Main.projPet[Projectile.type] = true;
+            // DisplayName.SetDefault("Tesla Field Generator");
 
             ProjectileID.Sets.MinionSacrificable[Projectile.type] = true;
             ProjectileID.Sets.CultistIsResistantTo[Projectile.type] = true;
-            ProjectileID.Sets.MinionTargettingFeature[Projectile.type] = true;
         }
 
         public override void SetDefaults()
@@ -111,10 +109,11 @@ namespace Redemption.Projectiles.Minions
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Lightning Arc");
+            // DisplayName.SetDefault("Lightning Arc");
             ProjectileID.Sets.MinionShot[Projectile.type] = true;
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 10;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 1;
+            ElementID.ProjThunder[Type] = true;
         }
 
         float colorlerp;
@@ -250,7 +249,7 @@ namespace Redemption.Projectiles.Minions
             return false;
         }
 
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             float num2 = (float)(Projectile.rotation + 1.57079637050629 + (Main.rand.NextBool(2)? -1.0 : 1.0) * 1.57079637050629);
             float num3 = (float)(Main.rand.NextDouble() * 2.0 + 2.0);

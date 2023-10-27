@@ -1,7 +1,6 @@
 using Microsoft.Xna.Framework;
 using Redemption.Globals.Player;
 using Redemption.Items.Accessories.HM;
-using Redemption.Items.Placeable.Tiles;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -17,6 +16,7 @@ namespace Redemption.Tiles.Tiles
             Main.tileSolid[Type] = true;
             Main.tileMergeDirt[Type] = true;
             Main.tileBlendAll[Type] = true;
+            Main.tileBrick[Type] = true;
             Main.tileMerge[Type][ModContent.TileType<IrradiatedDirtTile>()] = true;
             Main.tileMerge[ModContent.TileType<IrradiatedDirtTile>()][Type] = true;
             Main.tileMerge[Type][ModContent.TileType<IrradiatedSandstoneTile>()] = true;
@@ -39,7 +39,15 @@ namespace Redemption.Tiles.Tiles
             AddMapEntry(new Color(149, 133, 121));
             MineResist = 1.5f;
             DustType = DustID.Ash;
-            ItemDrop = ModContent.ItemType<IrradiatedHardenedSand>();
+        }
+        public override void FloorVisuals(Player player)
+        {
+            if (player.velocity.X != 0f && Main.rand.NextBool(20))
+            {
+                Dust dust = Dust.NewDustDirect(player.Bottom, 0, 0, DustType, 0f, -Main.rand.NextFloat(2f));
+                dust.noGravity = true;
+                dust.fadeIn = 1f;
+            }
         }
         public override void KillTile(int i, int j, ref bool fail, ref bool effectOnly, ref bool noItem)
         {

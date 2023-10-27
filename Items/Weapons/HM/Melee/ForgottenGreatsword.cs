@@ -1,7 +1,8 @@
 using Microsoft.Xna.Framework;
+using Redemption.Globals;
 using Redemption.Items.Materials.HM;
-using Redemption.Items.Materials.PreHM;
 using Redemption.Items.Weapons.PreHM.Melee;
+using Redemption.Projectiles.Melee;
 using System;
 using System.Collections.Generic;
 using Terraria;
@@ -13,13 +14,15 @@ namespace Redemption.Items.Weapons.HM.Melee
 {
     public class ForgottenGreatsword : ModItem
     {
+        public override LocalizedText Tooltip => base.Tooltip.WithFormatArgs(ElementID.WindS);
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Ophos' Forgotten Greatsword");
-            Tooltip.SetDefault("Spins the blade around the player and sets ablaze\n" +
-                "Forms a firestorm that engulfs the player, release left-click to disperse it, launching nearby enemies away");
+            // DisplayName.SetDefault("Ophos' Forgotten Greatsword");
+            /* Tooltip.SetDefault("Spins the blade around the player and sets ablaze\n" +
+                "Forms a firestorm that engulfs the player, dealing " + ElementID.WindS + " damage" +
+                "\nRelease left-click to disperse it, launching nearby enemies away"); */
 
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -48,13 +51,14 @@ namespace Redemption.Items.Weapons.HM.Melee
             // Projectile Properties
             Item.shootSpeed = 5f;
             Item.shoot = ModContent.ProjectileType<ForgottenGreatsword_Proj>();
+            Item.ExtraItemShoot(ModContent.ProjectileType<Firestorm_Proj>());
         }
         public override void AddRecipes()
         {
             CreateRecipe()
                 .AddIngredient(ModContent.ItemType<ForgottenSword>())
                 .AddIngredient(ModContent.ItemType<OphosNotes>())
-                .AddCondition(new Recipe.Condition(NetworkText.FromLiteral("Repaired by the Fallen"), _ => false))
+                .AddCondition(RedeConditions.RepairedByFallen)
                 .Register();
         }
         private static readonly int[] unwantedPrefixes = new int[] { PrefixID.Terrible, PrefixID.Dull, PrefixID.Shameful, PrefixID.Annoying, PrefixID.Broken, PrefixID.Damaged, PrefixID.Shoddy, PrefixID.Weak };
@@ -68,10 +72,7 @@ namespace Redemption.Items.Weapons.HM.Melee
         {
             if (Main.keyState.PressingShift())
             {
-                TooltipLine line = new(Mod, "Lore",
-                    "'A silver sword with a steel handle, forged by Ophos, a fabled blacksmith from what is now Hye Anglon.\n" +
-                    "Said to be proficient in Firestorm magic, he would mark his works with a gem that imbued his weapons with his magical power.\n" +
-                    "This weapon in particular uses a traditional design of the Territory of Northhill.'")
+                TooltipLine line = new(Mod, "Lore", Language.GetTextValue("Mods.Redemption.Items.ForgottenGreatsword.Lore"))
                 {
                     OverrideColor = Color.LightGray
                 };
@@ -79,14 +80,14 @@ namespace Redemption.Items.Weapons.HM.Melee
             }
             else
             {
-                TooltipLine line = new(Mod, "HoldShift", "Hold [Shift] to view lore")
+                TooltipLine line = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.SpecialTooltips.Viewer"))
                 {
                     OverrideColor = Color.Gray,
                 };
                 tooltips.Add(line);
             }
-            TooltipLine axeLine = new(Mod, "SharpBonus", "Slash Bonus: Small chance to decapitate skeletons, killing them instantly") { OverrideColor = Colors.RarityOrange };
-            tooltips.Add(axeLine);
+            TooltipLine slashLine = new(Mod, "SharpBonus", Language.GetTextValue("Mods.Redemption.GenericTooltips.Bonuses.SlashBonus")) { OverrideColor = Colors.RarityOrange };
+            tooltips.Add(slashLine);
         }
     }
 }

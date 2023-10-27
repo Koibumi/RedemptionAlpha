@@ -14,10 +14,11 @@ namespace Redemption.Items.Usable
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("");
+            // DisplayName.SetDefault("");
             Main.RegisterItemAnimation(Item.type, new DrawAnimationVertical(5, 5));
             ItemID.Sets.AnimatesAsSoul[Item.type] = true;
             ItemID.Sets.ItemNoGravity[Item.type] = true;
+            ItemID.Sets.IsAPickup[Type] = true;
         }
 
         public override void SetDefaults()

@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Redemption.Buffs.Pets;
 using Redemption.Globals;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace Redemption.Projectiles.Pets
@@ -10,12 +11,15 @@ namespace Redemption.Projectiles.Pets
 	{
 		public override void SetStaticDefaults()
 		{
-			DisplayName.SetDefault("Pet Xenomite Elemental");
+			// DisplayName.SetDefault("Pet Xenomite Elemental");
 			Main.projFrames[Projectile.type] = 8;
 			Main.projPet[Projectile.type] = true;
-		}
+            ProjectileID.Sets.CharacterPreviewAnimations[Projectile.type] = ProjectileID.Sets.SimpleLoop(0, Main.projFrames[Projectile.type], 5)
+				.WithOffset(2, -20f).WithSpriteDirection(-1)
+                .WithCode(DelegateMethods.CharacterPreview.Float);
+        }
 
-		public override void SetDefaults()
+        public override void SetDefaults()
 		{
 			Projectile.width = 34;
 			Projectile.height = 66;
@@ -34,7 +38,8 @@ namespace Redemption.Projectiles.Pets
 			Player player = Main.player[Projectile.owner];
 			CheckActive(player);
 
-			Projectile.rotation = Projectile.velocity.X * 0.05f;
+            Lighting.AddLight(Projectile.Center, .4f * Projectile.Opacity, Projectile.Opacity, .4f * Projectile.Opacity);
+            Projectile.rotation = Projectile.velocity.X * 0.05f;
 
 			Projectile.frameCounter++;
 			if (Projectile.frameCounter >= 5)

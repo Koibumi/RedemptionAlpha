@@ -47,7 +47,10 @@ namespace Redemption.Tiles.Trees
             switch (drop)
             {
                 case 1:
-                    Item.NewItem(new EntitySource_ShakeTree(x, y), x * 16, y * 16, 16, 16, ModContent.ItemType<Olives>());
+                    if (Main.rand.NextBool(2))
+                        Item.NewItem(new EntitySource_ShakeTree(x, y), x * 16, y * 16, 16, 16, ModContent.ItemType<Avocado>());
+                    else
+                        Item.NewItem(new EntitySource_ShakeTree(x, y), x * 16, y * 16, 16, 16, ModContent.ItemType<Olives>());
                     break;
                 case 2:
                     Item.NewItem(new EntitySource_ShakeTree(x, y), x * 16, y * 16, 16, 16, ItemID.Acorn, Main.rand.Next(1, 3));
@@ -90,7 +93,7 @@ namespace Redemption.Tiles.Trees
         }
         public override void SetStaticDefaults()
         {
-            GrowsOnTileId = new int[1] { ModContent.TileType<AncientDirtTile>() };
+            GrowsOnTileId = new int[2] { ModContent.TileType<AncientDirtTile>(), ModContent.TileType<AncientGrassTile>() };
         }
         public override Asset<Texture2D> GetTexture()
         {

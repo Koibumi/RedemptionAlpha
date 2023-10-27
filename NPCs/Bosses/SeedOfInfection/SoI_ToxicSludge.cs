@@ -1,5 +1,7 @@
 using Microsoft.Xna.Framework;
+using Redemption.Buffs.Debuffs;
 using Redemption.Dusts;
+using Redemption.Globals;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -11,8 +13,9 @@ namespace Redemption.NPCs.Bosses.SeedOfInfection
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Toxic Sludge");
+            // DisplayName.SetDefault("Toxic Sludge");
             Main.projFrames[Projectile.type] = 3;
+            ElementID.ProjPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -25,7 +28,7 @@ namespace Redemption.NPCs.Bosses.SeedOfInfection
             Projectile.ignoreWater = true;
             Projectile.timeLeft = 200;
         }
-
+        public override void OnHitPlayer(Player target, Player.HurtInfo info) => target.AddBuff(ModContent.BuffType<BileDebuff>(), 180);
         public override void AI()
         {
             if (++Projectile.frameCounter >= 3)
@@ -37,7 +40,7 @@ namespace Redemption.NPCs.Bosses.SeedOfInfection
             Projectile.rotation = Projectile.velocity.ToRotation() + 1.57f;
             Projectile.velocity.Y += 0.2f;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(SoundID.NPCDeath1, Projectile.position);
             for (int i = 0; i < 30; i++)

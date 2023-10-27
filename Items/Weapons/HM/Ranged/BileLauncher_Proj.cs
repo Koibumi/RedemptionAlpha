@@ -17,15 +17,14 @@ namespace Redemption.Items.Weapons.HM.Ranged
         public override string Texture => "Redemption/Items/Weapons/HM/Ranged/BileLauncher";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Bile Launcher");
+            // DisplayName.SetDefault("Bile Launcher");
         }
-        public override void SetDefaults()
+        public override void SetSafeDefaults()
         {
             Projectile.width = 66;
             Projectile.height = 36;
             Projectile.friendly = false;
             Projectile.hostile = false;
-            Projectile.tileCollide = false;
             Projectile.penetrate = -1;
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.ignoreWater = true;

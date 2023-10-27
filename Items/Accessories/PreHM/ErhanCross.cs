@@ -10,20 +10,22 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Redemption.BaseExtension;
+using Terraria.Localization;
 
 namespace Redemption.Items.Accessories.PreHM
 {
     public class ErhanCross : ModItem
-	{
-		public override void SetStaticDefaults()
+    {
+        public override LocalizedText Tooltip => base.Tooltip.WithFormatArgs(ElementID.HolyS, ElementID.ShadowS);
+        public override void SetStaticDefaults()
 		{
-            DisplayName.SetDefault("Erhan's Cross");
-            Tooltip.SetDefault("Summons a holy shield to orbit around the user, reflecting most projectiles" +
+            // DisplayName.SetDefault("Erhan's Cross");
+            /* Tooltip.SetDefault("Summons a holy shield to orbit around the user, reflecting most projectiles" +
                 "\nThe shield breaks once enough damage has been dealt to it" +
-                "\n10% increased Holy elemental resistance" +
-                "\n10% decreased Shadow elemental resistance");
+                "\n10% increased " + ElementID.HolyS + " elemental resistance" +
+                "\n10% decreased " + ElementID.ShadowS + " elemental resistance"); */
 
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -38,8 +40,8 @@ namespace Redemption.Items.Accessories.PreHM
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
             BuffPlayer modPlayer = player.RedemptionPlayerBuff();
-            modPlayer.ElementalResistance[7] += 0.1f;
-            modPlayer.ElementalResistance[8] -= 0.1f;
+            modPlayer.ElementalResistance[ElementID.Holy] += 0.1f;
+            modPlayer.ElementalResistance[ElementID.Shadow] -= 0.1f;
 
             modPlayer.erhanCross = true;
             if (player.whoAmI == Main.myPlayer && player.active && !player.dead && player.ownedProjectileCounts[ModContent.ProjectileType<ErhanCross_Shield>()] < 1 &&
@@ -52,7 +54,7 @@ namespace Redemption.Items.Accessories.PreHM
         public override string Texture => "Redemption/NPCs/Bosses/Erhan/Erhan_HolyShield";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Holy Shield");
+            // DisplayName.SetDefault("Holy Shield");
         }
         public override void SetDefaults()
         {
@@ -68,7 +70,7 @@ namespace Redemption.Items.Accessories.PreHM
         public override void AI()
         {
             Player player = Main.player[Projectile.owner];
-            if (!player.active || player.HasBuff<ErhanCrossCooldown>() || !player.RedemptionPlayerBuff().erhanCross)
+            if (!player.active || player.dead || player.HasBuff<ErhanCrossCooldown>() || !player.RedemptionPlayerBuff().erhanCross)
                 Projectile.Kill();
 
             Projectile.timeLeft = 10;
@@ -89,7 +91,7 @@ namespace Redemption.Items.Accessories.PreHM
                     if (!target.active || target.whoAmI == Projectile.whoAmI || !target.hostile)
                         continue;
 
-                    if (target.velocity.Length() == 0 || target.Redemption().TechnicallyMelee || target.Redemption().ParryBlacklist || !Projectile.Hitbox.Intersects(target.Hitbox))
+                    if (target.velocity.Length() == 0 || target.ProjBlockBlacklist() || !Projectile.Hitbox.Intersects(target.Hitbox))
                         continue;
 
                     Projectile.ai[1] = 10;
@@ -117,7 +119,7 @@ namespace Redemption.Items.Accessories.PreHM
                         target.hostile = false;
                     }
 
-                    target.damage *= 4;
+                    target.Redemption().ReflectDamageIncrease = 4; 
                     target.velocity = -target.velocity;
                 }
             }

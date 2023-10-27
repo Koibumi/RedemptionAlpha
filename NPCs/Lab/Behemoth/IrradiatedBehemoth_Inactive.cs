@@ -13,7 +13,7 @@ namespace Redemption.NPCs.Lab.Behemoth
         public override string Texture => "Redemption/NPCs/Lab/Behemoth/IrradiatedBehemoth";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("");
+            // DisplayName.SetDefault("");
             NPCID.Sets.DontDoHardmodeScaling[Type] = true;
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0)
@@ -36,6 +36,7 @@ namespace Redemption.NPCs.Lab.Behemoth
             NPC.npcSlots = 0;
             NPC.behindTiles = true;
             NPC.netAlways = true;
+            NPC.ShowNameOnHover = false;
         }
         public override void AI()
         {
@@ -62,8 +63,8 @@ namespace Redemption.NPCs.Lab.Behemoth
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
             Texture2D texture = TextureAssets.Npc[NPC.type].Value;
-            Texture2D HeadAni = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Head").Value;
-            Texture2D HandAni = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Hand").Value;
+            Texture2D HeadAni = ModContent.Request<Texture2D>(Texture + "_Head").Value;
+            Texture2D HandAni = ModContent.Request<Texture2D>(Texture + "_Hand").Value;
             var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
             spriteBatch.Draw(texture, NPC.Center - screenPos, NPC.frame, NPC.GetAlpha(new Color(20, 20, 20, 255)), NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0f);
@@ -77,6 +78,6 @@ namespace Redemption.NPCs.Lab.Behemoth
             return false;
         }
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => false;
-        public override bool? CanHitNPC(NPC target) => false;
+        public override bool CanHitNPC(NPC target) => false;
     }
 }

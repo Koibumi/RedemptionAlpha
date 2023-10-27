@@ -6,6 +6,7 @@ using Terraria;
 using Terraria.DataStructures;
 using Terraria.GameContent.ObjectInteractions;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 
@@ -30,13 +31,14 @@ namespace Redemption.Tiles.Furniture.Misc
             TileObjectData.newTile.Origin = new Point16(0, 2);
             TileObjectData.addTile(Type);
             DustType = 7;
-            MinPick = 500;
+            MinPick = 1000;
             MineResist = 3f;
-            ModTranslation name = CreateMapEntryName();
-            name.SetDefault("Ancient Altar");
+            HitSound = CustomSounds.StoneHit;
+            LocalizedText name = CreateMapEntryName();
+            // name.SetDefault("Ancient Altar");
             AddMapEntry(new Color(120, 190, 40), name);
         }
-        public override bool HasSmartInteract(int i, int j, SmartInteractScanSettings settings) => true;
+        public override bool HasSmartInteract(int i, int j, SmartInteractScanSettings settings) => Main.tile[i, j].TileFrameX < 36;
         public override void NearbyEffects(int i, int j, bool closer)
         {
             if (!Main.rand.NextBool(10))
@@ -53,7 +55,10 @@ namespace Redemption.Tiles.Furniture.Misc
             Player player = Main.LocalPlayer;
             player.noThrow = 2;
             player.cursorItemIconEnabled = true;
-            player.cursorItemIconID = ModContent.ItemType<CursedGem>();
+            if (Main.tile[i, j].TileFrameX < 36)
+                player.cursorItemIconID = ModContent.ItemType<CursedGem>();
+            else
+                player.cursorItemIconID = -1;
         }
 
         public override bool CanKillTile(int i, int j, ref bool blockDamaged) => false;
@@ -67,22 +72,21 @@ namespace Redemption.Tiles.Furniture.Misc
             {
                 Player player = Main.LocalPlayer;
                 player.QuickSpawnItem(new EntitySource_TileInteraction(player, i, j), ModContent.ItemType<CursedGem>());
-            }
-            for (int x = left; x < left + 2; x++)
-            {
-                for (int y = top; y < top + 3; y++)
+                for (int x = left; x < left + 2; x++)
                 {
-                    if (Main.tile[x, y].TileFrameX < 36)
+                    for (int y = top; y < top + 3; y++)
                     {
-                        Main.tile[x, y].TileFrameX += 36;
+                        if (Main.tile[x, y].TileFrameX < 36)
+                            Main.tile[x, y].TileFrameX += 36;
                     }
                 }
+                return true;
             }
-            return true;
+            return false;
         }
         public override bool PreDraw(int i, int j, SpriteBatch spriteBatch)
         {
-            Texture2D flare = ModContent.Request<Texture2D>("Redemption/Textures/WhiteFlare").Value;
+            Texture2D flare = Redemption.WhiteFlare.Value;
             Rectangle rect = new(0, 0, flare.Width, flare.Height);
             Color color = BaseUtility.MultiLerpColor(Main.LocalPlayer.miscCounter % 100 / 100f, new Color(211, 232, 169), new Color(247, 247, 169), new Color(211, 232, 169));
             Vector2 zero = new(Main.offScreenRange, Main.offScreenRange);
@@ -105,12 +109,12 @@ namespace Redemption.Tiles.Furniture.Misc
     }
     public class AncientAltar : PlaceholderTile
     {
-        public override string Texture => "Redemption/Placeholder";
-        public override void SetStaticDefaults()
+        public override string Texture => Redemption.PLACEHOLDER_TEXTURE;
+        public override void SetSafeStaticDefaults()
         {
-            DisplayName.SetDefault("Ancient Altar");
-            Tooltip.SetDefault("Gives the Cursed Gem" +
-                "\n[c/ff0000:Unbreakable]");
+            // DisplayName.SetDefault("Ancient Altar");
+            /* Tooltip.SetDefault("Gives the Cursed Gem" +
+                "\n[c/ff0000:Unbreakable]"); */
         }
 
         public override void SetDefaults()

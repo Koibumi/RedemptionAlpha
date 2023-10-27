@@ -11,14 +11,14 @@ namespace Redemption.Items.Weapons.HM.Ranged
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Converts bullets into drill bits that shred through enemies and tiles\n" +
-                "Inflicts Broken Armor, piercing through Guard Points");
-            SacrificeTotal = 1;
+            /* Tooltip.SetDefault("Converts bullets into drill bits that shred through enemies and tiles\n" +
+                "Inflicts Broken Armor, piercing through Guard Points"); */
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
         {
-            Item.damage = 74;
+            Item.damage = 82;
             Item.DamageType = DamageClass.Ranged;
             Item.width = 44;
             Item.height = 24;
@@ -28,7 +28,7 @@ namespace Redemption.Items.Weapons.HM.Ranged
             Item.noMelee = true;
             Item.knockBack = 1;
             Item.value = Item.sellPrice(0, 8, 0, 0);
-            Item.rare = ItemRarityID.Red;
+            Item.rare = ItemRarityID.Yellow;
             Item.UseSound = SoundID.Item40;
             Item.autoReuse = true;
             Item.shoot = ModContent.ProjectileType<DrillRevolver_Bullet>();

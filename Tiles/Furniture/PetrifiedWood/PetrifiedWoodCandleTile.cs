@@ -1,8 +1,10 @@
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ID;
 using Terraria.ObjectData;
+using Terraria.Enums;
 using Redemption.Items.Placeable.Furniture.PetrifiedWood;
 
 namespace Redemption.Tiles.Furniture.PetrifiedWood
@@ -16,13 +18,17 @@ namespace Redemption.Tiles.Furniture.PetrifiedWood
             Main.tileLighted[Type] = true;
             TileID.Sets.DisableSmartCursor[Type] = true;
             TileObjectData.newTile.CopyFrom(TileObjectData.StyleOnTable1x1);
+            TileObjectData.newTile.WaterDeath = true;
+            TileObjectData.newTile.WaterPlacement = LiquidPlacement.NotAllowed;
+            TileObjectData.newTile.LavaPlacement = LiquidPlacement.NotAllowed;
             TileObjectData.newTile.CoordinateHeights = new int[] { 20 };
+            TileObjectData.newTile.StyleLineSkip = 2;
             TileObjectData.addTile(Type);
-			ModTranslation name = CreateMapEntryName();
-			name.SetDefault("Petrified Wood Candle");
+			LocalizedText name = CreateMapEntryName();
+			// name.SetDefault("Petrified Wood Candle");
             AddMapEntry(new Color(100, 100, 100), name);
-			AdjTiles = new int[]{ TileID.Candles };
-            ItemDrop = ModContent.ItemType<PetrifiedWoodCandle>();
+            RegisterItemDrop(ModContent.ItemType<PetrifiedWoodCandle>());
+            AdjTiles = new int[]{ TileID.Candles };
             AddToArray(ref TileID.Sets.RoomNeeds.CountsAsTorch);
             DustType = DustID.Ash;
         }
@@ -35,7 +41,10 @@ namespace Redemption.Tiles.Furniture.PetrifiedWood
         }
         public override bool RightClick(int i, int j)
         {
-            Main.player[Main.myPlayer].PickTile(i, j, 100);
+            if (Main.tile[i, j].TileFrameX >= 18)
+                Main.tile[i, j].TileFrameX -= 18;
+            else
+                Main.tile[i, j].TileFrameX += 18;
             return true;
         }
         public override void NumDust(int i, int j, bool fail, ref int num) => num = fail ? 1 : 3;

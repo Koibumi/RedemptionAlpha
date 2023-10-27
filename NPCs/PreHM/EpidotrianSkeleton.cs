@@ -20,6 +20,7 @@ using Terraria.Utilities;
 using Redemption.BaseExtension;
 using Redemption.Base;
 using Terraria.DataStructures;
+using Terraria.Localization;
 
 namespace Redemption.NPCs.PreHM
 {
@@ -42,7 +43,6 @@ namespace Redemption.NPCs.PreHM
             Main.npcFrameCount[NPC.type] = 13;
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0);
-
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
         }
         public override void SetDefaults()
@@ -57,12 +57,11 @@ namespace Redemption.NPCs.PreHM
             NPC.DeathSound = SoundID.DD2_SkeletonDeath;
             NPC.value = 95;
             NPC.knockBackResist = 0.5f;
-            NPC.alpha = 255;
             NPC.aiStyle = -1;
             Banner = NPC.type;
             BannerItem = ModContent.ItemType<EpidotrianSkeletonBanner>();
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -114,7 +113,6 @@ namespace Redemption.NPCs.PreHM
             }
         }
 
-        private Vector2 moveTo;
         private int runCooldown;
         public override void OnSpawn(IEntitySource source)
         {
@@ -122,7 +120,7 @@ namespace Redemption.NPCs.PreHM
             SetStats();
 
             TimerRand = Main.rand.Next(80, 280);
-            NPC.alpha = 0;
+            NPC.netUpdate = true;
         }
         public override void AI()
         {
@@ -145,6 +143,7 @@ namespace Redemption.NPCs.PreHM
                         AITimer = 0;
                         TimerRand = Main.rand.Next(120, 260);
                         AIState = ActionState.Wander;
+                        NPC.netUpdate = true;
                     }
 
                     SightCheck();
@@ -159,11 +158,12 @@ namespace Redemption.NPCs.PreHM
                         AITimer = 0;
                         TimerRand = Main.rand.Next(80, 280);
                         AIState = ActionState.Idle;
+                        NPC.netUpdate = true;
                     }
                     BaseAI.AttemptOpenDoor(NPC, ref doorVars[0], ref doorVars[1], ref doorVars[2], 80, interactDoorStyle: HasEyes ? 2 : 0);
 
-                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20);
-                    RedeHelper.HorizontallyMove(NPC, moveTo * 16, 0.4f, 1 * SpeedMultiplier, 12, 8, NPC.Center.Y > player.Center.Y);
+                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20, (moveTo.Y - 32) * 16);
+                    NPCHelper.HorizontallyMove(NPC, moveTo * 16, 0.4f, 1 * SpeedMultiplier, 12, 8, NPC.Center.Y > moveTo.Y * 16);
                     break;
 
                 case ActionState.Alert:
@@ -193,9 +193,8 @@ namespace Redemption.NPCs.PreHM
                         if (Main.netMode != NetmodeID.Server)
                             Gore.NewGore(NPC.GetSource_FromThis(), NPC.position, RedeHelper.Spread(1), ModContent.Find<ModGore>("Redemption/AncientCoinGore").Type, 1);
                     }
-                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20);
-                    RedeHelper.HorizontallyMove(NPC, Personality == PersonalityState.Greedy ? new Vector2(globalNPC.attacker.Center.X < NPC.Center.X ? NPC.Center.X + 100
-                        : NPC.Center.X - 100, NPC.Center.Y) : globalNPC.attacker.Center, 0.2f, 2f * SpeedMultiplier * (NPC.RedemptionNPCBuff().rallied ? 1.2f : 1), 12, 8, NPC.Center.Y > globalNPC.attacker.Center.Y);
+                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20, globalNPC.attacker.Center.Y);
+                    NPCHelper.HorizontallyMove(NPC, Personality == PersonalityState.Greedy ? new Vector2(NPC.Center.X + (100 * NPC.RightOfDir(globalNPC.attacker)), NPC.Center.Y) : globalNPC.attacker.Center, 0.2f, 2f * SpeedMultiplier * (NPC.RedemptionNPCBuff().rallied ? 1.2f : 1), 12, 8, NPC.Center.Y > globalNPC.attacker.Center.Y, globalNPC.attacker);
 
                     break;
             }
@@ -211,61 +210,58 @@ namespace Redemption.NPCs.PreHM
         public override void FindFrame(int frameHeight)
         {
             if (Main.netMode != NetmodeID.Server)
-            {
                 NPC.frame.Width = TextureAssets.Npc[NPC.type].Width() / 3;
-                NPC.frame.X = Personality switch
-                {
-                    PersonalityState.Soulful => NPC.frame.Width,
-                    PersonalityState.Greedy => NPC.frame.Width * 2,
-                    _ => 0,
-                };
-                HeadX = Personality switch
-                {
-                    PersonalityState.Greedy => 1,
-                    _ => 0,
-                };
+            NPC.frame.X = Personality switch
+            {
+                PersonalityState.Soulful => NPC.frame.Width,
+                PersonalityState.Greedy => NPC.frame.Width * 2,
+                _ => 0,
+            };
+            HeadX = Personality switch
+            {
+                PersonalityState.Greedy => 1,
+                _ => 0,
+            };
 
-                if (NPC.collideY || NPC.velocity.Y == 0)
+            if (NPC.collideY || NPC.velocity.Y == 0)
+            {
+                NPC.rotation = 0;
+                if (NPC.velocity.X == 0)
                 {
-                    NPC.rotation = 0;
-                    if (NPC.velocity.X == 0)
+                    if (++NPC.frameCounter >= 10)
                     {
-                        if (++NPC.frameCounter >= 10)
-                        {
-                            NPC.frameCounter = 0;
-                            NPC.frame.Y += frameHeight;
-                            if (NPC.frame.Y > 3 * frameHeight)
-                                NPC.frame.Y = 0 * frameHeight;
-                        }
-                    }
-                    else
-                    {
-                        if (NPC.frame.Y < 5 * frameHeight)
-                            NPC.frame.Y = 5 * frameHeight;
-
-                        NPC.frameCounter += NPC.velocity.X * 0.5f;
-                        if (NPC.frameCounter is >= 3 or <= -3)
-                        {
-                            NPC.frameCounter = 0;
-                            NPC.frame.Y += frameHeight;
-                            if (NPC.frame.Y > 12 * frameHeight)
-                                NPC.frame.Y = 5 * frameHeight;
-                        }
+                        NPC.frameCounter = 0;
+                        NPC.frame.Y += frameHeight;
+                        if (NPC.frame.Y > 3 * frameHeight)
+                            NPC.frame.Y = 0 * frameHeight;
                     }
                 }
                 else
                 {
-                    NPC.rotation = NPC.velocity.X * 0.05f;
-                    NPC.frame.Y = 4 * frameHeight;
+                    if (NPC.frame.Y < 5 * frameHeight)
+                        NPC.frame.Y = 5 * frameHeight;
+
+                    NPC.frameCounter += NPC.velocity.X * 0.5f;
+                    if (NPC.frameCounter is >= 3 or <= -3)
+                    {
+                        NPC.frameCounter = 0;
+                        NPC.frame.Y += frameHeight;
+                        if (NPC.frame.Y > 12 * frameHeight)
+                            NPC.frame.Y = 5 * frameHeight;
+                    }
                 }
-                HeadOffset = SetHeadOffset(ref frameHeight);
             }
+            else
+            {
+                NPC.rotation = NPC.velocity.X * 0.05f;
+                NPC.frame.Y = 4 * frameHeight;
+            }
+            HeadOffset = SetHeadOffset(ref frameHeight);
         }
 
         public int GetNearestNPC(int[] WhitelistNPC = default, bool friendly = false)
         {
-            if (WhitelistNPC == null)
-                WhitelistNPC = new int[] { NPCID.Guide };
+            WhitelistNPC ??= new int[] { NPCID.Guide };
 
             float nearestNPCDist = -1;
             int nearestNPC = -1;
@@ -273,7 +269,7 @@ namespace Redemption.NPCs.PreHM
             for (int i = 0; i < Main.maxNPCs; i++)
             {
                 NPC target = Main.npc[i];
-                if (!target.active || target.whoAmI == NPC.whoAmI || target.dontTakeDamage || target.type == NPCID.OldMan)
+                if (!target.active || target.whoAmI == NPC.whoAmI || target.dontTakeDamage || target.type == NPCID.OldMan || target.type == NPCID.TargetDummy)
                     continue;
 
                 if (friendly)
@@ -312,6 +308,7 @@ namespace Redemption.NPCs.PreHM
                     moveTo = NPC.FindGround(20);
                     AITimer = 0;
                     AIState = ActionState.Alert;
+                    NPC.netUpdate = true;
                 }
                 if (!HasEyes && Personality == PersonalityState.Aggressive && Main.rand.NextBool(1800))
                 {
@@ -323,6 +320,7 @@ namespace Redemption.NPCs.PreHM
                         moveTo = NPC.FindGround(20);
                         AITimer = 0;
                         AIState = ActionState.Alert;
+                        NPC.netUpdate = true;
                     }
                     return;
                 }
@@ -339,61 +337,62 @@ namespace Redemption.NPCs.PreHM
                     moveTo = NPC.FindGround(20);
                     AITimer = 0;
                     AIState = ActionState.Alert;
+                    NPC.netUpdate = true;
                 }
             }
         }
         public void ChoosePersonality()
         {
             WeightedRandom<int> head = new(Main.rand);
-            head.Add(0);
-            head.Add(1, 0.6);
+            head.Add(0); // 28%
+            head.Add(1, 0.6); // 17%
             head.Add(2, 0.6);
-            head.Add(3, 0.4);
+            head.Add(3, 0.4); // 11%
             head.Add(4, 0.4);
-            head.Add(5, 0.1);
+            head.Add(5, 0.1); // 2.8%
             head.Add(6, 0.1);
             head.Add(7, 0.1);
-            head.Add(8, 0.06);
+            head.Add(8, 0.06); // 1.7%
             head.Add(9, 0.06);
             head.Add(10, 0.06);
             head.Add(11, 0.06);
             HeadType = head;
 
             WeightedRandom<PersonalityState> choice = new(Main.rand);
-            choice.Add(PersonalityState.Normal, 10);
-            choice.Add(PersonalityState.Calm, 8);
+            choice.Add(PersonalityState.Normal, 10); // 36%
+            choice.Add(PersonalityState.Calm, 8); // 29%
             choice.Add(PersonalityState.Aggressive, 8);
             if (TimerRand == 0)
             {
-                choice.Add(PersonalityState.Soulful, 1);
-                choice.Add(PersonalityState.Greedy, 0.5);
+                choice.Add(PersonalityState.Soulful, 1); // 3.6%
+                choice.Add(PersonalityState.Greedy, 0.5); // 1.8%
             }
 
             Personality = choice;
             if (Main.rand.NextBool(3) || Personality == PersonalityState.Soulful)
                 HasEyes = true;
+            NPC.netUpdate = true;
         }
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
-            Texture2D head = ModContent.Request<Texture2D>("Redemption/NPCs/PreHM/Skeleton_Heads").Value;
-            Texture2D glow = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Glow").Value;
+            Texture2D glow = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
             var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
             spriteBatch.Draw(TextureAssets.Npc[NPC.type].Value, NPC.Center - screenPos, NPC.frame, NPC.IsABestiaryIconDummy ? drawColor : NPC.GetAlpha(drawColor), NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
 
-            int Height = head.Height / 14;
-            int Width = head.Width / 2;
+            int Height = head.Value.Height / 14;
+            int Width = head.Value.Width / 2;
             int y = Height * HeadType;
             int x = Width * HeadX;
             Rectangle rect = new(x, y, Width, Height);
-            spriteBatch.Draw(head, NPC.Center - screenPos, new Rectangle?(rect), drawColor, NPC.rotation, NPC.frame.Size() / 2 + new Vector2(NPC.spriteDirection == 1 ? -4 : 2, 2 + HeadOffset), NPC.scale, effects, 0);
+            spriteBatch.Draw(head.Value, NPC.Center - screenPos, new Rectangle?(rect), drawColor, NPC.rotation, NPC.frame.Size() / 2 + new Vector2(NPC.spriteDirection == 1 ? -4 : 2, 2 + HeadOffset), NPC.scale, effects, 0);
 
             if (HasEyes)
                 spriteBatch.Draw(glow, NPC.Center - screenPos, NPC.frame, Color.White, NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
 
             return false;
         }
-        public override bool? CanHitNPC(NPC target) => AIState == ActionState.Alert && Personality != PersonalityState.Greedy ? null : false;
+        public override bool CanHitNPC(NPC target) => AIState == ActionState.Alert && Personality != PersonalityState.Greedy;
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => AIState == ActionState.Alert && Personality != PersonalityState.Greedy;
         public override void OnKill()
         {
@@ -416,8 +415,7 @@ namespace Redemption.NPCs.PreHM
             npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<AncientGoldCoin>(), 4, 1, 2));
             npcLoot.Add(ItemDropRule.Common(ItemID.Hook, 25));
             npcLoot.Add(ItemDropRule.Food(ItemID.MilkCarton, 150));
-            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<EpidotrianSkull>(), 50));
-            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<OldTophat>(), 500));
+            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<EpidotrianSkull>(), 100));
             npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<Trumpet>(), 750));
             npcLoot.Add(ItemDropRule.ByCondition(new LostSoulCondition(), ModContent.ItemType<LostSoul>(), 3));
         }
@@ -427,8 +425,7 @@ namespace Redemption.NPCs.PreHM
             {
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Biomes.Caverns,
 
-                new FlavorTextBestiaryInfoElement(
-                    "These skeletons are from Epidotra's mainland, they are slightly taller and smarter than the island's ones. Their strength is dependent on their soul, which is also known as Willpower.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.EpidotrianSkeleton"))
             });
         }
     }

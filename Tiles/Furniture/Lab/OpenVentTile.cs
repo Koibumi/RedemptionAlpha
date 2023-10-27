@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Redemption.Dusts.Tiles;
 using Terraria;
 using Terraria.DataStructures;
+using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 
@@ -14,6 +15,7 @@ namespace Redemption.Tiles.Furniture.Lab
             Main.tileFrameImportant[Type] = true;
             Main.tileLavaDeath[Type] = false;
             Main.tileNoAttach[Type] = true;
+            TileID.Sets.FramesOnKillWall[Type] = true;
             TileObjectData.newTile.Width = 3;
             TileObjectData.newTile.Height = 3;
             TileObjectData.newTile.CoordinateHeights = new int[] { 16, 16, 16 };
@@ -24,7 +26,7 @@ namespace Redemption.Tiles.Furniture.Lab
             TileObjectData.newTile.AnchorWall = true;
             TileObjectData.addTile(Type);
             DustType = ModContent.DustType<LabPlatingDust>();
-            MinPick = 500;
+            MinPick = 1000;
             MineResist = 3f;
             AddMapEntry(new Color(23, 24, 25));
         }
@@ -32,11 +34,11 @@ namespace Redemption.Tiles.Furniture.Lab
     }
     public class OpenVent : PlaceholderTile
     {
-        public override string Texture => "Redemption/Placeholder";
-        public override void SetStaticDefaults()
+        public override string Texture => Redemption.PLACEHOLDER_TEXTURE;
+        public override void SetSafeStaticDefaults()
         {
-            DisplayName.SetDefault("Open Vent");
-            Tooltip.SetDefault("[c/ff0000:Unbreakable (500% Pickaxe Power)]");
+            // DisplayName.SetDefault("Open Vent");
+            // Tooltip.SetDefault("[c/ff0000:Unbreakable (500% Pickaxe Power)]");
         }
 
         public override void SetDefaults()

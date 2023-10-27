@@ -1,4 +1,5 @@
 using Terraria;
+using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -8,8 +9,9 @@ namespace Redemption.Items.Weapons.PostML.Ranged
 	{
 		public override void SetStaticDefaults()
 		{
-            Tooltip.SetDefault("Throw an energy-filled grenade");
-            SacrificeTotal = 1;
+            // Tooltip.SetDefault("Throw an energy-filled grenade");
+            Main.RegisterItemAnimation(Item.type, new DrawAnimationVertical(4, 11));
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()

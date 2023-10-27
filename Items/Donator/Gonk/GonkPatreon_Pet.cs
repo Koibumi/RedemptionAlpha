@@ -1,8 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Redemption.Base;
 using Redemption.Biomes;
-using Redemption.Globals;
 using System;
 using Terraria;
 using Terraria.GameContent;
@@ -15,9 +13,12 @@ namespace Redemption.Items.Donator.Gonk
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Samus");
+            // DisplayName.SetDefault("Samus");
             Main.projFrames[Projectile.type] = 12;
             Main.projPet[Projectile.type] = true;
+            ProjectileID.Sets.CharacterPreviewAnimations[Projectile.type] = ProjectileID.Sets.SimpleLoop(1, 8, 5)
+                .WhenSelected(1, 8, 5)
+                .WithOffset(2, 0).WithSpriteDirection(-1);
         }
 
         public override void SetDefaults()
@@ -93,7 +94,7 @@ namespace Redemption.Items.Donator.Gonk
             Main.EntitySpriteDraw(texture, center - Main.screenPosition, new Rectangle?(rect), Projectile.GetAlpha(lightColor), Projectile.rotation, drawOrigin, Projectile.scale, effects, 0);
 
             Point water = Projectile.Center.ToTileCoordinates();
-            if (Main.tile[water.X, water.Y].LiquidType == LiquidID.Water && Main.tile[water.X, water.Y].LiquidAmount > 0)
+            if (Framing.GetTileSafely(water.X, water.Y).LiquidType == LiquidID.Water && Framing.GetTileSafely(water.X, water.Y).LiquidAmount > 0)
                 Main.EntitySpriteDraw(gravityOverlay, center - Main.screenPosition, new Rectangle?(rect), Projectile.GetAlpha(lightColor), Projectile.rotation, drawOrigin, Projectile.scale, effects, 0);
 
             if (Main.player[Projectile.owner].InModBiome<SoullessBiome>())

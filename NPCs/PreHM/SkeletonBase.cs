@@ -1,19 +1,46 @@
 ﻿using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Terraria.DataStructures;
 using Redemption.Globals.NPC;
 using Redemption.Globals;
-using Redemption.Buffs.Debuffs;
-using Redemption.Buffs.NPCBuffs;
 using Redemption.BaseExtension;
 using Terraria.GameContent.UI;
 using Terraria.Utilities;
+using System.IO;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
 
 namespace Redemption.NPCs.PreHM
 {
     public abstract class SkeletonBase : ModNPC
     {
+        public static Asset<Texture2D> head;
+        public static Asset<Texture2D> SlashAni;
+        public static Asset<Texture2D> SlashGlow;
+        public static Asset<Texture2D> head2;
+        public static Asset<Texture2D> NobleSlashAni;
+        public static Asset<Texture2D> NobleSlashGlow;
+        public override void Load()
+        {
+            if (Main.dedServ)
+                return;
+            head = ModContent.Request<Texture2D>("Redemption/NPCs/PreHM/Skeleton_Heads");
+            SlashAni = ModContent.Request<Texture2D>("Redemption/NPCs/PreHM/SkeletonDuelist_Slashes");
+            SlashGlow = ModContent.Request<Texture2D>("Redemption/NPCs/PreHM/SkeletonDuelist_Slashes_Glow");
+            head2 = ModContent.Request<Texture2D>("Redemption/NPCs/PreHM/Skeleton_Heads2");
+            NobleSlashAni = ModContent.Request<Texture2D>("Redemption/NPCs/PreHM/SkeletonNoble_HalberdSlash");
+            NobleSlashGlow = ModContent.Request<Texture2D>("Redemption/NPCs/PreHM/SkeletonNoble_HalberdSlash_Glow");
+        }
+        public override void Unload()
+        {
+            head = null;
+            SlashAni = null;
+            SlashGlow = null;
+            head2 = null;
+            NobleSlashAni = null;
+            NobleSlashGlow = null;
+        }
         public enum PersonalityState
         {
             Normal, Aggressive, Calm, Greedy, Soulful
@@ -25,6 +52,20 @@ namespace Redemption.NPCs.PreHM
         public int HeadOffset;
         public int CoinsDropped;
         public string SoundString = "Skeleton";
+        public Vector2 moveTo;
+
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.Write(HasEyes);
+            writer.Write(HeadType);
+            writer.WriteVector2(moveTo);
+        }
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            HasEyes = reader.ReadBoolean();
+            HeadType = reader.ReadInt32();
+            moveTo = reader.ReadVector2();
+        }
 
         public ref float AITimer => ref NPC.ai[1];
 
@@ -45,15 +86,6 @@ namespace Redemption.NPCs.PreHM
         public override void SetStaticDefaults()
         {
             SetSafeStaticDefaults();
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Bleeding,
-                    BuffID.Poisoned,
-                    ModContent.BuffType<DirtyWoundDebuff>(),
-                    ModContent.BuffType<NecroticGougeDebuff>()
-                }
-            });
         }
 
         public bool AttackerIsUndead()
@@ -80,6 +112,9 @@ namespace Redemption.NPCs.PreHM
         }
         public override bool PreAI()
         {
+            if (NPC.Redemption().spiritSummon)
+                return true;
+
             Player player = Main.player[NPC.target];
             if (player.RedemptionPlayerBuff().skeletonFriendly)
                 NPC.friendly = true;
@@ -165,39 +200,42 @@ namespace Redemption.NPCs.PreHM
                     NPC.defense += 4;
                     break;
             }
-            switch (Personality)
+            if (!NPC.Redemption().spiritSummon)
             {
-                case PersonalityState.Calm:
-                    NPC.lifeMax = (int)(NPC.lifeMax * 0.9f);
-                    NPC.life = (int)(NPC.life * 0.9f);
-                    NPC.damage = (int)(NPC.damage * 0.8f);
-                    SpeedMultiplier = 0.8f;
-                    break;
-                case PersonalityState.Aggressive:
-                    NPC.lifeMax = (int)(NPC.lifeMax * 1.05f);
-                    NPC.life = (int)(NPC.life * 1.05f);
-                    NPC.damage = (int)(NPC.damage * 1.05f);
-                    NPC.value = (int)(NPC.value * 1.25f);
-                    VisionIncrease = 100;
-                    SpeedMultiplier = 1.1f;
-                    break;
-                case PersonalityState.Soulful:
-                    NPC.lifeMax = (int)(NPC.lifeMax * 1.4f);
-                    NPC.life = (int)(NPC.life * 1.4f);
-                    NPC.defense = (int)(NPC.defense * 1.15f);
-                    NPC.damage = (int)(NPC.damage * 1.25f);
-                    NPC.value *= 2;
-                    VisionIncrease = 300;
-                    SpeedMultiplier = 1.3f;
-                    break;
-                case PersonalityState.Greedy:
-                    NPC.lifeMax = (int)(NPC.lifeMax * 1.2f);
-                    NPC.life = (int)(NPC.life * 1.2f);
-                    NPC.defense = (int)(NPC.defense * 1.25f);
-                    NPC.damage = (int)(NPC.damage * 0.6f);
-                    NPC.value *= 4;
-                    SpeedMultiplier = 1.8f;
-                    break;
+                switch (Personality)
+                {
+                    case PersonalityState.Calm:
+                        NPC.lifeMax = (int)(NPC.lifeMax * 0.9f);
+                        NPC.life = (int)(NPC.life * 0.9f);
+                        NPC.damage = (int)(NPC.damage * 0.8f);
+                        SpeedMultiplier = 0.8f;
+                        break;
+                    case PersonalityState.Aggressive:
+                        NPC.lifeMax = (int)(NPC.lifeMax * 1.05f);
+                        NPC.life = (int)(NPC.life * 1.05f);
+                        NPC.damage = (int)(NPC.damage * 1.05f);
+                        NPC.value = (int)(NPC.value * 1.25f);
+                        VisionIncrease = 100;
+                        SpeedMultiplier = 1.1f;
+                        break;
+                    case PersonalityState.Soulful:
+                        NPC.lifeMax = (int)(NPC.lifeMax * 1.4f);
+                        NPC.life = (int)(NPC.life * 1.4f);
+                        NPC.defense = (int)(NPC.defense * 1.15f);
+                        NPC.damage = (int)(NPC.damage * 1.25f);
+                        NPC.value *= 2;
+                        VisionIncrease = 300;
+                        SpeedMultiplier = 1.3f;
+                        break;
+                    case PersonalityState.Greedy:
+                        NPC.lifeMax = (int)(NPC.lifeMax * 1.2f);
+                        NPC.life = (int)(NPC.life * 1.2f);
+                        NPC.defense = (int)(NPC.defense * 1.25f);
+                        NPC.damage = (int)(NPC.damage * 0.6f);
+                        NPC.value *= 4;
+                        SpeedMultiplier = 1.8f;
+                        break;
+                }
             }
             if (HasEyes)
             {
@@ -215,6 +253,7 @@ namespace Redemption.NPCs.PreHM
                 SoundString = "GreedySkeleton";
             else if (Personality is PersonalityState.Soulful)
                 SoundString = "SoulfulSkeleton";
+            NPC.netUpdate = true;
         }
     }
 }

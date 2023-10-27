@@ -1,3 +1,4 @@
+using Redemption.Globals;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -8,7 +9,8 @@ namespace Redemption.NPCs.Bosses.ADD
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Hail");
+            // DisplayName.SetDefault("Hail");
+            ElementID.ProjIce[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -34,7 +36,7 @@ namespace Redemption.NPCs.Bosses.ADD
                     player.AddBuff(BuffID.Frozen, 60);
             }
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             int dustIndex = Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.Ice);
             Main.dust[dustIndex].velocity *= 2;

@@ -10,9 +10,9 @@ namespace Redemption.Items.Usable
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Special Keycard");
-            Tooltip.SetDefault("Unlocks a special Laboratory Chest");
-            SacrificeTotal = 1;
+            // DisplayName.SetDefault("Special Keycard");
+            // Tooltip.SetDefault("Unlocks a special Laboratory Chest");
+            Item.ResearchUnlockCount = 1;
         }
         public override void SetDefaults()
         {
@@ -21,7 +21,7 @@ namespace Redemption.Items.Usable
             Item.rare = ItemRarityID.Purple;
             Item.maxStack = 1;
             if (!Main.dedServ)
-                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Item.ModItem.Texture + "_Glow").Value;
+                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
         }
     }
 }

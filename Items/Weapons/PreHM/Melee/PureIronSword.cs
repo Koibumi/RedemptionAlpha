@@ -1,28 +1,31 @@
+using Redemption.Globals;
 using Redemption.Items.Materials.PreHM;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.Items.Weapons.PreHM.Melee
 {
     public class PureIronSword : ModItem
     {
+        public override LocalizedText Tooltip => base.Tooltip.WithFormatArgs(ElementID.IceS);
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Pure-Iron Sword");
-            Tooltip.SetDefault("Swings can block ice projectiles\n" +
-                "Holding left-click and hitting enemies will charge an Arctic Spin Slash");
+            // DisplayName.SetDefault("Pure-Iron Sword");
+            /* Tooltip.SetDefault("Swings can block ice projectiles\n" +
+                "Holding left-click and hitting enemies will charge an Arctic Spin Slash"); */
 
             ItemID.Sets.SkipsInitialUseSound[Item.type] = true;
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
         {
             // Common Properties
-            Item.width = 48;
-            Item.height = 48;
+            Item.width = 60;
+            Item.height = 60;
             Item.rare = ItemRarityID.Orange;
             Item.value = Item.sellPrice(gold: 1);
 
@@ -55,8 +58,8 @@ namespace Redemption.Items.Weapons.PreHM.Melee
         }
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
-            TooltipLine axeLine = new(Mod, "SharpBonus", "Slash Bonus: Small chance to decapitate skeletons, killing them instantly") { OverrideColor = Colors.RarityOrange };
-            tooltips.Add(axeLine);
+            TooltipLine slashLine = new(Mod, "SharpBonus", Language.GetTextValue("Mods.Redemption.GenericTooltips.Bonuses.SlashBonus")) { OverrideColor = Colors.RarityOrange };
+            tooltips.Add(slashLine);
         }
     }
 }

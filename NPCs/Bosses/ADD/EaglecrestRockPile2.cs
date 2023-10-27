@@ -1,11 +1,9 @@
 using Redemption.Base;
 using Redemption.BaseExtension;
-using Redemption.Buffs.Debuffs;
-using Redemption.Buffs.NPCBuffs;
 using Redemption.Globals;
+using Redemption.Globals.NPC;
 using System;
 using Terraria;
-using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -22,23 +20,14 @@ namespace Redemption.NPCs.Bosses.ADD
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Eaglecrest Rock Pile");
+            // DisplayName.SetDefault("Eaglecrest Rock Pile");
             Main.npcFrameCount[NPC.type] = 8;
 
             NPCID.Sets.DontDoHardmodeScaling[Type] = true;
             NPCID.Sets.CantTakeLunchMoney[Type] = true;
             NPCID.Sets.BossBestiaryPriority.Add(Type);
 
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Poisoned,
-                    ModContent.BuffType<InfestedDebuff>(),
-                    ModContent.BuffType<NecroticGougeDebuff>(),
-                    ModContent.BuffType<ViralityDebuff>(),
-                    ModContent.BuffType<DirtyWoundDebuff>()
-                }
-            });
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Inorganic);
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0) { Hide = true };
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
@@ -56,6 +45,7 @@ namespace Redemption.NPCs.Bosses.ADD
             NPC.HitSound = SoundID.NPCHit41;
             NPC.DeathSound = SoundID.NPCDeath43;
             NPC.lavaImmune = true;
+            NPC.GetGlobalNPC<ElementalNPC>().OverrideMultiplier[ElementID.Earth] *= .75f;
         }
 
         public override void AI()
@@ -76,7 +66,7 @@ namespace Redemption.NPCs.Bosses.ADD
                 AITimer = 1;
             }
             NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20);
-            RedeHelper.HorizontallyMove(NPC, player.Center, 0.14f, 7f + TimerRand, 26, 30, NPC.Center.Y > player.Center.Y);
+            NPCHelper.HorizontallyMove(NPC, player.Center, 0.14f, 7f + TimerRand, 26, 30, NPC.Center.Y > player.Center.Y, player);
         }
         public override bool? CanFallThroughPlatforms() => NPC.Redemption().fallDownPlatform;
         public override void FindFrame(int frameHeight)
@@ -100,8 +90,7 @@ namespace Redemption.NPCs.Bosses.ADD
                 NPC.frame.Y = 0;
             }
         }
-
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {

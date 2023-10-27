@@ -1,13 +1,12 @@
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.Localization;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Redemption.Items.Materials.HM;
 using Redemption.Items.Materials.PostML;
 using Redemption.Projectiles.Melee;
-using Redemption.Items.Weapons.PostML.Ranged;
-using Redemption.Items.Accessories.HM;
 
 namespace Redemption.Items.Weapons.PostML.Melee
 {
@@ -29,19 +28,19 @@ namespace Redemption.Items.Weapons.PostML.Melee
         }
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Sun-In-Palm");
-            Tooltip.SetDefault("Hold out this mechanical hand to grow a ball of energy\n" +
+            // DisplayName.SetDefault("Sun-In-Palm");
+            /* Tooltip.SetDefault("Hold out this mechanical hand to grow a ball of energy\n" +
                 "Disintegrates most projectiles after reaching a certain size\n" +
                 "Release left-click to shrink it back down, overcharging will cause it to explode and set the player on fire\n" +
-                "'The power of the sun, in the palm of my hand'");
+                "'The power of the sun, in the palm of my hand'"); */
             ItemID.Sets.SkipsInitialUseSound[Item.type] = true;
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
             SetupDrawing();
         }
 
         public override void SetDefaults()
         {
-            Item.damage = 200;
+            Item.damage = 300;
             Item.DamageType = DamageClass.Melee;
             Item.width = 28;
             Item.height = 30;
@@ -83,11 +82,7 @@ namespace Redemption.Items.Weapons.PostML.Melee
         {
             if (Main.keyState.PressingShift())
             {
-                TooltipLine line2 = new(Mod, "Lore",
-                    "\"Utilizing the same, revolutionary heat-sink technology Obliterator's super heatray uses,\n" +
-                    "but instead of being buried in your chest, it's in your palm! It's just that simple!!\n\n" +
-                    "Caution: Girus is not responsible for irresponsible and/or dangerous use of the Sun-In-Palm product.\n" +
-                    "Please hold the Sun-In-Palm product as far away from yourself while in use.\"")
+                TooltipLine line2 = new(Mod, "Lore", Language.GetTextValue("Mods.Redemption.Items.SunInThePalm.Lore"))
                 {
                     OverrideColor = Color.LightGray
                 };
@@ -95,7 +90,7 @@ namespace Redemption.Items.Weapons.PostML.Melee
             }
             else
             {
-                TooltipLine line2 = new(Mod, "HoldShift", "There's a label attached [Hold Shift to Read]")
+                TooltipLine line2 = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.Items.SunInThePalm.Viewer"))
                 {
                     OverrideColor = Color.Gray,
                 };

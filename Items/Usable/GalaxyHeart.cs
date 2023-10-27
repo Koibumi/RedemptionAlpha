@@ -8,16 +8,16 @@ using Terraria.ModLoader;
 namespace Redemption.Items.Usable
 {
     public class GalaxyHeart : ModItem
-	{
-		public override void SetStaticDefaults()
-		{
-			Tooltip.SetDefault("Permanently increases maximum life by 50"
-                + "\nCan only be used if the max amount of life fruit has been consumed");
-            SacrificeTotal = 1;
+    {
+        public override void SetStaticDefaults()
+        {
+            /* Tooltip.SetDefault("Permanently increases maximum life by 50"
+                + "\nCan only be used if the max amount of life fruit has been consumed"); */
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
-		{
+        {
             Item.width = 24;
             Item.height = 22;
             Item.useAnimation = 30;

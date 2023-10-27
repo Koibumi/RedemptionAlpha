@@ -30,13 +30,11 @@ namespace Redemption.Tiles.Furniture.Misc
             TileObjectData.addAlternate(1);
             TileObjectData.addTile(Type);
             DustType = ModContent.DustType<SlateDust>();
-            MinPick = 500;
+            HitSound = CustomSounds.StoneHit;
+            MinPick = 1000;
             MineResist = 15f;
+            RegisterItemDrop(ModContent.ItemType<KSStatue>());
             AddMapEntry(new Color(104, 91, 83));
-        }
-        public override void KillMultiTile(int i, int j, int frameX, int frameY)
-        {
-            Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 16, 32, ModContent.ItemType<KSStatue>());
         }
         public override bool CanExplode(int i, int j) => false;
     }

@@ -3,7 +3,6 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
-using Redemption.Items.Placeable.Furniture.Shade;
 using Redemption.Dusts.Tiles;
 
 namespace Redemption.Tiles.Furniture.Shade
@@ -27,20 +26,19 @@ namespace Redemption.Tiles.Furniture.Shade
 			AddMapEntry(new Color(59, 61, 87));
 
 			DustType = ModContent.DustType<ShadestoneDust>();
-			ItemDrop = ModContent.ItemType<ShadestonePlatform>();
 			AdjTiles = new int[] { TileID.Platforms };
 
-			// Placement
-			TileObjectData.newTile.CoordinateHeights = new[] { 16 };
-			TileObjectData.newTile.CoordinateWidth = 16;
-			TileObjectData.newTile.CoordinatePadding = 2;
-			TileObjectData.newTile.StyleHorizontal = true;
-			TileObjectData.newTile.StyleMultiplier = 27;
-			TileObjectData.newTile.StyleWrapLimit = 27;
-			TileObjectData.newTile.UsesCustomCanPlace = false;
-			TileObjectData.newTile.LavaDeath = true;
-			TileObjectData.addTile(Type);
-		}
+            // Placement
+            TileObjectData.newTile.CoordinateHeights = new[] { 16 };
+            TileObjectData.newTile.CoordinateWidth = 16;
+            TileObjectData.newTile.CoordinatePadding = 2;
+            TileObjectData.newTile.StyleHorizontal = true;
+            TileObjectData.newTile.StyleMultiplier = 27;
+            TileObjectData.newTile.StyleWrapLimit = 27;
+            TileObjectData.newTile.UsesCustomCanPlace = false;
+            TileObjectData.newTile.LavaDeath = true;
+            TileObjectData.addTile(Type);
+        }
 		public override void PostSetDefaults() => Main.tileNoSunLight[Type] = false;
 		public override void NumDust(int i, int j, bool fail, ref int num) => num = fail ? 1 : 3;
 	}

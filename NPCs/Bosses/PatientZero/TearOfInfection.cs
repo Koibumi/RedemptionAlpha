@@ -1,5 +1,7 @@
 using Microsoft.Xna.Framework;
+using Redemption.Buffs.Debuffs;
 using Redemption.Dusts;
+using Redemption.Globals;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -11,8 +13,9 @@ namespace Redemption.NPCs.Bosses.PatientZero
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Tear of Infection");
+            // DisplayName.SetDefault("Tear of Infection");
             Main.projFrames[Projectile.type] = 4;
+            ElementID.ProjPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -25,6 +28,7 @@ namespace Redemption.NPCs.Bosses.PatientZero
             Projectile.ignoreWater = true;
             Projectile.timeLeft = 200;
         }
+        public override void OnHitPlayer(Player target, Player.HurtInfo info) => target.AddBuff(ModContent.BuffType<BileDebuff>(), 120);
         public override Color? GetAlpha(Color lightColor) => Color.White * Projectile.Opacity;
         public override void AI()
         {
@@ -41,7 +45,7 @@ namespace Redemption.NPCs.Bosses.PatientZero
             Projectile.rotation = Projectile.velocity.ToRotation() + 1.57f;
             Projectile.velocity.Y += 0.1f;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(SoundID.NPCDeath1 with { Volume = .3f }, Projectile.position);
             for (int i = 0; i < 10; i++)
@@ -56,7 +60,7 @@ namespace Redemption.NPCs.Bosses.PatientZero
         public override string Texture => "Redemption/NPCs/Bosses/PatientZero/TearOfInfection";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Poison Beat");
+            // DisplayName.SetDefault("Poison Beat");
             Main.projFrames[Projectile.type] = 4;
         }
         public override void SetDefaults()
@@ -76,7 +80,7 @@ namespace Redemption.NPCs.Bosses.PatientZero
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Poison Beat");
+            // DisplayName.SetDefault("Poison Beat");
         }
         public override void SetDefaults()
         {

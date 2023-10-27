@@ -1,17 +1,16 @@
 using Redemption.Biomes;
 using Redemption.Buffs.Debuffs;
 using Redemption.Globals;
-using Redemption.Items.Armor.Vanity;
+using Redemption.Globals.NPC;
 using Redemption.Items.Armor.Vanity.Intruder;
 using Redemption.Items.Materials.HM;
-using Redemption.Items.Materials.PreHM;
 using Redemption.Items.Placeable.Banners;
 using Redemption.Items.Usable.Potions;
 using Terraria;
-using Terraria.DataStructures;
 using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.NPCs.Wasteland
@@ -22,22 +21,16 @@ namespace Redemption.NPCs.Wasteland
         public override void SetStaticDefaults()
         {
             Main.npcFrameCount[NPC.type] = 2;
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Poisoned,
-                    ModContent.BuffType<BileDebuff>(),
-                    ModContent.BuffType<GreenRashesDebuff>(),
-                    ModContent.BuffType<GlowingPustulesDebuff>(),
-                    ModContent.BuffType<FleshCrystalsDebuff>()
-                }
-            });
+            NPCID.Sets.ShimmerTransformToNPC[NPC.type] = NPCID.DemonEye;
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Infected);
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0)
             {
                 Velocity = 1f
             };
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
+            ElementID.NPCBlood[Type] = true;
+            ElementID.NPCPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -50,6 +43,7 @@ namespace Redemption.NPCs.Wasteland
             NPC.aiStyle = 2;
             AIType = NPCID.DemonEye;
             AnimationType = NPCID.DemonEye;
+            NPC.noGravity = true;
             SpawnModBiomes = new int[1] { ModContent.GetInstance<WastelandPurityBiome>().Type };
             Banner = NPC.type;
             BannerItem = ModContent.ItemType<SickenedDemonEyeBanner>();
@@ -58,11 +52,10 @@ namespace Redemption.NPCs.Wasteland
         {
             bestiaryEntry.Info.AddRange(new IBestiaryInfoElement[]
             {
-                new FlavorTextBestiaryInfoElement(
-                    "Is it crying? No, that's just foul smelling pus leaking out.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.SickenedDemonEye"))
             });
         }
-        public override void ModifyHitPlayer(Player target, ref int damage, ref bool crit)
+        public override void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers)
         {
             if (Main.rand.NextBool(2) || Main.expertMode)
                 target.AddBuff(ModContent.BuffType<GreenRashesDebuff>(), Main.rand.Next(400, 900));
@@ -96,7 +89,7 @@ namespace Redemption.NPCs.Wasteland
         }
         public override void ModifyNPCLoot(NPCLoot npcLoot)
         {
-            npcLoot.Add(ItemDropRule.ByCondition(new Conditions.BeatAnyMechBoss(), ModContent.ItemType<XenomiteShard>(), 2, 3, 5));
+            npcLoot.Add(ItemDropRule.ByCondition(new Conditions.BeatAnyMechBoss(), ModContent.ItemType<Xenomite>(), 2, 1, 2));
             npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<ToxicBile>(), 4, 1, 3));
             npcLoot.Add(ItemDropRule.OneFromOptions(50, ModContent.ItemType<IntruderMask>(), ModContent.ItemType<IntruderArmour>(), ModContent.ItemType<IntruderPants>()));
             npcLoot.Add(ItemDropRule.Food(ModContent.ItemType<StarliteDonut>(), 150));
@@ -106,7 +99,7 @@ namespace Redemption.NPCs.Wasteland
                 npcLoot.Add(dropRule);
             }
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {

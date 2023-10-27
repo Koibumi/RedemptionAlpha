@@ -1,6 +1,5 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Redemption.Base;
 using System;
 using Terraria;
 using Terraria.GameContent;
@@ -13,9 +12,11 @@ namespace Redemption.Items.Donator.Waasephi
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Waasephini");
+            // DisplayName.SetDefault("Waasephini");
             Main.projFrames[Projectile.type] = 15;
             Main.projPet[Projectile.type] = true;
+            ProjectileID.Sets.CharacterPreviewAnimations[Projectile.type] = ProjectileID.Sets.SimpleLoop(1, 8, 5)
+                .WithOffset(2, 0).WithSpriteDirection(-1);
         }
 
         public override void SetDefaults()

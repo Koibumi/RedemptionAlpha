@@ -2,8 +2,10 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.Base;
 using Redemption.Globals;
-using Redemption.UI;
+using Redemption.Textures;
+using Redemption.UI.ChatUI;
 using Terraria;
+using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -14,7 +16,7 @@ namespace Redemption.NPCs.Bosses.KSIII
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Hologram");
+            // DisplayName.SetDefault("Hologram");
             Main.projFrames[Projectile.type] = 10;
         }
         public override void SetDefaults()
@@ -25,7 +27,8 @@ namespace Redemption.NPCs.Bosses.KSIII
             Projectile.hostile = false;
             Projectile.alpha = 255;
         }
-
+        private static Texture2D Bubble => CommonTextures.TextBubble_Slayer.Value;
+        private static readonly SoundStyle voice = CustomSounds.Voice6 with { Pitch = 0.1f };
         public int faceType;
         public override void AI()
         {
@@ -36,7 +39,7 @@ namespace Redemption.NPCs.Bosses.KSIII
                 if (++Projectile.frame >= 2 * (faceType + 1))
                     Projectile.frame = 2 * faceType;
             }
-
+            Projectile.LookAtEntity(Main.player[RedeHelper.GetNearestAlivePlayer(Projectile)]);
             if (Projectile.localAI[0]++ < 30)
                 Projectile.alpha -= 4;
 
@@ -44,41 +47,27 @@ namespace Redemption.NPCs.Bosses.KSIII
             {
                 if (Projectile.localAI[0] == 30)
                 {
-                    RedeSystem.Instance.DialogueUIElement.DisplayDialogue("Hey, get lost.", 150, 1, 0.6f, "King Slayer III:", 0.4f, color, null, null, Projectile.Center, sound: true);
-                }
-                if (Projectile.localAI[0] == 170)
-                {
-                    faceType = 1;
-                    RedeSystem.Instance.DialogueUIElement.DisplayDialogue("You really aren't worth my time, ya know.", 180, 1, 0.6f, "King Slayer III:", 0.4f, color, null, null, Projectile.Center, sound: true);
-                }
-                if (Projectile.localAI[0] == 350)
-                {
-                    faceType = 3;
-                    switch (Main.rand.Next(4))
+                    string line1 = Main.rand.Next(4) switch
                     {
-                        case 0:
-                            RedeSystem.Instance.DialogueUIElement.DisplayDialogue("So stop bothering me and leave me to my 4D chess.", 200, 1, 0.6f, "King Slayer III:", 0.4f, color, null, null, Projectile.Center, sound: true);
-                            break;
-                        case 1:
-                            RedeSystem.Instance.DialogueUIElement.DisplayDialogue("So stop bothering me, I have a certain android I need to 'lecture'.", 200, 1, 0.6f, "King Slayer III:", 0.4f, color, null, null, Projectile.Center, sound: true);
-                            break;
-                        case 2:
-                            RedeSystem.Instance.DialogueUIElement.DisplayDialogue("So stop bothering me, I don't care about you.", 200, 1, 0.6f, "King Slayer III:", 0.4f, color, null, null, Projectile.Center, sound: true);
-                            break;
-                        case 3:
-                            RedeSystem.Instance.DialogueUIElement.DisplayDialogue("So stop bothering me and we can all go about our day.", 200, 1, 0.6f, "King Slayer III:", 0.4f, color, null, null, Projectile.Center, sound: true);
-                            break;
-                    }
-                }
-                if (Projectile.localAI[0] == 550)
-                {
-                    faceType = 0;
-                    RedeSystem.Instance.DialogueUIElement.DisplayDialogue("I'll beat you up if you annoy me again.", 180, 1, 0.6f, "King Slayer III:", 0.4f, color, null, null, Projectile.Center, sound: true);
+                        1 => "So stop bothering me,[0.1] I have a certain android I need to 'lecture'.",
+                        2 => "So stop bothering me,[0.1] I don't care about you.",
+                        3 => "So stop bothering me and we can all go about our day.",
+                        _ => "So stop bothering me and leave me to my 4D chess.",
+                    };
+                    DialogueChain chain = new();
+                    chain.Add(new(Projectile, "Hey,[0.1] get lost.", new Color(170, 255, 255), Color.Black, voice, .03f, 2f, 0, false, null, Bubble, null))
+                         .Add(new(Projectile, "[@f1]You really aren't worth my time,[0.1] ya know.", new Color(170, 255, 255), Color.Black, voice, .03f, 2f, 0, false, null, Bubble, null))
+                         .Add(new(Projectile, "[@f3]" + line1, new Color(170, 255, 255), Color.Black, voice, .03f, 2f, 0, false, null, Bubble, null))
+                         .Add(new(Projectile, "[@f0]I'll beat you up if you annoy me again.", new Color(170, 255, 255), Color.Black, voice, .03f, 2f, .5f, true, null, Bubble, null, endID: 1));
+                    chain.OnSymbolTrigger += Chain_OnSymbolTrigger;
+                    chain.OnEndTrigger += Chain_OnEndTrigger;
+                    ChatUI.Visible = true;
+                    ChatUI.Add(chain);
                 }
             }
-            if (Projectile.localAI[0] > 730)
+            if (Projectile.localAI[0] > 5000)
             {
-                if (RedeBossDowned.slayerDeath < 1)
+                if (RedeBossDowned.slayerDeath < 1 && Main.netMode != NetmodeID.MultiplayerClient)
                 {
                     RedeBossDowned.slayerDeath = 1;
                     if (Main.netMode == NetmodeID.Server)
@@ -89,11 +78,19 @@ namespace Redemption.NPCs.Bosses.KSIII
                 if (Projectile.alpha >= 255)
                     Projectile.Kill();
             }
-            if (MoRDialogueUI.Visible)
+        }
+        private void Chain_OnSymbolTrigger(Dialogue dialogue, string signature)
+        {
+            faceType = signature switch
             {
-                RedeSystem.Instance.DialogueUIElement.PointPos = Projectile.Center;
-                RedeSystem.Instance.DialogueUIElement.TextColor = color;
-            }
+                "f1" => 1,
+                "f3" => 3,
+                _ => 0,
+            };
+        }
+        private void Chain_OnEndTrigger(Dialogue dialogue, int ID)
+        {
+            Projectile.localAI[0] = 5000;
         }
         public override bool PreDraw(ref Color lightColor)
         {

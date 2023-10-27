@@ -7,6 +7,7 @@ using Redemption.Globals.Player;
 using Redemption.Items.Materials.PreHM;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.Items.Accessories.HM
@@ -14,16 +15,19 @@ namespace Redemption.Items.Accessories.HM
     [AutoloadEquip(EquipType.Neck)]
     public class GracesGuidance : ModItem
     {
+        public override LocalizedText Tooltip => base.Tooltip.WithFormatArgs(ElementID.HolyS, ElementID.FireS);
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Grace's Guidance");
-            Tooltip.SetDefault("12% increased Holy elemental damage and resistance\n" +
-                "6% increased Holy and Fire elemental critical strike chance\n" +
+            // DisplayName.SetDefault("Grace's Guidance");
+            /* Tooltip.SetDefault("12% increased " + ElementID.HolyS + " elemental damage and resistance\n" +
+                "6% increased " + ElementID.HolyS + " and " + ElementID.FireS + " elemental critical strike chance\n" +
                 "Stacks if both elements are present\n" +
-                "Critical strikes with a Holy elemental weapon has a chance to release homing lightmass\n" +
-                "An aura of holy flames surrounds you while holding a Fire or Holy elemental weapon\n" +
-                "Increases length of invincibility after taking damage");
-            SacrificeTotal = 1;
+                "Critical strikes with a " + ElementID.HolyS + " elemental weapon has a chance to release homing lightmass\n" +
+                "An aura of holy flames surrounds you while holding a " + ElementID.FireS + " or " + ElementID.HolyS + " elemental weapon\n" +
+                "Increases length of invincibility after taking damage"); */
+            Item.ResearchUnlockCount = 1;
+            ElementID.ItemHoly[Type] = true;
+            ElementID.ItemFire[Type] = true;
         }
 
         public override void SetDefaults()
@@ -34,7 +38,7 @@ namespace Redemption.Items.Accessories.HM
             Item.rare = ItemRarityID.Yellow;
             Item.accessory = true;
             if (!Main.dedServ)
-                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Item.ModItem.Texture + "_Glow").Value;
+                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
         }
         public override void AddRecipes()
         {
@@ -50,12 +54,12 @@ namespace Redemption.Items.Accessories.HM
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
             BuffPlayer modPlayer = player.RedemptionPlayerBuff();
-            modPlayer.ElementalDamage[7] += 0.12f;
-            modPlayer.ElementalResistance[7] += 0.12f;
+            modPlayer.ElementalDamage[ElementID.Holy] += 0.12f;
+            modPlayer.ElementalResistance[ElementID.Holy] += 0.12f;
             player.longInvince = true;
             modPlayer.gracesGuidance = true;
 
-            if (player.whoAmI == Main.myPlayer && player.active && !player.dead && (ItemLists.Fire.Contains(player.HeldItem.type) || ProjectileLists.Fire.Contains(player.HeldItem.shoot) || ItemLists.Holy.Contains(player.HeldItem.type) || ProjectileLists.Holy.Contains(player.HeldItem.shoot)))
+            if (player.whoAmI == Main.myPlayer && player.active && !player.dead && (player.HeldItem.HasElementItem(ElementID.Fire) || player.HeldItem.HasElementItem(ElementID.Holy)))
             {
                 if (timer++ == 30)
                     RedeDraw.SpawnCirclePulse(player.Center, Color.DarkOrange * 0.8f, 0.7f, player);
@@ -68,26 +72,17 @@ namespace Redemption.Items.Accessories.HM
                 for (int i = 0; i < Main.maxNPCs; i++)
                 {
                     NPC npc = Main.npc[i];
-                    if (!npc.active || !npc.CanBeChasedBy() || player.DistanceSQ(npc.Center) > 280 * 280)
+                    if (!npc.active || !npc.CanBeChasedBy() || NPCLoader.CanBeHitByItem(npc, player, Item) is false || player.DistanceSQ(npc.Center) > 280 * 280)
                         continue;
 
                     npc.AddBuff(ModContent.BuffType<HolyFireDebuff>(), 4);
                 }
             }
         }
-        public override bool CanEquipAccessory(Player player, int slot, bool modded)
+        public override bool CanAccessoryBeEquippedWith(Item equippedItem, Item incomingItem, Player player)
         {
-            if (slot < 10)
-            {
-                int maxAccessoryIndex = 5 + player.extraAccessorySlots;
-                for (int i = 3; i < 3 + maxAccessoryIndex; i++)
-                {
-                    if (slot != i && player.armor[i].type == ModContent.ItemType<PowerCellWristband>())
-                        return false;
-                    if (slot != i && player.armor[i].type == ModContent.ItemType<SacredCross>())
-                        return false;
-                }
-            }
+            if (equippedItem.type == ModContent.ItemType<PowerCellWristband>() || equippedItem.type == ModContent.ItemType<SacredCross>())
+                return false;
             return true;
         }
     }

@@ -9,6 +9,7 @@ using Terraria;
 using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.Utilities;
 
@@ -28,15 +29,13 @@ namespace Redemption.NPCs.Friendly
         }
         public ref float AITimer => ref NPC.ai[1];
         public ref float Force => ref NPC.ai[2];
-        public static void UnloadChain()
-        {
-            tailChain = null;
-        }
+
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Noza, Tamer of Evil");
+            // DisplayName.SetDefault("Noza, Tamer of Evil");
             Main.npcFrameCount[NPC.type] = 10;
             NPCID.Sets.ActsLikeTownNPC[Type] = true;
+            NPCID.Sets.NoTownNPCHappiness[Type] = true;
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0) { Hide = true };
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
         }
@@ -124,7 +123,7 @@ namespace Redemption.NPCs.Friendly
             }
         }
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => false;
-        public override bool? CanHitNPC(NPC target) => false;
+        public override bool CanHitNPC(NPC target) => false;
 
         public static int ChatNumber = 0;
 
@@ -138,7 +137,7 @@ namespace Redemption.NPCs.Friendly
             }
         }
 
-        public override void OnChatButtonClicked(bool firstButton, ref bool shop)
+        public override void OnChatButtonClicked(bool firstButton, ref string shopName)
         {
             if (firstButton)
             {
@@ -156,7 +155,7 @@ namespace Redemption.NPCs.Friendly
         {
             return ChatNumber switch
             {
-                0 => "Wouldn't you like to know! I'm a bit early to the party - apparently I'm meant to be in the \"full 0.8 update\"... Whatever that means.\nBut I got impatient so here I am! With nothing to do! There isn't even anything unique here!",
+                0 => Language.GetTextValue("Mods.Redemption.Dialogue.Noza.Chat1"),
                 _ => "...",
             };
         }
@@ -168,31 +167,31 @@ namespace Redemption.NPCs.Friendly
             if (BasePlayer.HasHelmet(player, ItemID.DevilHorns, true) || BasePlayer.HasHelmet(player, ItemID.DemonHorns, true))
             {
                 EmoteState = EmotionState.Laugh;
-                chat.Add("Nice horns, did your MOM make them for you? WHEHEHEHEHE!");
+                chat.Add(Language.GetTextValue("Mods.Redemption.Dialogue.Noza.Dialogue1"));
             }
             if (player.HeldItem.type == ModContent.ItemType<BlindJustice>())
-                return "EEK! Get that holy weapon AWAY from me!";
+                return Language.GetTextValue("Mods.Redemption.Dialogue.Noza.Dialogue2");
             if (BasePlayer.HasAccessory(player, ItemID.AngelHalo, true, true))
-                return "Yuck! What's with that ring over your head? No goody-two-shoes in MY bastion!";
+                chat.Add(Language.GetTextValue("Mods.Redemption.Dialogue.Noza.Dialogue3"), 2);
 
             if (player.IsFullTBot())
             {
                 EmoteState = EmotionState.Laugh;
-                chat.Add("What is a SILLY LITTLE METAL BUCKET doing in MY bastion!?");
-                chat.Add("What even are you? Some sort of bucket cosplayer!? Wehehehe!");
+                chat.Add(Language.GetTextValue("Mods.Redemption.Dialogue.Noza.Dialogue4TBot"));
+                chat.Add(Language.GetTextValue("Mods.Redemption.Dialogue.Noza.Dialogue5TBot"));
             }
             else
             {
                 EmoteState = EmotionState.Laugh;
-                chat.Add("What is a SILLY LITTLE HUMAN doing in MY bastion!?");
-                chat.Add("Look at ITTY BITTY you! Whehehehe! Humans look so STUPID!");
-                chat.Add("Wow! I forgot how TINY humans were! Whehehehe!");
+                chat.Add(Language.GetTextValue("Mods.Redemption.Dialogue.Noza.Dialogue4"));
+                chat.Add(Language.GetTextValue("Mods.Redemption.Dialogue.Noza.Dialogue5"));
+                chat.Add(Language.GetTextValue("Mods.Redemption.Dialogue.Noza.Dialogue6"));
             }
             return chat;
         }
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
-            Texture2D EyesTex = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Blink").Value;
+            Texture2D EyesTex = ModContent.Request<Texture2D>(Texture + "_Blink").Value;
             var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
             spriteBatch.Draw(TextureAssets.Npc[NPC.type].Value, NPC.Center - new Vector2(0, 3) - screenPos, NPC.frame, NPC.GetAlpha(drawColor), NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
@@ -215,8 +214,15 @@ namespace Redemption.NPCs.Friendly
         {
             return ModContent.Request<Texture2D>("Redemption/NPCs/Friendly/Noza_NPC_Tail").Value;
         }
+        public Texture2D GetGlowmaskTexture(Mod mod) => null;
 
         public int NumberOfSegments => 6;
+        public int MaxFrames => 1;
+        public int FrameCounterMax => 0;
+        public bool Glow => false;
+        public bool HasGlowmask => false;
+        public int Shader => 0;
+        public int GlowmaskShader => 0;
 
         public Color GetColor(PlayerDrawSet drawInfo, Color baseColour)
         {
@@ -268,7 +274,7 @@ namespace Redemption.NPCs.Friendly
             return texture.Frame(NumberOfSegments, 1, NumberOfSegments - 1 - index, 0);
         }
 
-        public Vector2 Force(Player player, int index, int dir, float gravDir, float time, NPC npc = null)
+        public Vector2 Force(Player player, int index, int dir, float gravDir, float time, NPC npc = null, Projectile proj = null)
         {
             Vector2 force = new(
                 -dir * 0.5f,

@@ -15,16 +15,16 @@ namespace Redemption.Items.Weapons.PostML.Ranged
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("'Prepare for obliteration'"
+            /* Tooltip.SetDefault("'Prepare for obliteration'"
                 + "\nLeft-Click to mark a single enemy and fire a stream of missiles at their position" +
                 "\nRight-Click to mark your cursor position with a barrage of missiles" +
-                "\nUses rockets as ammo");
-            SacrificeTotal = 1;
+                "\nUses rockets as ammo"); */
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
         {
-            Item.damage = 210;
+            Item.damage = 160;
             Item.DamageType = DamageClass.Ranged;
             Item.width = 30;
             Item.height = 38;
@@ -43,7 +43,14 @@ namespace Redemption.Items.Weapons.PostML.Ranged
             Item.shoot = ModContent.ProjectileType<BlastBattery_Missile>();
             Item.useAmmo = AmmoID.Rocket;
             if (!Main.dedServ)
-                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Item.ModItem.Texture + "_Glow").Value;
+                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
+        }
+        public override bool CanConsumeAmmo(Item ammo, Player player)
+        {
+            NPC target = null;
+            if (player.altFunctionUse != 2 && !RedeHelper.ClosestNPC(ref target, 300, Main.MouseWorld, true, player.MinionAttackTargetNPC))
+                return false;
+            return true;
         }
         public override void HoldItem(Player player)
         {
@@ -80,7 +87,7 @@ namespace Redemption.Items.Weapons.PostML.Ranged
                 .AddIngredient(ModContent.ItemType<CorruptedXenomite>(), 12)
                 .AddIngredient(ModContent.ItemType<CarbonMyofibre>(), 4)
                 .AddIngredient(ModContent.ItemType<Plating>(), 2)
-                .AddIngredient(ModContent.ItemType<Capacitator>())
+                .AddIngredient(ModContent.ItemType<Capacitor>())
                 .AddTile(TileID.MythrilAnvil)
                 .Register();
         }

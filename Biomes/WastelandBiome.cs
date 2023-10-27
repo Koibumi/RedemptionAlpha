@@ -9,6 +9,7 @@ using Terraria;
 using Terraria.Audio;
 using Terraria.ModLoader;
 using Redemption.BaseExtension;
+using Terraria.Graphics.Effects;
 
 namespace Redemption.Biomes
 {
@@ -29,10 +30,15 @@ namespace Redemption.Biomes
         {
             bool fogSafe = BasePlayer.HasAccessory(player, ModContent.ItemType<GasMask>(), true, false) ||
                 player.RedemptionPlayerBuff().HEVSuit;
-
             if (isActive)
-                Terraria.Graphics.Effects.Filters.Scene["MoR:FogOverlay"]?.GetShader().UseOpacity(fogSafe ? 0.25f : 0.3f).UseIntensity(fogSafe ? 0.6f : 1f)
+            {
+                if (!player.InModBiome<WastelandCorruptionBiome>() && !player.InModBiome<WastelandCrimsonBiome>())
+                    SkyManager.Instance.Activate("MoR:WastelandSky");
+                Filters.Scene["MoR:FogOverlay"]?.GetShader().UseOpacity(fogSafe ? 0.25f : 0.3f).UseIntensity(fogSafe ? 0.6f : 1f)
                 .UseColor(Color.DarkOliveGreen).UseImage(ModContent.Request<Texture2D>("Redemption/Effects/Perlin", AssetRequestMode.ImmediateLoad).Value);
+            }
+            else
+                SkyManager.Instance.Deactivate("MoR:WastelandSky");
             player.ManageSpecialBiomeVisuals("MoR:FogOverlay", isActive);
             player.ManageSpecialBiomeVisuals("MoR:WastelandSky", isActive, player.Center);
         }
@@ -59,7 +65,7 @@ namespace Redemption.Biomes
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Wasteland");
+            // DisplayName.SetDefault("Wasteland");
         }
 
         public override SceneEffectPriority Priority => SceneEffectPriority.BiomeMedium;
@@ -85,9 +91,15 @@ namespace Redemption.Biomes
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Snow Wasteland");
+            // DisplayName.SetDefault("Snow Wasteland");
         }
-
+        public override void SpecialVisuals(Player player, bool isActive)
+        {
+            if (isActive)
+                SkyManager.Instance.Activate("MoR:WastelandSnowSky");
+            else
+                SkyManager.Instance.Deactivate("MoR:WastelandSnowSky");
+        }
         public override SceneEffectPriority Priority => SceneEffectPriority.BiomeHigh;
 
         public override bool IsBiomeActive(Player player)
@@ -110,7 +122,7 @@ namespace Redemption.Biomes
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Desert Wasteland");
+            // DisplayName.SetDefault("Desert Wasteland");
         }
 
         public override SceneEffectPriority Priority => SceneEffectPriority.BiomeHigh;
@@ -136,9 +148,15 @@ namespace Redemption.Biomes
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Corrupt Wasteland");
+            // DisplayName.SetDefault("Corrupt Wasteland");
         }
-
+        public override void SpecialVisuals(Player player, bool isActive)
+        {
+            if (isActive)
+                SkyManager.Instance.Activate("MoR:WastelandCorruptSky");
+            else
+                SkyManager.Instance.Deactivate("MoR:WastelandCorruptSky");
+        }
         public override SceneEffectPriority Priority => SceneEffectPriority.BiomeHigh;
 
         public override bool IsBiomeActive(Player player)
@@ -162,9 +180,15 @@ namespace Redemption.Biomes
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Crimson Wasteland");
+            // DisplayName.SetDefault("Crimson Wasteland");
         }
-
+        public override void SpecialVisuals(Player player, bool isActive)
+        {
+            if (isActive)
+                SkyManager.Instance.Activate("MoR:WastelandCrimsonSky");
+            else
+                SkyManager.Instance.Deactivate("MoR:WastelandCrimsonSky");
+        }
         public override SceneEffectPriority Priority => SceneEffectPriority.BiomeHigh;
 
         public override bool IsBiomeActive(Player player)

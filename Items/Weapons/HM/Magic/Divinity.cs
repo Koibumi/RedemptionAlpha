@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 using Terraria.ID;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.BaseExtension;
-using Redemption.Items.Weapons.PreHM.Magic;
+using Redemption.Items.Weapons.PreHM.Summon;
 
 namespace Redemption.Items.Weapons.HM.Magic
 {
@@ -12,10 +12,10 @@ namespace Redemption.Items.Weapons.HM.Magic
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Hold left-click to conjure a tiny sun and charge it up, draining mana\n" +
-                "Release once charged enough to launch at cursor position");
+            /* Tooltip.SetDefault("Hold left-click to conjure a tiny sun and charge it up, draining mana\n" +
+                "Release once charged enough to launch at cursor position"); */
 
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -40,7 +40,7 @@ namespace Redemption.Items.Weapons.HM.Magic
             Item.shootSpeed = 2f;
             Item.shoot = ModContent.ProjectileType<Divinity_Sun>();
             if (!Main.dedServ)
-                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Item.ModItem.Texture + "_Glow").Value;
+                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
         }
         public override bool CanUseItem(Player player)
         {

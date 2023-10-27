@@ -1,8 +1,10 @@
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ID;
+using Terraria.Localization;
 using Microsoft.Xna.Framework;
 using System;
+using Redemption.Items.Materials.PreHM;
 
 namespace Redemption.Items.Armor.PreHM.LivingWood
 {
@@ -11,11 +13,11 @@ namespace Redemption.Items.Armor.PreHM.LivingWood
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Living Wood Helmet");
-            Tooltip.SetDefault("+1 increased summon damage");
+            // DisplayName.SetDefault("Living Wood Helmet");
+            // Tooltip.SetDefault("+1 increased summon damage");
             ArmorIDs.Head.Sets.DrawHead[EquipLoader.GetEquipSlot(Mod, Name, EquipType.Head)] = false;
 
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -39,7 +41,7 @@ namespace Redemption.Items.Armor.PreHM.LivingWood
 
         public override void UpdateArmorSet(Player player)
         {
-            player.setBonus = "Immune to poison, increases your max number of minions";
+            player.setBonus = Language.GetTextValue("Mods.Redemption.GenericTooltips.ArmorSetBonus.LivingWood");
             player.buffImmune[BuffID.Poisoned] = true;
             player.maxMinions += 1;
             if (Main.rand.NextBool(25) && Math.Abs(player.velocity.X) + Math.Abs(player.velocity.Y) > 1f && !player.rocketFrame)
@@ -49,6 +51,13 @@ namespace Redemption.Items.Armor.PreHM.LivingWood
 
                 Gore.NewGore(player.GetSource_FromThis(), new Vector2(player.Center.X + Main.rand.Next(-12, 4), player.Center.Y + Main.rand.Next(6)), player.velocity, GoreID.TreeLeaf_Normal);
             }
+        }
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                .AddIngredient<LivingTwig>(24)
+                .AddTile(TileID.Anvils)
+                .Register();
         }
     }
 }

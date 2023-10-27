@@ -1,3 +1,4 @@
+using Redemption.Items.Materials.PreHM;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -9,9 +10,9 @@ namespace Redemption.Items.Armor.PreHM.LivingWood
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("+1 increased summon damage");
+            // Tooltip.SetDefault("+1 increased summon damage");
 
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -26,6 +27,13 @@ namespace Redemption.Items.Armor.PreHM.LivingWood
         public override void UpdateEquip(Player player)
         {
             player.GetDamage(DamageClass.Summon).Flat += 1;
+        }
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                .AddIngredient<LivingTwig>(36)
+                .AddTile(TileID.Anvils)
+                .Register();
         }
     }
 }

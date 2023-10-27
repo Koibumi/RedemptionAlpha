@@ -5,6 +5,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Redemption.BaseExtension;
+using Terraria.Localization;
 
 namespace Redemption.Items.Accessories.HM
 {
@@ -12,14 +13,14 @@ namespace Redemption.Items.Accessories.HM
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Geiger-Muller");
-            Tooltip.SetDefault("Lab issued Geiger counter. The louder it gets, the higher the chance of you getting irradiated.");
-            SacrificeTotal = 1;
+            // DisplayName.SetDefault("Geiger-Muller");
+            // Tooltip.SetDefault("Lab issued Geiger counter. The louder it gets, the higher the chance of you getting irradiated.");
+            Item.ResearchUnlockCount = 1;
         }
         public override void SetDefaults()
         {
             Item.value = Item.buyPrice(0, 20, 50, 0);
-            Item.rare = ItemRarityID.Lime;
+            Item.rare = ItemRarityID.LightRed;
             Item.width = 34;
             Item.height = 28;
             Item.accessory = true;
@@ -36,36 +37,36 @@ namespace Redemption.Items.Accessories.HM
         {
             Player player = Main.player[Main.myPlayer];
             Radiation modPlayer = player.RedemptionRad();
-            string rad = "No";
-            string rad2 = "nothing to note.";
+            string rad = Language.GetTextValue("Mods.Redemption.Items.GeigerMuller.Status1");
+            string rad2 = Language.GetTextValue("Mods.Redemption.Items.GeigerMuller.Note1");
             switch (modPlayer.irradiatedLevel)
             {
                 case 0:
-                    rad = "No";
-                    rad2 = "nothing to note.";
+                    rad = Language.GetTextValue("Mods.Redemption.Items.GeigerMuller.Status1");
+                    rad2 = Language.GetTextValue("Mods.Redemption.Items.GeigerMuller.Note1");
                     break;
                 case 1:
-                    rad = "Low";
-                    rad2 = "nothing to note.";
+                    rad = Language.GetTextValue("Mods.Redemption.Items.GeigerMuller.Status2");
+                    rad2 = Language.GetTextValue("Mods.Redemption.Items.GeigerMuller.Note1");
                     break;
                 case 2:
-                    rad = "Medium";
-                    rad2 = "have teochrome-issued pills on hand just in case.";
+                    rad = Language.GetTextValue("Mods.Redemption.Items.GeigerMuller.Status3");
+                    rad2 = Language.GetTextValue("Mods.Redemption.Items.GeigerMuller.Note2");
                     break;
                 case 3:
-                    rad = "High";
-                    rad2 = "have teochrome-issued pills on hand just in case.";
+                    rad = Language.GetTextValue("Mods.Redemption.Items.GeigerMuller.Status4");
+                    rad2 = Language.GetTextValue("Mods.Redemption.Items.GeigerMuller.Note2");
                     break;
                 case 4:
-                    rad = "Very high";
-                    rad2 = "high chance of irradiation and suffering ARS.";
+                    rad = Language.GetTextValue("Mods.Redemption.Items.GeigerMuller.Status5");
+                    rad2 = Language.GetTextValue("Mods.Redemption.Items.GeigerMuller.Note3");
                     break;
                 case 5:
-                    rad = "Extreme";
-                    rad2 = "Acute Radiation Syndrome detected.";
+                    rad = Language.GetTextValue("Mods.Redemption.Items.GeigerMuller.Status6");
+                    rad2 = Language.GetTextValue("Mods.Redemption.Items.GeigerMuller.Note4");
                     break;
             }
-            string text1 = rad + " doses of radiation detected on self, " + rad2;
+            string text1 = rad + Language.GetTextValue("Mods.Redemption.Items.GeigerMuller.StatusEnd") + rad2;
             TooltipLine line = new(Mod, "text1", text1)
             {
                 OverrideColor = Color.LimeGreen
@@ -83,4 +84,3 @@ namespace Redemption.Items.Accessories.HM
         }
     }
 }
-

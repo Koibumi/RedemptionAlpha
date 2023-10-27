@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Redemption.Base;
+using Redemption.Globals;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -10,8 +11,9 @@ namespace Redemption.Projectiles.Ranged
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Seed-Laden Arrow");
+            // DisplayName.SetDefault("Seed-Laden Arrow");
             Main.projFrames[Projectile.type] = 5;
+            ElementID.ProjNature[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -22,7 +24,7 @@ namespace Redemption.Projectiles.Ranged
             Projectile.penetrate = 1;
             Projectile.timeLeft = 600;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             Player player = Main.player[Projectile.owner];
             if (Main.myPlayer == player.whoAmI)
@@ -52,7 +54,7 @@ namespace Redemption.Projectiles.Ranged
         public override string Texture => "Redemption/NPCs/Bosses/Thorn/ThornSeed";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Thorn Seed");
+            // DisplayName.SetDefault("Thorn Seed");
         }
         public override void SetDefaults()
         {
@@ -91,7 +93,7 @@ namespace Redemption.Projectiles.Ranged
         {
             Player player = Main.player[Projectile.owner];
             if (Main.myPlayer == player.whoAmI)
-                Projectile.NewProjectile(Projectile.GetSource_FromAI(), new Vector2(Projectile.Center.X, Projectile.Center.Y - 36), Vector2.Zero, ModContent.ProjectileType<ThornTrapSmall_Proj>(), Projectile.damage / 2, 3, Main.myPlayer);
+                Projectile.NewProjectile(Projectile.GetSource_FromAI(), new Vector2(Projectile.Center.X, Projectile.Center.Y - 36), Vector2.Zero, ModContent.ProjectileType<ThornTrapSmall_Proj>(), Projectile.damage / 2, 3, Main.myPlayer, Projectile.ai[0]);
 
             return true;
         }

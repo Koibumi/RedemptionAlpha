@@ -1,7 +1,6 @@
 using Microsoft.Xna.Framework;
 using Redemption.Globals.Player;
 using Redemption.Items.Materials.HM;
-using Redemption.Items.Weapons.HM.Ammo;
 using Redemption.Projectiles.Ranged;
 using Terraria;
 using Terraria.ID;
@@ -13,11 +12,11 @@ namespace Redemption.Items.Weapons.HM.Ranged
 	{
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Uranium Raygun");
-            Tooltip.SetDefault("(2[i:" + ModContent.ItemType<EnergyPack>() + "]) Fires rings of uranium"
+            // DisplayName.SetDefault("Uranium Raygun");
+            /* Tooltip.SetDefault("(2[i:" + ModContent.ItemType<EnergyPack>() + "]) Fires rings of uranium"
                 + "\nCan pierce through tiles and enemies\n" +
-                "Requires an Energy Pack to be in your inventory");
-            SacrificeTotal = 1;
+                "Requires an Energy Pack to be in your inventory"); */
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -54,7 +53,7 @@ namespace Redemption.Items.Weapons.HM.Ranged
             CreateRecipe()
                 .AddIngredient(ModContent.ItemType<Uranium>(), 18)
                 .AddIngredient(ModContent.ItemType<Plating>(), 3)
-                .AddIngredient(ModContent.ItemType<Capacitator>())
+                .AddIngredient(ModContent.ItemType<Capacitor>())
                 .AddTile(TileID.MythrilAnvil)
                 .Register();
         }

@@ -4,6 +4,7 @@ using Redemption.Globals;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.Enums;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 
@@ -26,10 +27,11 @@ namespace Redemption.Tiles.Furniture.Misc
             TileObjectData.newTile.Origin = new Point16(5, 10);
             TileObjectData.newTile.AnchorBottom = new AnchorData(AnchorType.SolidTile | AnchorType.SolidWithTop | AnchorType.SolidSide, TileObjectData.newTile.Width, 0);
             TileObjectData.addTile(Type);
+            HitSound = CustomSounds.StoneHit;
             DustType = ModContent.DustType<SlateDust>();
-            ModTranslation name = CreateMapEntryName();
-            name.SetDefault("Anglon Portal");
-            AddMapEntry(new Color(81, 72, 65));
+            LocalizedText name = CreateMapEntryName();
+            // name.SetDefault("Anglon Gateway");
+            AddMapEntry(new Color(81, 72, 65), name);
         }
 
         public override void NumDust(int i, int j, bool fail, ref int num)
@@ -41,11 +43,11 @@ namespace Redemption.Tiles.Furniture.Misc
     }
     public class AnglonPortalItem : PlaceholderTile
     {
-        public override string Texture => "Redemption/Placeholder";
-        public override void SetStaticDefaults()
+        public override string Texture => Redemption.PLACEHOLDER_TEXTURE;
+        public override void SetSafeStaticDefaults()
         {
-            DisplayName.SetDefault("Anglon Portal");
-            Tooltip.SetDefault("[c/ff0000:Unbreakable]");
+            // DisplayName.SetDefault("Anglon Portal");
+            // Tooltip.SetDefault("[c/ff0000:Unbreakable]");
         }
 
         public override void SetDefaults()

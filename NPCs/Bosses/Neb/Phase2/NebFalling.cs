@@ -10,7 +10,7 @@ namespace Redemption.NPCs.Bosses.Neb.Phase2
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Nebuleus, Angel of the Cosmos");
+            // DisplayName.SetDefault("Nebuleus, Angel of the Cosmos");
         }
         public override void SetDefaults()
         {
@@ -25,6 +25,8 @@ namespace Redemption.NPCs.Bosses.Neb.Phase2
 
         public override void AI()
         {
+            RedeSystem.Silence = true;
+
             Player player = Main.player[Projectile.owner];
             if (Main.rand.NextBool(3))
                 Dust.NewDust(new Vector2(Projectile.position.X, Projectile.position.Y), Projectile.width, Projectile.height, DustID.Enchanted_Pink, 0f, 0f, 100, default, 3f);
@@ -40,7 +42,7 @@ namespace Redemption.NPCs.Bosses.Neb.Phase2
             fallThrough = false;
             return true;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             if (Projectile.owner == Main.myPlayer)
                 Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center.X, Projectile.Center.Y, 0, 0, ModContent.ProjectileType<NebDefeat>(), 0, 3, Main.myPlayer);

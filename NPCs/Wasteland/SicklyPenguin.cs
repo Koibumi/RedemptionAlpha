@@ -2,7 +2,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.Biomes;
 using Redemption.Buffs.Debuffs;
-using Redemption.Buffs.NPCBuffs;
 using Redemption.Globals;
 using Redemption.Globals.NPC;
 using Redemption.Items.Materials.PreHM;
@@ -17,8 +16,9 @@ using Terraria.ModLoader;
 using Redemption.BaseExtension;
 using Redemption.Items.Materials.HM;
 using Redemption.Items.Usable.Potions;
-using Redemption.Items.Armor.Vanity;
 using Redemption.Items.Armor.Vanity.Intruder;
+using System.IO;
+using Terraria.Localization;
 
 namespace Redemption.NPCs.Wasteland
 {
@@ -44,24 +44,15 @@ namespace Redemption.NPCs.Wasteland
         public override void SetStaticDefaults()
         {
             Main.npcFrameCount[NPC.type] = 3;
-
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Poisoned,
-                    ModContent.BuffType<PureChillDebuff>(),
-                    ModContent.BuffType<IceFrozen>(),
-                    ModContent.BuffType<BileDebuff>(),
-                    ModContent.BuffType<GreenRashesDebuff>(),
-                    ModContent.BuffType<GlowingPustulesDebuff>(),
-                    ModContent.BuffType<FleshCrystalsDebuff>()
-                }
-            });
+            NPCID.Sets.ShimmerTransformToNPC[NPC.type] = NPCID.Penguin;
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Infected);
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Cold);
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0)
             {
                 Velocity = 1f
             };
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
+            ElementID.NPCPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -80,13 +71,21 @@ namespace Redemption.NPCs.Wasteland
             Banner = NPC.type;
             BannerItem = ModContent.ItemType<SicklyPenguinBanner>();
         }
-
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.WriteVector2(moveTo);
+        }
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            moveTo = reader.ReadVector2();
+        }
         private Vector2 moveTo;
         private int runCooldown;
         public override void OnSpawn(IEntitySource source)
         {
             Variant = Main.rand.Next(3);
             TimerRand = Main.rand.Next(80, 120);
+            NPC.netUpdate = true;
         }
         public override void AI()
         {
@@ -107,6 +106,7 @@ namespace Redemption.NPCs.Wasteland
                         AITimer = 0;
                         TimerRand = Main.rand.Next(120, 260);
                         AIState = ActionState.Wander;
+                        NPC.netUpdate = true;
                     }
 
                     SightCheck();
@@ -121,10 +121,11 @@ namespace Redemption.NPCs.Wasteland
                         AITimer = 0;
                         TimerRand = Main.rand.Next(80, 120);
                         AIState = ActionState.Idle;
+                        NPC.netUpdate = true;
                     }
 
-                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20);
-                    RedeHelper.HorizontallyMove(NPC, moveTo * 16, 0.4f, 1.2f, 12, 8, NPC.Center.Y > player.Center.Y);
+                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20, (moveTo.Y - 32) * 16);
+                    NPCHelper.HorizontallyMove(NPC, moveTo * 16, 0.4f, 1.2f, 12, 8, NPC.Center.Y > moveTo.Y * 16);
                     break;
 
                 case ActionState.Alert:
@@ -141,8 +142,8 @@ namespace Redemption.NPCs.Wasteland
 
                     NPC.DamageHostileAttackers(0, 4);
 
-                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20);
-                    RedeHelper.HorizontallyMove(NPC, globalNPC.attacker.Center, 0.15f, 8f, 12, 12, NPC.Center.Y > globalNPC.attacker.Center.Y);
+                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20, globalNPC.attacker.Center.Y);
+                    NPCHelper.HorizontallyMove(NPC, globalNPC.attacker.Center, 0.15f, 8f, 12, 12, NPC.Center.Y > globalNPC.attacker.Center.Y, globalNPC.attacker);
 
                     break;
             }
@@ -151,32 +152,30 @@ namespace Redemption.NPCs.Wasteland
         public override void FindFrame(int frameHeight)
         {
             if (Main.netMode != NetmodeID.Server)
-            {
                 NPC.frame.Width = TextureAssets.Npc[NPC.type].Width() / 3;
-                NPC.frame.X = (int)(NPC.frame.Width * Variant);
+            NPC.frame.X = (int)(NPC.frame.Width * Variant);
 
-                if (NPC.collideY || NPC.velocity.Y == 0)
-                {
-                    NPC.rotation = NPC.velocity.X * 0.02f;
-                    if (NPC.velocity.X == 0)
-                        NPC.frame.Y = 0;
-                    else
-                    {
-                        NPC.frameCounter += NPC.velocity.X * 0.5f;
-                        if (NPC.frameCounter is >= 3 or <= -3)
-                        {
-                            NPC.frameCounter = 0;
-                            NPC.frame.Y += frameHeight;
-                            if (NPC.frame.Y > 2 * frameHeight)
-                                NPC.frame.Y = 0;
-                        }
-                    }
-                }
+            if (NPC.collideY || NPC.velocity.Y == 0)
+            {
+                NPC.rotation = NPC.velocity.X * 0.02f;
+                if (NPC.velocity.X == 0)
+                    NPC.frame.Y = 0;
                 else
                 {
-                    NPC.rotation = NPC.velocity.X * 0.05f;
-                    NPC.frame.Y = 1 * frameHeight;
+                    NPC.frameCounter += NPC.velocity.X * 0.5f;
+                    if (NPC.frameCounter is >= 3 or <= -3)
+                    {
+                        NPC.frameCounter = 0;
+                        NPC.frame.Y += frameHeight;
+                        if (NPC.frame.Y > 2 * frameHeight)
+                            NPC.frame.Y = 0;
+                    }
                 }
+            }
+            else
+            {
+                NPC.rotation = NPC.velocity.X * 0.05f;
+                NPC.frame.Y = 1 * frameHeight;
             }
         }
 
@@ -188,7 +187,7 @@ namespace Redemption.NPCs.Wasteland
             for (int i = 0; i < Main.maxNPCs; i++)
             {
                 NPC target = Main.npc[i];
-                if (!target.active || target.whoAmI == NPC.whoAmI || target.dontTakeDamage || target.type == NPCID.OldMan)
+                if (!target.active || target.whoAmI == NPC.whoAmI || target.dontTakeDamage || target.type == NPCID.OldMan || target.type == NPCID.TargetDummy)
                     continue;
 
                 if (target.lifeMax <= 5 || (!target.friendly && !NPCID.Sets.TakesDamageFromHostilesWithoutBeingFriendly[target.type]))
@@ -214,6 +213,7 @@ namespace Redemption.NPCs.Wasteland
                 moveTo = NPC.FindGround(20);
                 AITimer = 0;
                 AIState = ActionState.Alert;
+                NPC.netUpdate = true;
             }
             if (gotNPC != -1 && NPC.Sight(Main.npc[gotNPC], 600, true, true))
             {
@@ -221,6 +221,7 @@ namespace Redemption.NPCs.Wasteland
                 moveTo = NPC.FindGround(20);
                 AITimer = 0;
                 AIState = ActionState.Alert;
+                NPC.netUpdate = true;
             }
         }
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
@@ -230,7 +231,7 @@ namespace Redemption.NPCs.Wasteland
             return false;
         }
 
-        public override bool? CanHitNPC(NPC target) => AIState == ActionState.Alert ? null : false;
+        public override bool CanHitNPC(NPC target) => AIState == ActionState.Alert;
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => AIState == ActionState.Alert;
 
         public override void ModifyNPCLoot(NPCLoot npcLoot)
@@ -246,12 +247,12 @@ namespace Redemption.NPCs.Wasteland
             }
         }
 
-        public override void ModifyHitPlayer(Player target, ref int damage, ref bool crit)
+        public override void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers)
         {
             if (Main.rand.NextBool(2) || Main.expertMode)
                 target.AddBuff(ModContent.BuffType<GreenRashesDebuff>(), Main.rand.Next(200, 600));
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -265,7 +266,7 @@ namespace Redemption.NPCs.Wasteland
                 }
                 if (Variant == 0)
                     Gore.NewGore(NPC.GetSource_FromThis(), NPC.position, NPC.velocity, ModContent.Find<ModGore>("Redemption/SicklyPenguinGore5").Type, 1);
-                else 
+                else
                     Gore.NewGore(NPC.GetSource_FromThis(), NPC.position, NPC.velocity, ModContent.Find<ModGore>("Redemption/SicklyPenguinGore4").Type, 1);
                 Gore.NewGore(NPC.GetSource_FromThis(), NPC.position, NPC.velocity, ModContent.Find<ModGore>("Redemption/SicklyPenguinGore" + (Variant + 1)).Type, 1);
             }
@@ -281,8 +282,7 @@ namespace Redemption.NPCs.Wasteland
         {
             bestiaryEntry.Info.AddRange(new IBestiaryInfoElement[]
             {
-                new FlavorTextBestiaryInfoElement(
-                    "Penguins can fend off deadly cold, but they can't fend off the insidious killer that is irradiation. Here, the symptoms have shown up as blistering tumors.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.SicklyPenguin"))
             });
         }
     }

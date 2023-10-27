@@ -9,7 +9,7 @@ namespace Redemption.NPCs.Lab.MACE
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Xenium Laser");
+            // DisplayName.SetDefault("Xenium Laser");
             Main.projFrames[Projectile.type] = 8;
         }
         public override void SetDefaults()
@@ -35,7 +35,7 @@ namespace Redemption.NPCs.Lab.MACE
         }
 
         public override Color? GetAlpha(Color lightColor) => Color.White;
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             for (int i = 0; i < 5; i++)
             {

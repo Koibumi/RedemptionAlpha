@@ -11,7 +11,8 @@ namespace Redemption.Projectiles.Melee
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Ukon Spark");
+            // DisplayName.SetDefault("Ukon Spark");
+            ElementID.ProjThunder[Type] = true;
         }
 
         public override void SetDefaults()
@@ -32,10 +33,10 @@ namespace Redemption.Projectiles.Melee
             if (Main.rand.NextBool(6))
             {
                 for (int i = 0; i < 2; i++)
-                    DustHelper.DrawParticleElectricity(Projectile.Center + RedeHelper.Spread(80), Projectile.Center + RedeHelper.Spread(80), new LightningParticle(), 0.5f, 10, 0.2f);
+                    DustHelper.DrawParticleElectricity<LightningParticle>(Projectile.Center + RedeHelper.Spread(80), Projectile.Center + RedeHelper.Spread(80), 0.5f, 10, 0.2f);
             }
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(ModContent.BuffType<ElectrifiedDebuff>(), 300);
         }

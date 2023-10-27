@@ -23,12 +23,11 @@ namespace Redemption.Tiles.Furniture.Shade
 			TileID.Sets.InteractibleByNPCs[Type] = true;
 			TileID.Sets.IsValidSpawnPoint[Type] = true;
 			TileID.Sets.DisableSmartCursor[Type] = true;
-			TileObjectData.newTile.CopyFrom(TileObjectData.Style4x2);
-			TileObjectData.newTile.CoordinateHeights = new int[] { 16, 18 };
-			TileObjectData.addTile(Type);
-			ModTranslation name = CreateMapEntryName();
-			name.SetDefault("Shadestone Bed");
-			AddMapEntry(new Color(59, 61, 87), name);
+            TileObjectData.newTile.CopyFrom(TileObjectData.Style4x2);
+            TileObjectData.newTile.CoordinateHeights = new[] { 16, 18 };
+            TileObjectData.newTile.CoordinatePaddingFix = new Point16(0, -2);
+            TileObjectData.addTile(Type);
+			AddMapEntry(new Color(59, 61, 87), Language.GetText("ItemName.Bed"));
 			DustType = ModContent.DustType<ShadestoneDust>();
 			AddToArray(ref TileID.Sets.RoomNeeds.CountsAsChair);
 			AdjTiles = new int[] { TileID.Beds };
@@ -46,15 +45,12 @@ namespace Redemption.Tiles.Furniture.Shade
 			info.VisualOffset.Y += 4f;
 		}
 		public override void NumDust(int i, int j, bool fail, ref int num) => num = 1;
-
-		public override void KillMultiTile(int i, int j, int frameX, int frameY) => Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 64, 32, ModContent.ItemType<ShadestoneBed>());
-
 		public override bool RightClick(int i, int j)
 		{
 			Player player = Main.LocalPlayer;
 
-			Tile tile = Main.tile[i, j];
-			int spawnX = i - (tile.TileFrameX / 18) + (tile.TileFrameX >= 72 ? 5 : 2); 
+			Tile tile = Framing.GetTileSafely(i, j);
+			int spawnX = i - (tile.TileFrameX / 18) + (tile.TileFrameX >= 72 ? 5 : 2);
 			int spawnY = j + 2;
 			if (tile.TileFrameY % 38 != 0)
 			{

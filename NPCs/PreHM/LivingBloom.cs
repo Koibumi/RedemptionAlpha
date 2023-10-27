@@ -1,7 +1,5 @@
 using Microsoft.Xna.Framework;
 using Redemption.Base;
-using Redemption.Buffs.Debuffs;
-using Redemption.Buffs.NPCBuffs;
 using Redemption.Globals;
 using Redemption.Globals.NPC;
 using Redemption.Items.Placeable.Banners;
@@ -16,11 +14,32 @@ using Terraria.ModLoader;
 using Terraria.ModLoader.Utilities;
 using Redemption.BaseExtension;
 using Redemption.Items.Accessories.PreHM;
+using System.IO;
+using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
+using Terraria.Utilities;
+using Redemption.Tiles.Tiles;
+using Terraria.GameContent;
+using Terraria.Localization;
+using System;
+using Terraria.GameContent.UI;
+using Redemption.Items.Placeable.Tiles;
 
 namespace Redemption.NPCs.PreHM
 {
     public class LivingBloom : ModNPC
     {
+        public static Asset<Texture2D> flowerTex;
+        public override void Load()
+        {
+            if (Main.dedServ)
+                return;
+            flowerTex = ModContent.Request<Texture2D>(Texture + "_Flower");
+        }
+        public override void Unload()
+        {
+            flowerTex = null;
+        }
         public enum ActionState
         {
             Idle,
@@ -38,22 +57,14 @@ namespace Redemption.NPCs.PreHM
         public ref float AITimer => ref NPC.ai[1];
 
         public ref float TimerRand => ref NPC.ai[2];
-
+        public byte FlowerType;
+        public byte BodyType;
         public override void SetStaticDefaults()
         {
             Main.npcFrameCount[Type] = 11;
             NPCID.Sets.TakesDamageFromHostilesWithoutBeingFriendly[Type] = true;
 
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    ModContent.BuffType<InfestedDebuff>(),
-                    BuffID.Bleeding,
-                    BuffID.Poisoned,
-                    ModContent.BuffType<DirtyWoundDebuff>(),
-                    ModContent.BuffType<NecroticGougeDebuff>()
-                }
-            });
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Inorganic);
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0)
             {
@@ -61,6 +72,7 @@ namespace Redemption.NPCs.PreHM
             };
 
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
+            ElementID.NPCNature[Type] = true;
         }
 
         public override void SetDefaults()
@@ -75,16 +87,33 @@ namespace Redemption.NPCs.PreHM
             NPC.value = 20;
             NPC.knockBackResist = 0.5f;
             NPC.aiStyle = -1;
+            NPC.chaseable = false;
             Banner = NPC.type;
             BannerItem = ModContent.ItemType<LivingBloomBanner>();
         }
-
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.WriteVector2(moveTo);
+            writer.Write(FlowerType);
+            writer.Write(BodyType);
+            writer.Write(pettingPlayer);
+        }
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            moveTo = reader.ReadVector2();
+            FlowerType = reader.ReadByte();
+            BodyType = reader.ReadByte();
+            pettingPlayer = reader.ReadByte();
+        }
         public NPC npcTarget;
         public Vector2 moveTo;
         public int runCooldown;
         public override void OnSpawn(IEntitySource source)
         {
+            ChooseType();
+
             TimerRand = Main.rand.Next(80, 180);
+            NPC.netUpdate = true;
         }
         public override void AI()
         {
@@ -93,6 +122,8 @@ namespace Redemption.NPCs.PreHM
             NPC.TargetClosest();
             NPC.LookByVelocity();
             RegenCheck();
+            if ((globalNPC.attacker is Player || (globalNPC.attacker is NPC spirit && spirit.Redemption().spiritSummon)) && AIState > ActionState.Wander)
+                NPC.chaseable = true;
 
             if (AITimer % 30 == 0)
             {
@@ -106,12 +137,13 @@ namespace Redemption.NPCs.PreHM
                     if (NPC.velocity.Y == 0)
                         NPC.velocity.X *= 0.5f;
                     AITimer++;
-                    if (AITimer >= TimerRand)
+                    if (!IsBeingPet && AITimer >= TimerRand)
                     {
                         moveTo = NPC.FindGround(15);
                         AITimer = 0;
                         TimerRand = Main.rand.Next(120, 260);
                         AIState = ActionState.Wander;
+                        NPC.netUpdate = true;
                     }
 
                     if (NPC.ClosestNPCToNPC(ref npcTarget, 160, NPC.Center) && npcTarget.lifeMax > 5 && npcTarget.damage > 0 && !NPCLists.Plantlike.Contains(npcTarget.type) && !npcTarget.Redemption().invisible)
@@ -121,6 +153,7 @@ namespace Redemption.NPCs.PreHM
                         AITimer = 0;
                         TimerRand = Main.rand.Next(120, 260);
                         AIState = ActionState.Threatened;
+                        NPC.netUpdate = true;
                     }
                     break;
 
@@ -132,6 +165,7 @@ namespace Redemption.NPCs.PreHM
                         AITimer = 0;
                         TimerRand = Main.rand.Next(120, 260);
                         AIState = ActionState.Threatened;
+                        NPC.netUpdate = true;
                     }
 
                     AITimer++;
@@ -140,9 +174,10 @@ namespace Redemption.NPCs.PreHM
                         AITimer = 0;
                         TimerRand = Main.rand.Next(120, 260);
                         AIState = ActionState.Idle;
+                        NPC.netUpdate = true;
                     }
 
-                    RedeHelper.HorizontallyMove(NPC, moveTo * 16, 0.4f, 1, 6, 4, false);
+                    NPCHelper.HorizontallyMove(NPC, moveTo * 16, 0.4f, 1, 6, 4, false);
                     break;
 
                 case ActionState.Threatened:
@@ -157,13 +192,14 @@ namespace Redemption.NPCs.PreHM
                     else if (runCooldown > 0)
                         runCooldown--;
 
-                    RedeHelper.HorizontallyMove(NPC, new Vector2(globalNPC.attacker.Center.X < NPC.Center.X ? NPC.Center.X + 50 : NPC.Center.X - 50, NPC.Center.Y),
+                    NPCHelper.HorizontallyMove(NPC, new Vector2(NPC.Center.X + (50 * NPC.RightOfDir(globalNPC.attacker)), NPC.Center.Y),
                         0.5f, 2, 6, 4, false);
 
                     if (Main.rand.NextBool(200) && NPC.velocity.Y == 0)
                     {
                         AITimer = 0;
                         AIState = ActionState.RootAttack;
+                        NPC.netUpdate = true;
                     }
                     break;
                 case ActionState.RootAttack:
@@ -184,7 +220,7 @@ namespace Redemption.NPCs.PreHM
                     if (AITimer == 5)
                     {
                         int tilePosY = BaseWorldGen.GetFirstTileFloor((int)(globalNPC.attacker.Center.X + (globalNPC.attacker.velocity.X * 30)) / 16, (int)(globalNPC.attacker.Center.Y / 16) - 2);
-                        NPC.Shoot(new Vector2(globalNPC.attacker.Center.X + (globalNPC.attacker.velocity.X * 30), (tilePosY * 16) + 30), ModContent.ProjectileType<LivingBloomRoot>(), NPC.damage, Vector2.Zero, false, SoundID.Item1);
+                        NPC.Shoot(new Vector2(globalNPC.attacker.Center.X + (globalNPC.attacker.velocity.X * 30), (tilePosY * 16) + 30), ModContent.ProjectileType<LivingBloomRoot>(), NPC.damage, Vector2.Zero);
                         for (int i = 0; i < Main.maxNPCs; i++)
                         {
                             NPC target = Main.npc[i];
@@ -198,7 +234,7 @@ namespace Redemption.NPCs.PreHM
                                 continue;
 
                             int tilePosY2 = BaseWorldGen.GetFirstTileFloor((int)(target.Center.X + (target.velocity.X * 30)) / 16, (int)(target.Center.Y / 16) - 2);
-                            NPC.Shoot(new Vector2(target.Center.X + (target.velocity.X * 30), (tilePosY2 * 16) + 30), ModContent.ProjectileType<LivingBloomRoot>(), NPC.damage, Vector2.Zero, false, SoundID.Item1);
+                            NPC.Shoot(new Vector2(target.Center.X + (target.velocity.X * 30), (tilePosY2 * 16) + 30), ModContent.ProjectileType<LivingBloomRoot>(), NPC.damage, Vector2.Zero);
                         }
                         for (int p = 0; p < Main.maxPlayers; p++)
                         {
@@ -213,7 +249,7 @@ namespace Redemption.NPCs.PreHM
                                 continue;
 
                             int tilePosY2 = BaseWorldGen.GetFirstTileFloor((int)(target.Center.X + (target.velocity.X * 30)) / 16, (int)(target.Center.Y / 16) - 2);
-                            NPC.Shoot(new Vector2(target.Center.X + (target.velocity.X * 30), (tilePosY2 * 16) + 30), ModContent.ProjectileType<LivingBloomRoot>(), NPC.damage, Vector2.Zero, false, SoundID.Item1);
+                            NPC.Shoot(new Vector2(target.Center.X + (target.velocity.X * 30), (tilePosY2 * 16) + 30), ModContent.ProjectileType<LivingBloomRoot>(), NPC.damage, Vector2.Zero);
                         }
                     }
                     else if (AITimer >= 80)
@@ -222,6 +258,117 @@ namespace Redemption.NPCs.PreHM
                     }
                     break;
             }
+            PettingBehaviour();
+        }
+        private int pettingPlayer = -1;
+        private bool IsBeingPet => pettingPlayer != -1;
+        private int pettingTimer;
+        private bool petFinish;
+        private void PettingBehaviour()
+        {
+            if (petFinish && pettingTimer > 0 && BaseAI.HitTileOnSide(NPC, 3))
+            {
+                NPC.velocity.Y -= 4;
+                pettingTimer = 0;
+            }
+            if (AIState is ActionState.Idle)
+            {
+                if (NPC.getRect().Contains(Main.MouseWorld.ToPoint()))
+                {
+                    Player player = Main.LocalPlayer;
+                    int pettingRange = 70;
+
+                    if (player.Distance(NPC.Center) < pettingRange)
+                    {
+                        if (Main.mouseRight && Main.mouseRightRelease)
+                        {
+                            if (!IsBeingPet)
+                            {
+                                pettingTimer = 0;
+                                player.Center = new Vector2(NPC.Center.X, NPC.position.Y + NPC.height) + new Vector2(Math.Sign(NPC.DirectionTo(player.Center).X) * 20, -(player.height / 2));
+                                player.direction = Math.Sign(player.DirectionTo(NPC.Center).X);
+                                player.velocity = Vector2.Zero;
+
+                                if (Main.netMode != NetmodeID.SinglePlayer)
+                                    NetMessage.SendData(MessageID.SyncPlayer, number: player.whoAmI);
+                            }
+
+                            if (pettingPlayer == -1)
+                                pettingPlayer = Main.myPlayer;
+                            else
+                                pettingPlayer = -1;
+
+                            NPC.netUpdate = true;
+                        }
+                    }
+                }
+            }
+            if (IsBeingPet)
+            {
+                Player pPlayer = Main.player[pettingPlayer];
+
+                float amount = (float)Math.Sin(Main.timeForVisualEffects / 2f) * 2;
+                Player.CompositeArmStretchAmount stretchAmount = (amount > 0) ? Player.CompositeArmStretchAmount.Full : Player.CompositeArmStretchAmount.ThreeQuarters;
+                pPlayer.SetCompositeArmBack(true, stretchAmount, -2.3f * pPlayer.direction);
+
+                if (pPlayer.velocity != Vector2.Zero || NPC.velocity != Vector2.Zero)
+                    pettingPlayer = -1;
+
+                if (petFinish)
+                    return;
+                if (pettingTimer++ == 60)
+                    EmoteBubble.NewBubble(136, new WorldUIAnchor(NPC), 120);
+
+                if (pettingTimer >= TimerRand * 2)
+                {
+                    var item = Main.rand.Next(5) switch
+                    {
+                        1 => ItemID.Blinkroot,
+                        2 => ItemID.Moonglow,
+                        3 => ItemID.Waterleaf,
+                        4 => ModContent.ItemType<Nightshade>(),
+                        _ => ItemID.Daybloom,
+                    };
+                    EmoteBubble.NewBubble(0, new WorldUIAnchor(NPC), 120);
+                    Item.NewItem(NPC.GetSource_Loot(), NPC.getRect(), item);
+                    NPC.velocity.Y -= 5;
+                    pettingTimer = 10;
+                    petFinish = true;
+                    pettingPlayer = -1;
+                }
+            }
+        }
+        public void ChooseType()
+        {
+            int ancient = BaseTile.GetTileCount(NPC.Center / 16, new int[] { ModContent.TileType<AncientGrassTile>() }, 4);
+            int hallowed = BaseTile.GetTileCount(NPC.Center / 16, new int[] { TileID.HallowedGrass }, 4);
+            if (ancient > 0)
+            {
+                FlowerType = 5;
+                BodyType = 3;
+                NPC.netUpdate = true;
+                return;
+            }
+            WeightedRandom<byte> flower = new(Main.rand);
+            flower.Add(0);
+            flower.Add(1, 0.4);
+            flower.Add(2, 0.4);
+            flower.Add(3, 0.2);
+            flower.Add(4, 0.2);
+            flower.Add(5, 0.01);
+            flower.Add(6, 0.1);
+            flower.Add(7, 0.1);
+            flower.Add(8, 0.05);
+            FlowerType = flower;
+
+            WeightedRandom<byte> body = new(Main.rand);
+            body.Add(0);
+            body.Add(1, 0.2);
+            body.Add(2, hallowed > 0 ? 2 : 0.1);
+            if (FlowerType is 5)
+                body.Add(2, 10);
+            BodyType = body;
+            NPC.netUpdate = true;
         }
         public static bool GrassCheck(int X, int Y) // Directly from Flower Boots code, cleaned a bit
         {
@@ -324,6 +471,14 @@ namespace Redemption.NPCs.PreHM
 
         public override void FindFrame(int frameHeight)
         {
+            if (Main.netMode != NetmodeID.Server)
+                NPC.frame.Width = TextureAssets.Npc[NPC.type].Width() / 4;
+            NPC.frame.X = NPC.frame.Width * BodyType;
+            if (IsBeingPet)
+            {
+                NPC.frame.Y = 7 * frameHeight;
+                return;
+            }
             switch (AIState)
             {
                 case ActionState.RootAttack:
@@ -366,21 +521,43 @@ namespace Redemption.NPCs.PreHM
                     NPC.frame.Y = 10 * frameHeight;
             }
         }
+        public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
+        {
+            var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+
+            spriteBatch.Draw(TextureAssets.Npc[NPC.type].Value, NPC.Center - screenPos, NPC.frame, NPC.GetAlpha(drawColor), NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
+
+            int Height = flowerTex.Value.Height / 11;
+            int Width = flowerTex.Value.Width / 9;
+            int y = Height * (NPC.frame.Y / 60);
+            int x = Width * FlowerType;
+            Rectangle rect = new(x, y, Width, Height);
+            spriteBatch.Draw(flowerTex.Value, NPC.Center - screenPos, new Rectangle?(rect), drawColor, NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
+
+            return false;
+        }
 
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => false;
-        public override bool? CanHitNPC(NPC target) => false;
+        public override bool CanHitNPC(NPC target) => false;
         public override void ModifyNPCLoot(NPCLoot npcLoot)
         {
             npcLoot.Add(ItemDropRule.OneFromOptions(2,
                 new int[] { ItemID.Daybloom, ItemID.Blinkroot, ItemID.Moonglow, ItemID.Waterleaf, ModContent.ItemType<Nightshade>() }));
+            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<PlantMatter>(), 4, 1, 4));
             npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<AnglonicMysticBlossom>(), 100));
             npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<ForestCore>(), 60));
         }
 
         public override float SpawnChance(NPCSpawnInfo spawnInfo)
         {
+            if (Main.tile[spawnInfo.SpawnTileX, spawnInfo.SpawnTileY].TileType == ModContent.TileType<AncientGrassTile>())
+            {
+                float day = SpawnCondition.OverworldDay.Chance * (Main.raining ? 0.28f : 0.18f);
+                float cavern = SpawnCondition.Cavern.Chance * 0.18f;
+                return MathHelper.Max(day, cavern);
+            }
             float baseChance = SpawnCondition.OverworldDay.Chance;
-            float multiplier = Main.tile[spawnInfo.SpawnTileX, spawnInfo.SpawnTileY].TileType == TileID.Grass ? (Main.raining ? 0.28f : 0.18f) : 0f;
+            float multiplier = Main.tile[spawnInfo.SpawnTileX, spawnInfo.SpawnTileY].TileType is TileID.Grass or TileID.HallowedGrass ? (Main.raining ? 0.28f : 0.18f) : 0f;
 
             return baseChance * multiplier;
         }
@@ -392,12 +569,11 @@ namespace Redemption.NPCs.PreHM
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Biomes.Surface,
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Times.DayTime,
 
-                new FlavorTextBestiaryInfoElement(
-                    "A common creature native to Anglon, living in lush forests. They are made out of plant fibre and roots.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.LivingBloom"))
             });
         }
 
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (AIState is ActionState.Idle or ActionState.Wander)
             {
@@ -411,11 +587,12 @@ namespace Redemption.NPCs.PreHM
                 if (Main.netMode == NetmodeID.Server)
                     return;
 
-                int goreType1 = ModContent.Find<ModGore>("Redemption/LivingBloomGore1").Type;
-                int goreType2 = ModContent.Find<ModGore>("Redemption/LivingBloomGore2").Type;
+                int goreType1 = ModContent.Find<ModGore>("Redemption/LivingBloomGore" + (FlowerType + 1)).Type;
+                int goreType2 = ModContent.Find<ModGore>("Redemption/LivingBloomGore10").Type;
 
                 Gore.NewGore(NPC.GetSource_FromThis(), NPC.position, NPC.velocity, goreType1);
-                Gore.NewGore(NPC.GetSource_FromThis(), NPC.position, NPC.velocity, goreType2);
+                for (int p = 0; p < 2; p++)
+                    Gore.NewGore(NPC.GetSource_FromThis(), NPC.position, NPC.velocity, goreType2);
 
                 for (int i = 0; i < 8; i++)
                     Dust.NewDust(NPC.position + NPC.velocity, NPC.width, NPC.height, DustID.Grass,

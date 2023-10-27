@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using Redemption.BaseExtension;
 using Redemption.Buffs.Debuffs;
 using Redemption.Dusts;
 using Redemption.Globals;
@@ -7,6 +8,7 @@ using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent.Bestiary;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.NPCs.PostML
@@ -14,18 +16,16 @@ namespace Redemption.NPCs.PostML
     public class ShadesoulNPC : ModNPC
     {
         public ref float Scale => ref NPC.ai[0];
-
         public ref float AITimer => ref NPC.ai[1];
-
         public ref float ThrowTimer => ref NPC.ai[2];
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Shadesoul");
+            // DisplayName.SetDefault("Shadesoul");
             Main.npcFrameCount[Type] = 8;
             NPCID.Sets.CountsAsCritter[NPC.type] = true;
 
-            NPCID.Sets.NPCBestiaryDrawModifiers value = new (0)
+            NPCID.Sets.NPCBestiaryDrawModifiers value = new ()
             {
                 Velocity = 1f
             };
@@ -49,7 +49,13 @@ namespace Redemption.NPCs.PostML
             NPC.dontTakeDamage = true;
             NPC.catchItem = (short)ModContent.ItemType<Shadesoul>();
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override bool? CanBeCaughtBy(Item item, Player player)
+        {
+            if (player.RedemptionAbility().SpiritwalkerActive)
+                return null;
+            return false;
+        }
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -65,7 +71,8 @@ namespace Redemption.NPCs.PostML
         public override void AI()
         {
             int dust = Dust.NewDust(NPC.position + NPC.velocity, NPC.width, NPC.height, ModContent.DustType<VoidFlame>(),
-                NPC.velocity.X * 0.5f, NPC.velocity.Y * 0.5f, Scale: 2 + Scale);
+                0, 0, Scale: 2 + Scale);
+            Main.dust[dust].velocity *= 0;
             Main.dust[dust].noGravity = true;
 
             NPC.scale = 1 + Scale;
@@ -77,7 +84,7 @@ namespace Redemption.NPCs.PostML
             if (--ThrowTimer <= 0)
             {
                 if (NPC.velocity.Length() < 2)
-                    NPC.velocity = RedeHelper.PolarVector(3, Main.rand.NextFloat(0, MathHelper.TwoPi));
+                    NPC.velocity = RedeHelper.PolarVector(3, RedeHelper.RandomRotation());
 
                 NPC.velocity = NPC.velocity.RotatedBy(Main.rand.NextFloat(-0.3f, 0.3f));
             }
@@ -103,17 +110,19 @@ namespace Redemption.NPCs.PostML
                     NPC.frame.Y = 0;
             }
         }
-        public override void ModifyHitPlayer(Player target, ref int damage, ref bool crit)
+        public override void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers)
         {
             target.AddBuff(ModContent.BuffType<BlackenedHeartDebuff>(), 15);
         }
+        public override bool? CanBeHitByItem(Player player, Item item) => RedeHelper.CanHitSpiritCheck(player, item);
+        public override bool? CanBeHitByProjectile(Projectile projectile) => RedeHelper.CanHitSpiritCheck(projectile);
         public override void OnKill()
         {
             int dropAmount = (int)(Scale / 2 * 10);
             Item.NewItem(NPC.GetSource_Loot(), NPC.getRect(), ModContent.ItemType<Shadesoul>(), 1 + dropAmount);
         }
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => false;
-        public override bool? CanHitNPC(NPC target) => false;
+        public override bool CanHitNPC(NPC target) => false;
 
         public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
         {

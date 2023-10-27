@@ -1,5 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Redemption.Buffs.Debuffs;
+using Redemption.Globals;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.ID;
@@ -11,9 +13,11 @@ namespace Redemption.NPCs.Lab.Behemoth
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Radioactive Gas");
+            // DisplayName.SetDefault("Radioactive Gas");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 5;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjWind[Type] = true;
+            ElementID.ProjPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -27,6 +31,7 @@ namespace Redemption.NPCs.Lab.Behemoth
             Projectile.alpha = 200;
             Projectile.timeLeft = 120;
         }
+        public override void OnHitPlayer(Player target, Player.HurtInfo info) => target.AddBuff(ModContent.BuffType<BileDebuff>(), 180);
         public override void AI()
         {
             Projectile.rotation += Projectile.velocity.Length() / 40 * Projectile.spriteDirection;

@@ -1,7 +1,5 @@
 using Redemption.Globals;
-using Redemption.NPCs.Friendly;
 using Terraria;
-using Terraria.ModLoader;
 
 namespace Redemption.Items.Usable
 {
@@ -9,11 +7,11 @@ namespace Redemption.Items.Usable
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Violin");
+            // DisplayName.SetDefault("Violin");
             Main.projFrames[Projectile.type] = 5;
         }
 
-        public override void SetDefaults()
+        public override void SetSafeDefaults()
         {
             Projectile.width = 40;
             Projectile.height = 18;

@@ -1,33 +1,31 @@
 using Microsoft.Xna.Framework;
-using Redemption.NPCs.Bosses.PatientZero;
+using Redemption.Biomes;
 using Redemption.NPCs.Friendly;
-using Redemption.NPCs.Lab;
-using Redemption.NPCs.Lab.Behemoth;
-using Redemption.NPCs.Lab.Blisterface;
-using Redemption.NPCs.Lab.Janitor;
-using Redemption.NPCs.Lab.MACE;
-using Redemption.NPCs.Lab.Volt;
 using Redemption.WorldGeneration;
-using System.Collections.Generic;
-using System.IO;
 using Terraria;
-using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Terraria.ModLoader.IO;
 
 namespace Redemption.Globals
 {
     public class BastionArea : ModSystem
     {
-        public static bool Active;
-        public override void PreUpdateEntities()
-        {
-            Active = false;
-        }
         public override void PreUpdateWorld()
         {
-            if (!Active || RedeGen.BastionVector.X == -1 || RedeGen.BastionVector.Y == -1 || Main.netMode == NetmodeID.MultiplayerClient)
+            bool active = Main.LocalPlayer.InModBiome(ModContent.GetInstance<BlazingBastionBiome>());
+            if (Main.netMode != NetmodeID.SinglePlayer)
+            {
+                for (int i = 0; i < Main.maxPlayers; i++)
+                {
+                    Terraria.Player player = Main.player[i];
+                    if (!player.active)
+                        continue;
+
+                    if (player.InModBiome<BlazingBastionBiome>())
+                        active = true;
+                }
+            }
+            if (!active || RedeGen.BastionVector.X == -1)
                 return;
 
             Vector2 NozaPos = new((RedeGen.BastionVector.X + 210) * 16, (RedeGen.BastionVector.Y + 64) * 16);

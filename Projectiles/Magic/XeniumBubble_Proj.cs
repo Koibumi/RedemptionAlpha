@@ -4,7 +4,6 @@ using Redemption.Base;
 using Redemption.BaseExtension;
 using Redemption.Buffs.Debuffs;
 using Redemption.Globals;
-using Redemption.NPCs.Bosses.Obliterator;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
@@ -17,7 +16,10 @@ namespace Redemption.Projectiles.Magic
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Xenium Bubble");
+            // DisplayName.SetDefault("Xenium Bubble");
+            ElementID.ProjWater[Type] = true;
+            ElementID.ProjPoison[Type] = true;
+            ElementID.ProjExplosive[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -28,6 +30,7 @@ namespace Redemption.Projectiles.Magic
             Projectile.friendly = true;
             Projectile.tileCollide = true;
             Projectile.ignoreWater = true;
+            Projectile.DamageType = DamageClass.Magic;
             Projectile.timeLeft = 600;
             Projectile.alpha = 10;
         }
@@ -37,7 +40,7 @@ namespace Redemption.Projectiles.Magic
             Projectile.velocity.X *= 0.95f;
             Projectile.velocity.Y *= 0.97f;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(SoundID.Item54, Projectile.position);
             if (Projectile.ai[0] == 1)
@@ -57,7 +60,7 @@ namespace Redemption.Projectiles.Magic
                     if (Projectile.DistanceSQ(target.Center) > 160 * 160)
                         continue;
 
-                    int hitDirection = Projectile.Center.X > target.Center.X ? -1 : 1;
+                    int hitDirection = target.RightOfDir(Projectile);
                     BaseAI.DamageNPC(target, Projectile.damage * 2, Projectile.knockBack, hitDirection, Projectile);
                 }
             }
@@ -77,7 +80,7 @@ namespace Redemption.Projectiles.Magic
             Projectile.velocity *= 0.95f;
             return false;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             if (Main.rand.NextBool(3))
                 target.AddBuff(ModContent.BuffType<GreenRashesDebuff>(), 300);
@@ -101,7 +104,7 @@ namespace Redemption.Projectiles.Magic
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Explosion");
+            // DisplayName.SetDefault("Explosion");
             Main.projFrames[Projectile.type] = 4;
         }
 
@@ -113,7 +116,8 @@ namespace Redemption.Projectiles.Magic
             Projectile.hostile = false;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
-            Projectile.rotation = Main.rand.NextFloat(0, MathHelper.TwoPi);
+            Projectile.DamageType = DamageClass.Magic;
+            Projectile.rotation = RedeHelper.RandomRotation();
             Projectile.spriteDirection = Main.rand.NextBool() ? 1 : -1;
         }
         public override void AI()

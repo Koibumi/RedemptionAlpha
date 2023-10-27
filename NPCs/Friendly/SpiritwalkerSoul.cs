@@ -12,6 +12,7 @@ using System;
 using Redemption.Dusts;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria.GameContent;
+using Terraria.Localization;
 
 namespace Redemption.NPCs.Friendly
 {
@@ -22,11 +23,8 @@ namespace Redemption.NPCs.Friendly
         public ref float TimerRand => ref NPC.ai[1];
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Lost Soul");
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                ImmuneToAllBuffsThatAreNotWhips = true
-            });
+            // DisplayName.SetDefault("Lost Soul");
+            NPCID.Sets.ImmuneToRegularBuffs[Type] = true;
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0)
             {
                 Hide = true
@@ -54,7 +52,7 @@ namespace Redemption.NPCs.Friendly
         }
         public override void AI()
         {
-            ParticleManager.NewParticle(RedeHelper.RandAreaInEntity(NPC) + (NPC.velocity * 2), Vector2.Zero, new SpiritParticle(), Color.White, 0.6f * NPC.scale, 0, 1);
+            ParticleManager.NewParticle(NPC.RandAreaInEntity() + (NPC.velocity * 2), Vector2.Zero, new SpiritParticle(), Color.White, 0.6f * NPC.scale, 0, 1);
             if (Main.rand.NextBool(3))
                 ParticleManager.NewParticle(NPC.Center, RedeHelper.Spread(2), new SpiritParticle(), Color.White, 1);
 
@@ -112,18 +110,18 @@ namespace Redemption.NPCs.Friendly
                     }
                     if (AITimer >= 260)
                     {
-                        string s = "Hold [Spirit Walker Ability Key] to enter the Spirit Realm";
+                        string s = Language.GetTextValue("Mods.Redemption.UI.SpiritWalker.Keybind");
                         foreach (string key in Redemption.RedeSpiritwalkerAbility.GetAssignedKeys())
                         {
-                            s = "Hold " + key + " to enter the Spirit Realm";
+                            s = Language.GetTextValue("Mods.Redemption.UI.SpiritWalker.Hold") + key + Language.GetTextValue("Mods.Redemption.UI.SpiritWalker.Context");
                         }
-                        RedeSystem.Instance.TitleCardUIElement.DisplayTitle("-Spirit Walker-", 180, 90, 1f, 0, Color.White, s);
+                        RedeSystem.Instance.TitleCardUIElement.DisplayTitle(Language.GetTextValue("Mods.Redemption.UI.SpiritWalker.Name"), 300, 90, 1f, 0, Color.White, s);
 
                         SoundEngine.PlaySound(CustomSounds.NewLocation, player.position);
                         player.RedemptionAbility().Spiritwalker = true;
                         player.RedemptionAbility().SpiritwalkerActive = false;
 
-                        NPC.Shoot(player.Center, ModContent.ProjectileType<SpiritwalkerIconFade>(), 0, Vector2.Zero, false, SoundID.Item1, player.whoAmI);
+                        NPC.Shoot(player.Center, ModContent.ProjectileType<SpiritwalkerIconFade>(), 0, Vector2.Zero, player.whoAmI);
                         for (int i = 0; i < 20; i++)
                         {
                             ParticleManager.NewParticle(player.Center, RedeHelper.Spread(10), new SpiritParticle(), Color.White, 2);
@@ -138,14 +136,14 @@ namespace Redemption.NPCs.Friendly
                     break;
             }
         }
-        public override bool? CanHitNPC(NPC target) => false;
+        public override bool CanHitNPC(NPC target) => false;
     }
     public class SpiritwalkerIconFade : ModProjectile
     {
         public override string Texture => "Redemption/Textures/Abilities/Spiritwalker";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Spirit Walker");
+            // DisplayName.SetDefault("Spirit Walker");
         }
         public override void SetDefaults()
         {

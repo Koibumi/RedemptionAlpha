@@ -14,7 +14,7 @@ namespace Redemption.Projectiles.Melee
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Arcane Beam");
+            // DisplayName.SetDefault("Arcane Beam");
         }
 
         public override void SetDefaults()
@@ -27,6 +27,7 @@ namespace Redemption.Projectiles.Melee
             Projectile.timeLeft = 350;
             Projectile.penetrate = -1;
             Projectile.tileCollide = false;
+            Projectile.DamageType = DamageClass.Melee;
         }
         public override void AI()
         {
@@ -40,12 +41,12 @@ namespace Redemption.Projectiles.Melee
                 }
             }
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             Player player = Main.player[Projectile.owner];
             RedeDraw.SpawnRing(Projectile.Center, Color.White, glowScale: 8);
             if (!Main.dedServ)
-                SoundEngine.PlaySound(CustomSounds.NebSound3 with { Volume = 0.5f, Pitch = 0.1f }, Projectile.position);
+                SoundEngine.PlaySound(CustomSounds.NebSound3 with { Volume = 0.2f, Pitch = 0.1f }, Projectile.position);
             Main.LocalPlayer.RedemptionScreen().ScreenShakeOrigin = Projectile.Center;
             Main.LocalPlayer.RedemptionScreen().ScreenShakeIntensity += 7;
 

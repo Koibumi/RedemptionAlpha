@@ -1,5 +1,3 @@
-using Microsoft.Xna.Framework;
-using Redemption.Buffs.Debuffs;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ID;
@@ -12,7 +10,7 @@ namespace Redemption.Projectiles.Misc
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Dust Cloud");
+            // DisplayName.SetDefault("Dust Cloud");
         }
         public override void SetDefaults()
         {
@@ -47,7 +45,7 @@ namespace Redemption.Projectiles.Misc
                 target.AddBuff(ModContent.BuffType<SandDustDebuff>(), 120);
             }
         }
-        public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
             target.AddBuff(ModContent.BuffType<SandDustDebuff>(), 60);
         }

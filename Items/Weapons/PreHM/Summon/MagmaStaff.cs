@@ -15,8 +15,8 @@ namespace Redemption.Items.Weapons.PreHM.Summon
 	{
 		public override void SetStaticDefaults()
 		{
-            Tooltip.SetDefault("Summons a Magma Cube to fight for you");
-			SacrificeTotal = 1;
+            // Tooltip.SetDefault("Summons a Magma Cube to fight for you");
+			Item.ResearchUnlockCount = 1;
 
 			ItemID.Sets.GamepadWholeScreenUseRange[Item.type] = true;
 			ItemID.Sets.LockOnIgnoresCollision[Item.type] = true;
@@ -41,7 +41,7 @@ namespace Redemption.Items.Weapons.PreHM.Summon
 			Item.shoot = ModContent.ProjectileType<MagmaCube>();
 			Item.mana = 10;
 			if (!Main.dedServ)
-				Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Item.ModItem.Texture + "_Glow").Value;
+				Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
 		}
 
 		public override void AddRecipes()

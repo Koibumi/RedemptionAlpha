@@ -1,8 +1,6 @@
-using Microsoft.CodeAnalysis;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.Base;
-using Redemption.Buffs.Debuffs;
 using Redemption.Globals;
 using Terraria;
 using Terraria.Audio;
@@ -16,7 +14,7 @@ namespace Redemption.Projectiles.Misc
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Star");
+            // DisplayName.SetDefault("Star");
             Main.projFrames[Projectile.type] = 4;
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 4;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
@@ -32,7 +30,7 @@ namespace Redemption.Projectiles.Misc
             Projectile.alpha = 50;
             Projectile.scale = 0.01f;
             Projectile.frame = Main.rand.Next(3);
-            Projectile.rotation = Main.rand.NextFloat(0, MathHelper.TwoPi);
+            Projectile.rotation = RedeHelper.RandomRotation();
         }
         public override void AI()
         {
@@ -52,7 +50,7 @@ namespace Redemption.Projectiles.Misc
 
                 if (Projectile.Hitbox.Intersects(player.Hitbox))
                 {
-                    SoundEngine.PlaySound(SoundID.MaxMana, player.position);
+                    SoundEngine.PlaySound(SoundID.MaxMana with { Volume = 0.5f }, player.position);
                     player.statLife += 2;
                     player.statMana++;
                     player.HealEffect(2);
@@ -86,7 +84,7 @@ namespace Redemption.Projectiles.Misc
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
             return false;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             int dustIndex = Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.SilverCoin, Scale: 2f);
             Main.dust[dustIndex].velocity *= 0f;

@@ -1,5 +1,5 @@
 using Microsoft.Xna.Framework;
-using Redemption.Items.Materials.PreHM;
+using Redemption.Globals;
 using Redemption.Projectiles.Magic;
 using Terraria;
 using Terraria.ID;
@@ -11,15 +11,15 @@ namespace Redemption.Items.Weapons.PreHM.Magic
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Icefall");
-            Tooltip.SetDefault("Lowers the air temperature at cursor point, forming damaging ice crystals that eventually fall to gravity");
+            // DisplayName.SetDefault("Icefall");
+            // Tooltip.SetDefault("Lowers the air temperature at cursor point, forming damaging ice crystals that eventually fall to gravity");
 
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
         {
-            Item.damage = 40;
+            Item.damage = 38;
             Item.DamageType = DamageClass.Magic;
             Item.mana = 7;
             Item.width = 30;
@@ -34,6 +34,7 @@ namespace Redemption.Items.Weapons.PreHM.Magic
             Item.rare = ItemRarityID.Orange;
             Item.shootSpeed = 0;
             Item.shoot = ModContent.ProjectileType<Icefall_Mist>();
+            Item.ExtraItemShoot(ModContent.ProjectileType<Icefall_Proj>());
             if (Main.netMode != NetmodeID.Server)
                 Item.UseSound = CustomSounds.IceMist;
         }
@@ -50,15 +51,6 @@ namespace Redemption.Items.Weapons.PreHM.Magic
         {
             position = Main.MouseWorld;
             velocity = new Vector2(Main.rand.NextFloat(-2, 2), 0);
-        }
-
-        public override void AddRecipes()
-        {
-            CreateRecipe()
-            .AddIngredient(ItemID.WaterBolt)
-            .AddIngredient(ModContent.ItemType<GathicCryoCrystal>(), 7)
-            .AddTile(TileID.Bookcases)
-            .Register();
         }
     }
 }

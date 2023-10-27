@@ -1,5 +1,4 @@
 using Microsoft.Xna.Framework;
-using Redemption.Items.Quest.KingSlayer;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.Enums;
@@ -29,10 +28,6 @@ namespace Redemption.Tiles.Furniture.SlayerShip
             MineResist = 10f;
             AddMapEntry(new Color(189, 191, 200));
             AnimationFrameHeight = 108;
-        }
-        public override void KillMultiTile(int i, int j, int frameX, int frameY)
-        {
-            Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 32, 32, ModContent.ItemType<SlayerShipEngine>());
         }
         public override void AnimateTile(ref int frame, ref int frameCounter)
         {

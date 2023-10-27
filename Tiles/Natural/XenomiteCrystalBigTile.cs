@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Redemption.Items.Materials.HM;
 using Terraria;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 using Terraria.ID;
@@ -21,23 +22,21 @@ namespace Redemption.Tiles.Natural
             TileObjectData.newTile.CopyFrom(TileObjectData.Style3x3);
             TileObjectData.newTile.DrawYOffset = 4;
             TileObjectData.addTile(Type);
-            ModTranslation name = CreateMapEntryName();
-            name.SetDefault("Xenomite Crystals");
+            LocalizedText name = CreateMapEntryName();
+            // name.SetDefault("Xenomite Crystals");
             AddMapEntry(new Color(50, 220, 50), name);
             HitSound = SoundID.Item27;
             DustType = DustID.GreenTorch;
             Main.tileLighted[Type] = true;
         }
-
         public override void NumDust(int i, int j, bool fail, ref int num)
         {
             num = fail ? 1 : 3;
         }
-
         public override void KillMultiTile(int i, int j, int frameX, int frameY)
         {
             if (Main.hardMode)
-                Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 48, 48, ModContent.ItemType<XenomiteItem>(), Main.rand.Next(3, 6));
+                Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 48, 48, ModContent.ItemType<Xenomite>(), Main.rand.Next(3, 6));
             else
                 Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 48, 48, ModContent.ItemType<XenomiteShard>(), Main.rand.Next(12, 24));
         }

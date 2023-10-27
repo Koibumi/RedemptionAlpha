@@ -3,12 +3,14 @@ using Redemption.Base;
 using Redemption.BaseExtension;
 using Redemption.Globals;
 using Redemption.Items.Critters;
+using Redemption.Items.Placeable.Banners;
 using Redemption.NPCs.PreHM;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.GameContent.Bestiary;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Utilities;
 
@@ -39,6 +41,7 @@ namespace Redemption.NPCs.Critters
         public override void SetStaticDefaults()
         {
             Main.npcFrameCount[Type] = 4;
+            NPCID.Sets.ShimmerTransformToNPC[NPC.type] = NPCID.Shimmerfly;
             NPCID.Sets.CountsAsCritter[Type] = true;
             NPCID.Sets.DontDoHardmodeScaling[Type] = true;
             NPCID.Sets.TakesDamageFromHostilesWithoutBeingFriendly[Type] = true;
@@ -64,6 +67,8 @@ namespace Redemption.NPCs.Critters
             NPC.aiStyle = -1;
             NPC.behindTiles = true;
             NPC.catchItem = (short)ModContent.ItemType<SandskinSpiderItem>();
+            Banner = NPC.type;
+            BannerItem = ModContent.ItemType<SandskinSpiderBanner>();
         }
 
         public NPC npcTarget;
@@ -131,9 +136,7 @@ namespace Redemption.NPCs.Critters
 
                     if (RedeHelper.ClosestNPC(ref npcTarget, 100, NPC.Center) && npcTarget.damage > 0)
                     {
-                        RedeHelper.HorizontallyMove(NPC,
-                            new Vector2(npcTarget.Center.X < NPC.Center.X ? NPC.Center.X + 50 : NPC.Center.X - 50,
-                                NPC.Center.Y), 0.5f, 2, 4, 2, false);
+                        NPCHelper.HorizontallyMove(NPC, new Vector2(npcTarget.Center.X < NPC.Center.X ? NPC.Center.X + 50 : NPC.Center.X - 50, NPC.Center.Y), 0.5f, 2, 4, 2, false);
                         return;
                     }
 
@@ -145,7 +148,7 @@ namespace Redemption.NPCs.Critters
                         AIState = ActionState.Idle;
                     }
 
-                    RedeHelper.HorizontallyMove(NPC, moveTo * 16, 0.2f, 1, 4, 2, false);
+                    NPCHelper.HorizontallyMove(NPC, moveTo * 16, 0.2f, 1, 4, 2, false);
                     break;
 
                 case ActionState.Hop:
@@ -330,12 +333,11 @@ namespace Redemption.NPCs.Critters
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Biomes.Desert,
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Times.DayTime,
 
-                new FlavorTextBestiaryInfoElement(
-                    "A spider that commonly burrows in the desert sands. They don't normally come out, due to the intense heat of the sun.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.SandskinSpider"))
             });
         }
 
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (AIState is ActionState.Idle)
             {

@@ -15,7 +15,7 @@ namespace Redemption.Projectiles.Minions
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Hologram");
+            // DisplayName.SetDefault("Hologram");
             Main.projFrames[Projectile.type] = 2;
             Main.projPet[Projectile.type] = true;
 
@@ -107,7 +107,7 @@ namespace Redemption.Projectiles.Minions
                                 SoundEngine.PlaySound(SoundID.Item75, Projectile.position);
                                 int p = Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center, RedeHelper.PolarVector(25, diff.ToRotation()), ProjectileID.LaserMachinegunLaser, Projectile.damage, Projectile.knockBack, player.whoAmI);
                                 Main.projectile[p].DamageType = DamageClass.Summon;
-                                Main.projectile[p].netUpdate2 = true;
+                                Main.projectile[p].netUpdate = true;
                                 attackCooldown = 60;
                             }
                             flyTo = player.Center + flyOffset + RedeHelper.PolarVector(-50, diff.ToRotation());
@@ -162,7 +162,7 @@ namespace Redemption.Projectiles.Minions
         {
             return mode == swordMode;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Projectile.localNPCImmunity[target.whoAmI] = 10;
             target.immune[Projectile.owner] = 0;

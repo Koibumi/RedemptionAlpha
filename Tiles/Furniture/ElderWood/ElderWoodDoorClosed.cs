@@ -5,6 +5,7 @@ using Terraria.DataStructures;
 using Terraria.Enums;
 using Terraria.GameContent.ObjectInteractions;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 
@@ -29,12 +30,9 @@ namespace Redemption.Tiles.Furniture.ElderWood
 
             DustType = DustID.t_BorealWood;
             AdjTiles = new int[] { TileID.ClosedDoor };
-            OpenDoorID = ModContent.TileType<ElderWoodDoorOpen>();
+            TileID.Sets.OpenDoorID[Type] = ModContent.TileType<ElderWoodDoorOpen>();
 
-            // Names
-            ModTranslation name = CreateMapEntryName();
-            name.SetDefault("Elder Wood Door");
-            AddMapEntry(new Color(109, 87, 78), name);
+            AddMapEntry(new Color(109, 87, 78), Language.GetText("MapObject.Door"));
 
             // Placement
             TileObjectData.newTile.Width = 1;
@@ -47,6 +45,7 @@ namespace Redemption.Tiles.Furniture.ElderWood
             TileObjectData.newTile.CoordinateHeights = new[] { 16, 16, 16 };
             TileObjectData.newTile.CoordinateWidth = 16;
             TileObjectData.newTile.CoordinatePadding = 2;
+            TileObjectData.newTile.StyleLineSkip = 3;
             TileObjectData.newAlternate.CopyFrom(TileObjectData.newTile);
             TileObjectData.newAlternate.Origin = new Point16(0, 1);
             TileObjectData.addAlternate(0);
@@ -59,8 +58,6 @@ namespace Redemption.Tiles.Furniture.ElderWood
         public override bool HasSmartInteract(int i, int j, SmartInteractScanSettings settings) => true;
 
         public override void NumDust(int i, int j, bool fail, ref int num) => num = 1;
-
-        public override void KillMultiTile(int i, int j, int frameX, int frameY) => Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 16, 48, ModContent.ItemType<ElderWoodDoor>());
 
         public override void MouseOver(int i, int j)
         {

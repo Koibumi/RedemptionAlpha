@@ -6,13 +6,14 @@ using System.IO;
 using Redemption.Items.Usable;
 using Redemption.Buffs.Debuffs;
 using Redemption.Globals;
-using Terraria.DataStructures;
 using Redemption.Biomes;
 using Terraria.GameContent.Bestiary;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.WorldGeneration;
 using Redemption.Base;
+using Terraria.Localization;
+using Redemption.Globals.NPC;
 
 namespace Redemption.NPCs.Lab.Blisterface
 {
@@ -25,24 +26,16 @@ namespace Redemption.NPCs.Lab.Blisterface
             NPCID.Sets.MPAllowedEnemies[Type] = true;
             NPCID.Sets.BossBestiaryPriority.Add(Type);
 
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Confused,
-                    BuffID.Poisoned,
-                    BuffID.Venom,
-                    ModContent.BuffType<BileDebuff>(),
-                    ModContent.BuffType<GreenRashesDebuff>(),
-                    ModContent.BuffType<GlowingPustulesDebuff>(),
-                    ModContent.BuffType<FleshCrystalsDebuff>()
-                }
-            });
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Infected);
+            NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Confused] = true;
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0)
             {
                 Velocity = 1
             };
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
+            ElementID.NPCWater[Type] = true;
+            ElementID.NPCPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -68,22 +61,21 @@ namespace Redemption.NPCs.Lab.Blisterface
         public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
         {
             bestiaryEntry.Info.AddRange(new List<IBestiaryInfoElement> {
-                new FlavorTextBestiaryInfoElement("An unfortunate fish, disfigured and mutilated beyond recognition by the Xenomite infection. This strain seems to be similar to that of the Blistered Scientists..."),
-                new FlavorTextBestiaryInfoElement("That's a bigass fish.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.Blisterface1")),
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.Blisterface2"))
             });
         }
         public override bool CheckActive()
         {
-            return !LabArea.Active;
+            return !Main.LocalPlayer.InModBiome<LabBiome>();
         }
-        public override bool StrikeNPC(ref double damage, int defense, ref float knockback, int hitDirection, ref bool crit)
+        public override void ModifyIncomingHit(ref NPC.HitModifiers modifiers)
         {
             Point water = NPC.Center.ToTileCoordinates();
             if (Main.tile[water.X, water.Y].LiquidType == LiquidID.Water && Main.tile[water.X, water.Y].LiquidAmount > 0)
-                damage /= 10;
-            return true;
+                modifiers.FinalDamage /= 10;
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -110,22 +102,14 @@ namespace Redemption.NPCs.Lab.Blisterface
         }
         public override void SendExtraAI(BinaryWriter writer)
         {
-            base.SendExtraAI(writer);
-            if (Main.netMode == NetmodeID.Server || Main.dedServ)
-            {
-                writer.Write(AITimer[0]);
-                writer.Write(AITimer[1]);
-            }
+            writer.Write(AITimer[0]);
+            writer.Write(AITimer[1]);
         }
 
         public override void ReceiveExtraAI(BinaryReader reader)
         {
-            base.ReceiveExtraAI(reader);
-            if (Main.netMode == NetmodeID.MultiplayerClient)
-            {
-                AITimer[0] = reader.ReadInt32();
-                AITimer[1] = reader.ReadInt32();
-            }
+            AITimer[0] = reader.ReadInt32();
+            AITimer[1] = reader.ReadInt32();
         }
 
         private readonly int[] AITimer = new int[2];
@@ -139,10 +123,23 @@ namespace Redemption.NPCs.Lab.Blisterface
                 if (NPC.Center.Y > (RedeGen.LabVector.Y + 191) * 16)
                     NPC.velocity.Y -= 0.1f;
             }
+            if (NPC.Center.X < (RedeGen.LabVector.X + 194) * 16)
+                NPC.velocity.X += 1f;
+            if (NPC.Center.X > (RedeGen.LabVector.X + 222) * 16)
+                NPC.velocity.X -= 1f;
+
+            if (NPC.Center.Y > (RedeGen.LabVector.Y + 196) * 16)
+            {
+
+                if (AITimer[0] > 0)
+                    AITimer[0] = 0;
+                NPC.velocity.Y = -3f;
+            }
             switch (AITimer[0])
             {
                 case 0:
-                    DespawnHandler();
+                    if (NPC.DespawnHandler(1, 5))
+                        return;
 
                     AITimer[1]++;
                     int jump = NPC.life > NPC.lifeMax / 2 ? 320 : 170;
@@ -157,7 +154,7 @@ namespace Redemption.NPCs.Lab.Blisterface
                     NPC.noTileCollide = false;
                     if (Main.rand.NextBool(20))
                     {
-                        NPC.Shoot(new Vector2(NPC.position.X + Main.rand.Next(0, NPC.width), NPC.position.Y + Main.rand.Next(0, NPC.height)), ModContent.ProjectileType<Blisterface_Bubble>(), 80, Vector2.Zero, true, SoundID.Item111);
+                        NPC.Shoot(new Vector2(NPC.position.X + Main.rand.Next(0, NPC.width), NPC.position.Y + Main.rand.Next(0, NPC.height)), ModContent.ProjectileType<Blisterface_Bubble>(), 80, Vector2.Zero, SoundID.Item111);
                     }
                     if (NPC.CountNPCS(ModContent.NPCType<BlisteredFish2>()) <= 5)
                     {
@@ -177,14 +174,15 @@ namespace Redemption.NPCs.Lab.Blisterface
                     {
                         if (AITimer[1] % 2 == 0)
                         {
-                            NPC.Shoot(new Vector2(NPC.Center.X + 12f * NPC.spriteDirection, NPC.Center.Y), ModContent.ProjectileType<Blisterface_Bubble>(), 80, new Vector2(Main.rand.Next(6, 13) * NPC.spriteDirection, Main.rand.Next(-2, 3)), true, SoundID.NPCDeath13, 0, 1);
+                            NPC.Shoot(new Vector2(NPC.Center.X + 12f * NPC.spriteDirection, NPC.Center.Y), ModContent.ProjectileType<Blisterface_Bubble>(), 80, new Vector2(Main.rand.Next(6, 13) * NPC.spriteDirection, Main.rand.Next(-2, 3)), SoundID.NPCDeath13, 0, 1);
                         }
                     }
                     if (AITimer[1] >= 68)
                     {
                         NPC.velocity.Y += 0.15f;
                     }
-                    if (AITimer[1] >= 180 && NPC.wet)
+                    Point water = NPC.Center.ToTileCoordinates();
+                    if (AITimer[1] >= 180 && Main.tile[water.X, water.Y].LiquidType == LiquidID.Water && Main.tile[water.X, water.Y].LiquidAmount > 0)
                     {
                         AITimer[1] = 0;
                         AITimer[0] = 0;
@@ -193,11 +191,6 @@ namespace Redemption.NPCs.Lab.Blisterface
                     break;
             }
             BaseAI.AIFish(NPC, ref NPC.ai, true);
-        }
-        private bool GlowActive;
-        private int GlowTimer;
-        public override void FindFrame(int frameHeight)
-        {
             if (GlowActive)
             {
                 if (GlowTimer++ > 60)
@@ -206,6 +199,11 @@ namespace Redemption.NPCs.Lab.Blisterface
                     GlowTimer = 0;
                 }
             }
+        }
+        private bool GlowActive;
+        private int GlowTimer;
+        public override void FindFrame(int frameHeight)
+        {
             NPC.frameCounter++;
             if (NPC.frameCounter >= 10)
             {
@@ -217,33 +215,18 @@ namespace Redemption.NPCs.Lab.Blisterface
         }
         public override void PostDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
-            Texture2D glow = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Glow").Value;
+            Texture2D glow = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
             var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             Color colour = Color.Lerp(Color.White, Color.White, 1f / GlowTimer * 10f) * (1f / GlowTimer * 10f);
             if (GlowActive)
                 spriteBatch.Draw(glow, NPC.Center - screenPos, NPC.frame, colour, NPC.rotation, NPC.frame.Size() / 2, 1f, effects, 0);
         }
-        private void DespawnHandler()
+        public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment)
         {
-            Player player = Main.player[NPC.target];
-            if (!player.active || player.dead)
-            {
-                NPC.TargetClosest(false);
-                player = Main.player[NPC.target];
-                if (!player.active || player.dead)
-                {
-                    NPC.alpha += 5;
-                    if (NPC.alpha >= 255)
-                        NPC.active = false;
-                }
-            }
-        }
-        public override void ScaleExpertStats(int numPlayers, float bossLifeScale)
-        {
-            NPC.lifeMax = (int)(NPC.lifeMax * 0.6f * bossLifeScale);
+            NPC.lifeMax = (int)(NPC.lifeMax * 0.6f * balance * bossAdjustment);
             NPC.damage = (int)(NPC.damage * 0.6f);
         }
-        public override void ModifyHitPlayer(Player target, ref int damage, ref bool crit)
+        public override void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers)
         {
             if (Main.rand.NextBool(2) || Main.expertMode)
                 target.AddBuff(ModContent.BuffType<GreenRashesDebuff>(), Main.rand.Next(800, 1600));

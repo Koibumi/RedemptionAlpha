@@ -13,7 +13,8 @@ namespace Redemption.NPCs.Bosses.ADD
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Lightning");
+            // DisplayName.SetDefault("Lightning");
+            ElementID.ProjThunder[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -33,12 +34,12 @@ namespace Redemption.NPCs.Bosses.ADD
                 int floor = BaseWorldGen.GetFirstTileFloor((int)Projectile.Center.X / 16, (int)Projectile.Center.Y / 16) * 16;
                 int dist = floor - (int)Projectile.Center.Y;
                 dist = (int)MathHelper.Clamp(dist, 0, 800);
-                DustHelper.DrawParticleElectricity(Projectile.Center, Projectile.Center + new Vector2(0, dist), new LightningParticle(), 1f, 30, 0.1f, 1);
+                DustHelper.DrawParticleElectricity<LightningParticle>(Projectile.Center, Projectile.Center + new Vector2(0, dist), 1f, 30, 0.1f, 1);
 
                 Projectile.localAI[0] = 1;
             }
         }
-        public override void OnHitPlayer(Player target, int damage, bool crit)
+        public override void OnHitPlayer(Player target, Player.HurtInfo info)
         {
             target.AddBuff(ModContent.BuffType<ElectrifiedDebuff>(), 120);
         }

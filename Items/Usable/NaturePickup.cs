@@ -1,7 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.BaseExtension;
-using Redemption.Buffs;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -13,9 +12,10 @@ namespace Redemption.Items.Usable
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("");
+            // DisplayName.SetDefault("");
             ItemID.Sets.ItemNoGravity[Item.type] = true;
             ItemID.Sets.ItemIconPulse[Item.type] = true;
+            ItemID.Sets.IsAPickup[Type] = true;
         }
 
         public override void SetDefaults()
@@ -25,7 +25,7 @@ namespace Redemption.Items.Usable
             Item.maxStack = 1;
             Item.rare = ItemRarityID.White;
             if (!Main.dedServ)
-                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Item.ModItem.Texture).Value;
+                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Texture).Value;
         }
         public override bool OnPickup(Player player)
         {

@@ -32,7 +32,7 @@ namespace Redemption
         {
             PitchVariance = 0.2f
         };
-        public static readonly SoundStyle AlarmItem = new("Redemption/Sounds/Custom/AlarmItem") { PitchVariance = .1f };
+        public static readonly SoundStyle AlarmItem = new("Redemption/Sounds/Custom/AlarmItem") { Volume = .5f, PitchVariance = .1f };
         public static readonly SoundStyle Alarm2 = new("Redemption/Sounds/Custom/Alarm2");
         public static readonly SoundStyle BallCreate = new("Redemption/Sounds/Custom/BallCreate") { PitchVariance = .1f };
         public static readonly SoundStyle BallFire = new("Redemption/Sounds/Custom/BallFire") { PitchVariance = .1f };
@@ -40,7 +40,7 @@ namespace Redemption
         public static readonly SoundStyle Bass1 = new("Redemption/Sounds/Custom/Bass1") { PitchVariance = .1f };
         public static readonly SoundStyle BulletBounce = new("Redemption/Sounds/Custom/BulletBounce", 3) { Volume = .3f, PitchVariance = .1f };
         public static readonly SoundStyle ChainSwing = new("Redemption/Sounds/Custom/ChainSwing");
-        public static readonly SoundStyle ChickenCluck = new("Redemption/Sounds/Custom/ChickenCluck", 3);
+        public static readonly SoundStyle ChickenCluck = new("Redemption/Sounds/Custom/ChickenCluck", 3) { PitchVariance = .1f };
         public static readonly SoundStyle Choir = new("Redemption/Sounds/Custom/Choir");
         public static readonly SoundStyle DistortedRoar = new("Redemption/Sounds/Custom/DistortedRoar") { Volume = .5f };
         public static readonly SoundStyle Doot = new("Redemption/Sounds/Custom/Doot") { PitchVariance = .3f };
@@ -56,7 +56,7 @@ namespace Redemption
         public static readonly SoundStyle GigaLaserCoolDown = new("Redemption/Sounds/Custom/GigaLaserCoolDown") { Volume = 1.5f };
         public static readonly SoundStyle GigaLaserFire = new("Redemption/Sounds/Custom/GigaLaserFire") { Volume = 1.5f };
         public static readonly SoundStyle GravityHammerSlam = new("Redemption/Sounds/Custom/GravityHammerSlam") { Volume = 0.6f };
-        public static readonly SoundStyle GrenadeLauncher = new("Redemption/Sounds/Custom/GrenadeLauncher");
+        public static readonly SoundStyle GrenadeLauncher = new("Redemption/Sounds/Custom/GrenadeLauncher") { Volume = .5f };
         public static readonly SoundStyle GuardBreak = new("Redemption/Sounds/Custom/GuardBreak");
         public static readonly SoundStyle Gun1KS = new("Redemption/Sounds/Custom/Gun1KS") { Volume = 1.5f };
         public static readonly SoundStyle Gun2KS = new("Redemption/Sounds/Custom/Gun2KS") { Volume = 1.5f };
@@ -83,7 +83,7 @@ namespace Redemption
         public static readonly SoundStyle PatientZeroLaserL = new("Redemption/Sounds/Custom/PatientZeroLaserL");
         public static readonly SoundStyle PlasmaBlast = new("Redemption/Sounds/Custom/PlasmaBlast");
         public static readonly SoundStyle PlasmaShot = new("Redemption/Sounds/Custom/PlasmaShot");
-        public static readonly SoundStyle PortalWub = new("Redemption/Sounds/Custom/PortalWub");
+        public static readonly SoundStyle PortalWub = new("Redemption/Sounds/Custom/PortalWub") { Volume = .5f, MaxInstances = 1, SoundLimitBehavior = SoundLimitBehavior.IgnoreNew };
         public static readonly SoundStyle Quake = new("Redemption/Sounds/Custom/Quake");
         public static readonly SoundStyle Reflect = new("Redemption/Sounds/Custom/Reflect") { Volume = .5f, PitchVariance = .1f };
         public static readonly SoundStyle ShootChange = new("Redemption/Sounds/Custom/ShootChange");
@@ -111,6 +111,8 @@ namespace Redemption
         public static readonly SoundStyle Voice4 = new("Redemption/Sounds/Custom/Voice4") { MaxInstances = 10, SoundLimitBehavior = SoundLimitBehavior.ReplaceOldest };
         public static readonly SoundStyle Voice5 = new("Redemption/Sounds/Custom/Voice5") { Volume = 0.7f, MaxInstances = 10, SoundLimitBehavior = SoundLimitBehavior.ReplaceOldest };
         public static readonly SoundStyle Voice6 = new("Redemption/Sounds/Custom/Voice6") { Volume = 0.4f, MaxInstances = 10, SoundLimitBehavior = SoundLimitBehavior.ReplaceOldest };
+        public static readonly SoundStyle Voice7 = new("Redemption/Sounds/Custom/Voice7") { MaxInstances = 10, SoundLimitBehavior = SoundLimitBehavior.ReplaceOldest };
+        public static readonly SoundStyle Voice8 = new("Redemption/Sounds/Custom/Voice8") { MaxInstances = 10, SoundLimitBehavior = SoundLimitBehavior.ReplaceOldest };
         public static readonly SoundStyle MegaLaser = new("Redemption/Sounds/Custom/MegaLaser");
         public static readonly SoundStyle ObliteratorYo = new("Redemption/Sounds/Custom/ObliteratorYo") { Volume = 0.7f };
         public static readonly SoundStyle OODashReady = new("Redemption/Sounds/Custom/OODashReady") { Volume = 0.8f };
@@ -128,5 +130,22 @@ namespace Redemption
         public static readonly SoundStyle Violin = new("Redemption/Sounds/Custom/Violin");
         public static readonly SoundStyle sans = new("Redemption/Sounds/Custom/sans") { Volume = .8f, PitchVariance = .1f };
         public static readonly SoundStyle BAZINGA = new("Redemption/Sounds/Custom/BAZINGA");
+        public static readonly SoundStyle WorldTree = new("Redemption/Sounds/Custom/WorldTree");
+        public static readonly SoundStyle DANShot = new("Redemption/Sounds/Custom/DANShot") { PitchVariance = .1f };
+        public static readonly SoundStyle Pixie1 = new("Redemption/Sounds/Custom/Pixie1") { PitchVariance = .1f };
+        public static readonly SoundStyle Pixie2 = new("Redemption/Sounds/Custom/Pixie2") { PitchVariance = .1f };
+        public static readonly SoundStyle Pixie3 = new("Redemption/Sounds/Custom/Pixie3") { PitchVariance = .1f };
+        public static readonly SoundStyle RoosterRoar = new("Redemption/Sounds/Custom/RoosterRoar") { PitchVariance = .1f };
+        public static readonly SoundStyle Roar1 = new("Redemption/Sounds/Custom/Roar1") { PitchVariance = .1f };
+        public static readonly SoundStyle NoitaDeath = new("Redemption/Sounds/Custom/NoitaDeath");
+        public static readonly SoundStyle SwordClash = new("Redemption/Sounds/Custom/SwordClash") { PitchVariance = .1f };
+
+        public static readonly SoundStyle BoneHit = new("Redemption/Sounds/Tiles/BoneHit", 3);
+        public static readonly SoundStyle BrickHit = new("Redemption/Sounds/Tiles/BrickHit", 3);
+        public static readonly SoundStyle ChainHit = new("Redemption/Sounds/Tiles/ChainHit", 3);
+        public static readonly SoundStyle CrystalHit = new("Redemption/Sounds/Tiles/CrystalHit", 3);
+        public static readonly SoundStyle MetalHit = new("Redemption/Sounds/Tiles/MetalHit", 3);
+        public static readonly SoundStyle DragonLeadHit = new("Redemption/Sounds/Tiles/DragonLeadHit", 3);
+        public static readonly SoundStyle StoneHit = new("Redemption/Sounds/Tiles/StoneHit1") { PitchVariance = .1f };
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Redemption.Globals;
 
 namespace Redemption.NPCs.Bosses.ADD
 {
@@ -11,9 +12,10 @@ namespace Redemption.NPCs.Bosses.ADD
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Gust");
+            // DisplayName.SetDefault("Gust");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 5;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjWind[Type] = true;
         }
         public override void SetDefaults()
         {

@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.BaseExtension;
 using Redemption.Buffs.Debuffs;
+using Redemption.Globals;
 using Redemption.Items.Materials.HM;
 using Redemption.Projectiles.Minions;
 using System.Collections.Generic;
@@ -17,10 +18,10 @@ namespace Redemption.Items.Weapons.HM.Summon
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Your summons will focus struck enemies\n" +
+            /* Tooltip.SetDefault("Your summons will focus struck enemies\n" +
                 "Strike enemies to summon a friendly hive cyst\n" +
-                "Inflicts Infection");
-            SacrificeTotal = 1;
+                "Inflicts Infection"); */
+            Item.ResearchUnlockCount = 1;
         }
         public override void SetDefaults()
         {
@@ -45,8 +46,9 @@ namespace Redemption.Items.Weapons.HM.Summon
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Infected Tentacle");
+            // DisplayName.SetDefault("Infected Tentacle");
             ProjectileID.Sets.IsAWhip[Type] = true;
+            ElementID.ProjPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -56,7 +58,7 @@ namespace Redemption.Items.Weapons.HM.Summon
             Projectile.WhipSettings.RangeMultiplier = 0.8f;
             Projectile.Redemption().TechnicallyMelee = true;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Player player = Main.player[Projectile.owner];
             target.AddBuff(ModContent.BuffType<GreenRashesDebuff>(), 300);
@@ -65,31 +67,10 @@ namespace Redemption.Items.Weapons.HM.Summon
 
             if (player.whoAmI == Main.myPlayer && player.ownedProjectileCounts[ModContent.ProjectileType<HiveCyst_Proj>()] < 2)
             {
-                SoundEngine.PlaySound(SoundID.NPCHit13, Projectile.position);
+                SoundEngine.PlaySound(SoundID.NPCHit13 with { Volume = .5f }, Projectile.position);
                 Projectile.NewProjectile(Projectile.GetSource_FromAI(), target.Center, Vector2.Zero, ModContent.ProjectileType<HiveCyst_Proj>(), Projectile.damage / 3, Projectile.knockBack, player.whoAmI);
             }
             Main.player[Projectile.owner].MinionAttackTargetNPC = target.whoAmI;
-        }
-        private static void DrawLine(List<Vector2> list)
-        {
-            Texture2D texture = TextureAssets.FishingLine.Value;
-            Rectangle frame = texture.Frame();
-            Vector2 origin = new(frame.Width / 2, 2);
-
-            Vector2 pos = list[0];
-            for (int i = 0; i < list.Count - 1; i++)
-            {
-                Vector2 element = list[i];
-                Vector2 diff = list[i + 1] - element;
-
-                float rotation = diff.ToRotation() - MathHelper.PiOver2;
-                Color color = Lighting.GetColor(element.ToTileCoordinates(), Color.White);
-                Vector2 scale = new(1, (diff.Length() + 2) / frame.Height);
-
-                Main.EntitySpriteDraw(texture, pos - Main.screenPosition, frame, color, rotation, origin, scale, SpriteEffects.None, 0);
-
-                pos += diff;
-            }
         }
         public override bool PreDraw(ref Color lightColor)
         {

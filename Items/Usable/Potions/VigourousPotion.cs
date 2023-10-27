@@ -2,9 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.Base;
 using Redemption.Buffs;
-using Redemption.Globals;
 using Redemption.Items.Materials.PostML;
-using Redemption.Items.Placeable.Plants;
 using Redemption.Rarities;
 using Terraria;
 using Terraria.GameContent;
@@ -17,8 +15,13 @@ namespace Redemption.Items.Usable.Potions
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Greatly increases life regeneration for a short time");
-            SacrificeTotal = 20;
+            // Tooltip.SetDefault("Greatly increases life regeneration for a short time");
+            ItemID.Sets.DrinkParticleColors[Type] = new Color[3] {
+                new Color(255, 147, 147),
+                new Color(218, 37, 109),
+                new Color(114, 255, 121)
+            };
+            Item.ResearchUnlockCount = 20;
         }
         public override void SetDefaults()
         {
@@ -30,7 +33,7 @@ namespace Redemption.Items.Usable.Potions
             Item.consumable = true;
             Item.width = 14;
             Item.height = 28;
-            Item.maxStack = 9999;
+            Item.maxStack = Item.CommonMaxStack;
             Item.value = Item.sellPrice(0, 0, 80, 0);
             Item.rare = ModContent.RarityType<CosmicRarity>();
             Item.buffType = ModContent.BuffType<VigourousBuff>();
@@ -42,13 +45,13 @@ namespace Redemption.Items.Usable.Potions
                 .AddIngredient(ModContent.ItemType<LifeFragment>(), 2)
                 .AddIngredient(ItemID.RegenerationPotion)
                 .AddTile(TileID.Bottles)
+                .DisableDecraft()
                 .Register();
         }
-        private float drawTimer;
         public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
         {
             Texture2D texture = TextureAssets.Item[Item.type].Value;
-            Texture2D glow = ModContent.Request<Texture2D>(Item.ModItem.Texture + "_Glow").Value;
+            Texture2D glow = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
             float opac = BaseUtility.MultiLerp(Main.LocalPlayer.miscCounter % 100 / 100f, 0f, 1f, 0f);
 
             spriteBatch.Draw(texture, position, new Rectangle(0, 0, texture.Width, texture.Height), drawColor, 0, origin, scale, 0, 0f);
@@ -58,7 +61,7 @@ namespace Redemption.Items.Usable.Potions
         public override bool PreDrawInWorld(SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI)
         {
             Texture2D texture = TextureAssets.Item[Item.type].Value;
-            Texture2D glow = ModContent.Request<Texture2D>(Item.ModItem.Texture + "_Glow").Value;
+            Texture2D glow = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
             float opac = BaseUtility.MultiLerp(Main.LocalPlayer.miscCounter % 100 / 100f, 0f, 1f, 0f);
             Rectangle frame;
             if (Main.itemAnimations[Item.type] != null)

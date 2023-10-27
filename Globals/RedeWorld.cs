@@ -5,6 +5,7 @@ using Redemption.NPCs.Bosses.Erhan;
 using Redemption.NPCs.Bosses.Keeper;
 using Redemption.NPCs.Friendly;
 using Redemption.Projectiles.Misc;
+using Redemption.UI.ChatUI;
 using Redemption.WorldGeneration.Soulless;
 using SubworldLibrary;
 using System;
@@ -69,6 +70,10 @@ namespace Redemption.Globals
         public static bool apidroidKilled;
         public static bool deadRingerGiven;
         public static bool newbGone;
+        public static bool slayerMessageGiven;
+        public static bool keycardGiven;
+        public static bool alignmentGiven;
+        public static bool[] spawnCleared = new bool[5];
 
         #region Nuke Shenanigans
         public static int nukeTimerInternal = 1800;
@@ -93,8 +98,11 @@ namespace Redemption.Globals
             if (Main.time == 1)
                 DayNightCount++;
 
+            if (SubworldSystem.Current != null)
+                return;
+
             #region Skeleton Invasion
-            if (DayNightCount >= 10 && !Main.hardMode && !Main.fastForwardTime)
+            if (DayNightCount >= 10 && !Main.hardMode && !Main.IsFastForwardingTime())
             {
                 if (Main.dayTime && Main.time == 1 && !WorldGen.spawnEye)
                 {
@@ -104,7 +112,7 @@ namespace Redemption.Globals
                         {
                             spawnSkeletonInvasion = true;
 
-                            string status = "The skeletons are plotting a party at dusk..." + (RedeBossDowned.downedSkeletonInvasion ? " Again." : "");
+                            string status = Language.GetTextValue("Mods.Redemption.StatusMessage.Event.SkeletonParty1") + (RedeBossDowned.downedSkeletonInvasion ? Language.GetTextValue("Mods.Redemption.StatusMessage.Event.Again") : "");
                             if (Main.netMode == NetmodeID.Server)
                                 ChatHelper.BroadcastChatMessage(NetworkText.FromLiteral(status), Color.LightGray);
                             else if (Main.netMode == NetmodeID.SinglePlayer)
@@ -114,9 +122,9 @@ namespace Redemption.Globals
                 }
                 if (!Main.dayTime && spawnSkeletonInvasion && Main.netMode != NetmodeID.MultiplayerClient && Main.time > 1)
                 {
-                    string status = "The skeletons are partying!";
+                    string status = Language.GetTextValue("Mods.Redemption.StatusMessage.Event.SkeletonParty2");
                     if (WorldGen.spawnEye || Main.bloodMoon || WorldGen.spawnHardBoss > 0)
-                        status = "The skeletons reconsidered partying tonight...";
+                        status = Language.GetTextValue("Mods.Redemption.StatusMessage.Event.SkeletonParty3");
                     else
                         SkeletonInvasion = true;
 
@@ -136,7 +144,7 @@ namespace Redemption.Globals
                 SkeletonInvasion = false;
                 RedeBossDowned.downedSkeletonInvasion = true;
 
-                string status = "The skeletons got bored and went home!";
+                string status = Language.GetTextValue("Mods.Redemption.StatusMessage.Event.SkeletonParty4");
                 if (Main.netMode == NetmodeID.Server)
                     ChatHelper.BroadcastChatMessage(NetworkText.FromLiteral(status), Color.LightGray);
                 else if (Main.netMode == NetmodeID.SinglePlayer)
@@ -148,7 +156,7 @@ namespace Redemption.Globals
             #endregion
 
             #region Keeper Summoning
-            if (!Main.dayTime && Terraria.NPC.downedBoss1 && !Main.hardMode && !Main.fastForwardTime)
+            if (!Main.dayTime && Terraria.NPC.downedBoss1 && !Main.hardMode && !Main.IsFastForwardingTime())
             {
                 if (Main.time == 1 && !WorldGen.spawnEye && !spawnSkeletonInvasion)
                 {
@@ -168,7 +176,7 @@ namespace Redemption.Globals
                         {
                             spawnKeeper = true;
 
-                            string status = "Shrieks echo through the night...";
+                            string status = Language.GetTextValue("Mods.Redemption.StatusMessage.Other.Keeper1");
                             if (Main.netMode == NetmodeID.Server)
                                 ChatHelper.BroadcastChatMessage(NetworkText.FromLiteral(status), Color.MediumPurple);
                             else if (Main.netMode == NetmodeID.SinglePlayer)
@@ -189,7 +197,7 @@ namespace Redemption.Globals
                         if (Main.netMode != NetmodeID.MultiplayerClient)
                             Terraria.NPC.SpawnOnPlayer(player.whoAmI, type);
                         else
-                            NetMessage.SendData(MessageID.SpawnBoss, number: player.whoAmI, number2: type);
+                            NetMessage.SendData(MessageID.SpawnBossUseLicenseStartEvent, number: player.whoAmI, number2: type);
 
                         spawnKeeper = false;
                         break;
@@ -204,7 +212,7 @@ namespace Redemption.Globals
                 if (Main.time == 1 && Main.rand.NextBool(2))
                 {
                     newbGone = true;
-                    string status = "The Fool has left...";
+                    string status = Language.GetTextValue("Mods.Redemption.StatusMessage.Progression.FoolLeft");
                     if (Main.netMode == NetmodeID.Server)
                         ChatHelper.BroadcastChatMessage(NetworkText.FromLiteral(status), Color.SandyBrown);
                     else if (Main.netMode == NetmodeID.SinglePlayer)
@@ -219,7 +227,7 @@ namespace Redemption.Globals
                 {
                     labSafe = true;
 
-                    string status = "The laboratory's defence systems have malfunctioned...";
+                    string status = Language.GetTextValue("Mods.Redemption.StatusMessage.Progression.LabOpen");
                     if (Main.netMode == NetmodeID.Server)
                         ChatHelper.BroadcastChatMessage(NetworkText.FromLiteral(status), Color.Cyan);
                     else if (Main.netMode == NetmodeID.SinglePlayer)
@@ -243,7 +251,7 @@ namespace Redemption.Globals
                 omegaTransmitReady[1] = true;
                 OmegaTransmitterMessage();
             }
-            if (Terraria.NPC.downedMoonlord && !omegaTransmitReady[2])
+            if (Terraria.NPC.downedMoonlord && keycardGiven && !omegaTransmitReady[2])
             {
                 omegaTransmitReady[2] = true;
                 OmegaTransmitterMessage();
@@ -288,11 +296,23 @@ namespace Redemption.Globals
                 blobbleSwarmCooldown--;
 
             UpdateNukeCountdown();
+
+            if (ConversionHandler.GenningWasteland)
+            {
+                int radiusLeft = (int)(ConversionHandler.WastelandCenter.X / 16f - ConversionHandler.Radius);
+                int radiusRight = (int)(ConversionHandler.WastelandCenter.X / 16f + ConversionHandler.Radius);
+                int radiusDown = (int)(ConversionHandler.WastelandCenter.Y / 16f + ConversionHandler.Radius);
+                if (radiusLeft < 15) { radiusLeft = 15; }
+                if (radiusRight > Main.maxTilesX - 15) { radiusRight = Main.maxTilesX - 15; }
+                if (radiusDown > Main.maxTilesY - 15) { radiusDown = Main.maxTilesY - 15; }
+                for (int i = 0; i < 2; i++)
+                    ConversionHandler.GenWasteland(radiusLeft, radiusRight, radiusDown, ConversionHandler.WastelandCenter, ConversionHandler.Radius);
+            }
         }
 
         public static void OmegaTransmitterMessage()
         {
-            string status = "A new Omega Prototype can be called using the Omega Transmitter";
+            string status = Language.GetTextValue("Mods.Redemption.StatusMessage.Progression.OmegaCall");
             if (Main.netMode == NetmodeID.Server)
                 ChatHelper.BroadcastChatMessage(NetworkText.FromLiteral(status), Color.IndianRed);
             else if (Main.netMode == NetmodeID.SinglePlayer)
@@ -358,7 +378,7 @@ namespace Redemption.Globals
             }
         }
 
-        public void HandleNukeExplosion()
+        public static void HandleNukeExplosion()
         {
             for (int i = 0; i < Main.maxPlayers; ++i)
             {
@@ -371,12 +391,12 @@ namespace Redemption.Globals
                     string nukeDeathReason;
 
                     WeightedRandom<string> nukeDeaths = new(Main.rand);
-                    nukeDeaths.Add(player.name + " saw a second sunrise.", 5);
-                    nukeDeaths.Add(player.name + " was wiped off the face of " + Main.worldName + ".", 5);
-                    nukeDeaths.Add(player.name + " experienced doomsday.", 5);
-                    nukeDeaths.Add(player.name + " became a shadow on the ground.", 5);
-                    nukeDeaths.Add(player.name + " went out with a bang.", 5);
-                    nukeDeaths.Add(player.name + " couldn't find the fridge in time.", 1);
+                    nukeDeaths.Add(player.name + Language.GetTextValue("Mods.Redemption.StatusMessage.Death.Nuclear1"), 5);
+                    nukeDeaths.Add(player.name + Language.GetTextValue("Mods.Redemption.StatusMessage.Death.Nuclear2") + Main.worldName + "", 5);
+                    nukeDeaths.Add(player.name + Language.GetTextValue("Mods.Redemption.StatusMessage.Death.Nuclear3"), 5);
+                    nukeDeaths.Add(player.name + Language.GetTextValue("Mods.Redemption.StatusMessage.Death.Nuclear4"), 5);
+                    nukeDeaths.Add(player.name + Language.GetTextValue("Mods.Redemption.StatusMessage.Death.Nuclear5"), 5);
+                    nukeDeaths.Add(player.name + Language.GetTextValue("Mods.Redemption.StatusMessage.Death.Nuclear6"), 1);
 
                     nukeDeathReason = nukeDeaths;
                     if (!Main.dedServ)
@@ -403,19 +423,6 @@ namespace Redemption.Globals
 
         public override void OnWorldLoad()
         {
-            alignment = 0;
-            DayNightCount = 0;
-            SkeletonInvasion = false;
-            spawnKeeper = false;
-            spawnSkeletonInvasion = false;
-            tbotDownedTimer = 0;
-            daerelDownedTimer = 0;
-            zephosDownedTimer = 0;
-            slayerRep = 0;
-            labSafe = false;
-            apidroidKilled = false;
-            deadRingerGiven = false;
-            newbGone = false;
             if (Terraria.NPC.downedPlantBoss)
                 omegaTransmitReady[0] = true;
             else
@@ -429,9 +436,20 @@ namespace Redemption.Globals
             else
                 omegaTransmitReady[2] = false;
         }
-
         public override void OnWorldUnload()
         {
+            omegaTransmitReady[0] = false;
+            omegaTransmitReady[1] = false;
+            omegaTransmitReady[2] = false;
+        }
+        public override void ClearWorld()
+        {
+            Redemption.TrailManager?.ClearAllTrails();
+            if (!Main.dedServ)
+                AdditiveCallManager.Unload();
+            if (!Main.dedServ && ChatUI.Visible)
+                ChatUI.Clear();
+
             alignment = 0;
             DayNightCount = 0;
             SkeletonInvasion = false;
@@ -445,9 +463,11 @@ namespace Redemption.Globals
             apidroidKilled = false;
             deadRingerGiven = false;
             newbGone = false;
-            omegaTransmitReady[0] = false;
-            omegaTransmitReady[1] = false;
-            omegaTransmitReady[2] = false;
+            slayerMessageGiven = false;
+            keycardGiven = false;
+            alignmentGiven = false;
+            for (int i = 0; i < spawnCleared.Length; i++)
+                spawnCleared[i] = false;
         }
 
         public override void SaveWorldData(TagCompound tag)
@@ -464,6 +484,12 @@ namespace Redemption.Globals
                 lists.Add("deadRingerGiven");
             if (newbGone)
                 lists.Add("newbGone");
+            if (slayerMessageGiven)
+                lists.Add("slayerMessageGiven");
+            if (keycardGiven)
+                lists.Add("keycardGiven");
+            if (alignmentGiven)
+                lists.Add("alignmentGiven");
 
             tag["lists"] = lists;
             tag["alignment"] = alignment;
@@ -489,6 +515,9 @@ namespace Redemption.Globals
             apidroidKilled = lists.Contains("apidroidKilled");
             deadRingerGiven = lists.Contains("deadRingerGiven");
             newbGone = lists.Contains("newbGone");
+            slayerMessageGiven = lists.Contains("slayerMessageGiven");
+            keycardGiven = lists.Contains("keycardGiven");
+            alignmentGiven = lists.Contains("alignmentGiven");
         }
 
         public override void NetSend(BinaryWriter writer)
@@ -499,6 +528,9 @@ namespace Redemption.Globals
             flags[2] = apidroidKilled;
             flags[3] = deadRingerGiven;
             flags[4] = newbGone;
+            flags[5] = slayerMessageGiven;
+            flags[6] = keycardGiven;
+            flags[7] = alignmentGiven;
             writer.Write(flags);
 
             writer.Write(alignment);
@@ -517,6 +549,9 @@ namespace Redemption.Globals
             apidroidKilled = flags[2];
             deadRingerGiven = flags[3];
             newbGone = flags[4];
+            slayerMessageGiven = flags[5];
+            keycardGiven = flags[6];
+            alignmentGiven = flags[7];
 
             alignment = reader.ReadInt32();
             DayNightCount = reader.ReadInt32();

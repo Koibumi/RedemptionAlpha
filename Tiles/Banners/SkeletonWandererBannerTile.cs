@@ -1,10 +1,9 @@
 using Microsoft.Xna.Framework;
-using Redemption.Items.Placeable.Banners;
 using Redemption.NPCs.PreHM;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
-using Terraria.DataStructures;
+using Terraria.Localization;
 
 namespace Redemption.Tiles.Banners
 {
@@ -21,14 +20,9 @@ namespace Redemption.Tiles.Banners
             TileObjectData.newTile.StyleHorizontal = true;
             TileObjectData.newTile.StyleWrapLimit = 111;
             TileObjectData.addTile(Type);
-            AddMapEntry(Color.SlateGray);
+            AddMapEntry(Color.SlateGray, Language.GetText("MapObject.Banner"));
         }
-
-        public override void KillMultiTile(int i, int j, int frameX, int frameY)
-        {
-            Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 16, 48, ModContent.ItemType<SkeletonWandererBanner>());
-        }
-
+        public override bool CreateDust(int i, int j, ref int type) => false;
         public override void NearbyEffects(int i, int j, bool closer)
         {
             if (closer)

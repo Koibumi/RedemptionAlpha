@@ -1,10 +1,13 @@
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ID;
+using Terraria.Localization;
 using Redemption.Items.Materials.PreHM;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Redemption.BaseExtension;
+using Redemption.Globals;
+using Redemption.Items.Armor.Single;
 
 namespace Redemption.Items.Armor.PreHM.PureIron
 {
@@ -13,11 +16,11 @@ namespace Redemption.Items.Armor.PreHM.PureIron
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Pure-Iron Helmet");
-            Tooltip.SetDefault("7% increased damage");
+            // DisplayName.SetDefault("Pure-Iron Helmet");
+            // Tooltip.SetDefault("7% increased damage");
             ArmorIDs.Head.Sets.DrawHead[EquipLoader.GetEquipSlot(Mod, Name, EquipType.Head)] = false;
-
-            SacrificeTotal = 1;
+            ItemID.Sets.ShimmerTransformToItem[Type] = ModContent.ItemType<AntiquePureIronHelmet>();
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -41,10 +44,9 @@ namespace Redemption.Items.Armor.PreHM.PureIron
 
         public override void UpdateArmorSet(Player player)
         {
-            player.setBonus = "20% increased Fire elemental resistance\n" +
-                "33% chance for weapons to inflict Pure Chill\n" +
-                "100% chance for all Pure-Iron weapons to inflict Pure Chill";
-            player.RedemptionPlayerBuff().ElementalResistance[1] += 0.2f;
+            player.setBonus = Language.GetTextValue("Mods.Redemption.GenericTooltips.ArmorSetBonus.PureIron.20Increased") + ElementID.FireS + Language.GetTextValue("Mods.Redemption.GenericTooltips.ArmorSetBonus.VanillaArmor.Resistance") +
+                Language.GetTextValue("Mods.Redemption.GenericTooltips.ArmorSetBonus.PureIron.Bonus");
+            player.RedemptionPlayerBuff().ElementalResistance[ElementID.Fire] += 0.2f;
             player.RedemptionPlayerBuff().pureIronBonus = true;
             player.RedemptionPlayerBuff().MetalSet = true;
         }
@@ -61,12 +63,7 @@ namespace Redemption.Items.Armor.PreHM.PureIron
         {
             if (Main.keyState.PressingShift())
             {
-                TooltipLine line = new(Mod, "Lore",
-                    "'A visored helmet used by the Warriors of the Iron Realm.\n" +
-                    "The metal emits a constant chill mist and is cold to the touch,\n" +
-                    "however the Iron Realm's warriors have been trained to resist such harsh temperatures.\n\n" +
-                    "The Warriors of the Iron Realm are Gathuram's main military force,\n" +
-                    "with units spanning all across the domain.'")
+                TooltipLine line = new(Mod, "Lore", Language.GetTextValue("Mods.Redemption.SpecialTooltips.PureIron.PureIronHelmet"))
                 {
                     OverrideColor = Color.LightGray
                 };
@@ -74,7 +71,7 @@ namespace Redemption.Items.Armor.PreHM.PureIron
             }
             else
             {
-                TooltipLine line = new(Mod, "HoldShift", "Hold [Shift] to view lore")
+                TooltipLine line = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.SpecialTooltips.Viewer"))
                 {
                     OverrideColor = Color.Gray,
                 };

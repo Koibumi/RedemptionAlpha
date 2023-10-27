@@ -16,6 +16,8 @@ using Redemption.BaseExtension;
 using Redemption.Items.Donator.Sneaklone;
 using Redemption.Items.Usable.Potions;
 using Redemption.Items.Usable;
+using System.IO;
+using Terraria.Localization;
 
 namespace Redemption.NPCs.Lab
 {
@@ -42,20 +44,12 @@ namespace Redemption.NPCs.Lab
         {
             Main.npcFrameCount[NPC.type] = 10;
 
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Poisoned,
-                    ModContent.BuffType<BileDebuff>(),
-                    ModContent.BuffType<GreenRashesDebuff>(),
-                    ModContent.BuffType<GlowingPustulesDebuff>(),
-                    ModContent.BuffType<FleshCrystalsDebuff>()
-                }
-            });
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Infected);
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0);
-
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
+            ElementID.NPCWater[Type] = true;
+            ElementID.NPCPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -74,24 +68,31 @@ namespace Redemption.NPCs.Lab
             Banner = NPC.type;
             BannerItem = ModContent.ItemType<OozingScientistBanner>();
         }
-
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.WriteVector2(moveTo);
+        }
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            moveTo = reader.ReadVector2();
+        }
         private Vector2 moveTo;
         private int runCooldown;
         public override void OnSpawn(IEntitySource source)
         {
             TimerRand = Main.rand.Next(80, 280);
+            NPC.netUpdate = true;
         }
         public override void AI()
         {
-            if (LabArea.Active)
-                NPC.DiscourageDespawn(60);
-
             Player player = Main.player[NPC.target];
+            if (player.InModBiome<LabBiome>())
+                NPC.DiscourageDespawn(60);
             RedeNPC globalNPC = NPC.Redemption();
             NPC.TargetClosest();
             NPC.LookByVelocity();
 
-            if (Main.rand.NextBool(1800))
+            if (Main.rand.NextBool(1800) && !Main.dedServ)
                 SoundEngine.PlaySound(new("Terraria/Sounds/Zombie_" + (Main.rand.NextBool() ? 21 : 23)), NPC.position);
 
             switch (AIState)
@@ -106,6 +107,7 @@ namespace Redemption.NPCs.Lab
                         AITimer = 0;
                         TimerRand = Main.rand.Next(120, 260);
                         AIState = ActionState.Wander;
+                        NPC.netUpdate = true;
                     }
 
                     SightCheck();
@@ -120,10 +122,11 @@ namespace Redemption.NPCs.Lab
                         AITimer = 0;
                         TimerRand = Main.rand.Next(80, 280);
                         AIState = ActionState.Idle;
+                        NPC.netUpdate = true;
                     }
 
-                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20);
-                    RedeHelper.HorizontallyMove(NPC, moveTo * 16, 0.4f, 1, 12, 8, NPC.Center.Y > player.Center.Y);
+                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20, (moveTo.Y - 32) * 16);
+                    NPCHelper.HorizontallyMove(NPC, moveTo * 16, 0.4f, 1, 12, 8, NPC.Center.Y > moveTo.Y * 16);
                     break;
 
                 case ActionState.Alert:
@@ -140,8 +143,8 @@ namespace Redemption.NPCs.Lab
 
                     NPC.DamageHostileAttackers(0, 7);
 
-                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20);
-                    RedeHelper.HorizontallyMove(NPC, globalNPC.attacker.Center, 0.1f, 8f * (NPC.RedemptionNPCBuff().rallied ? 1.2f : 1f), 18, 8, NPC.Center.Y > globalNPC.attacker.Center.Y);
+                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20, globalNPC.attacker.Center.Y);
+                    NPCHelper.HorizontallyMove(NPC, globalNPC.attacker.Center, 0.1f, 8f * (NPC.RedemptionNPCBuff().rallied ? 1.2f : 1f), 18, 8, NPC.Center.Y > globalNPC.attacker.Center.Y, globalNPC.attacker);
 
                     break;
             }
@@ -192,7 +195,7 @@ namespace Redemption.NPCs.Lab
             for (int i = 0; i < Main.maxNPCs; i++)
             {
                 NPC target = Main.npc[i];
-                if (!target.active || target.whoAmI == NPC.whoAmI || target.dontTakeDamage || target.type == NPCID.OldMan)
+                if (!target.active || target.whoAmI == NPC.whoAmI || target.dontTakeDamage || target.type == NPCID.OldMan || target.type == NPCID.TargetDummy)
                     continue;
 
                 if (target.lifeMax <= 5 || (!target.friendly && !NPCID.Sets.TakesDamageFromHostilesWithoutBeingFriendly[target.type]))
@@ -219,6 +222,7 @@ namespace Redemption.NPCs.Lab
                 moveTo = NPC.FindGround(15);
                 AITimer = 0;
                 AIState = ActionState.Alert;
+                NPC.netUpdate = true;
             }
             if (gotNPC != -1 && NPC.Sight(Main.npc[gotNPC], 600, true, true))
             {
@@ -227,10 +231,11 @@ namespace Redemption.NPCs.Lab
                 moveTo = NPC.FindGround(15);
                 AITimer = 0;
                 AIState = ActionState.Alert;
+                NPC.netUpdate = true;
             }
         }
 
-        public override bool? CanHitNPC(NPC target) => AIState == ActionState.Alert ? null : false;
+        public override bool CanHitNPC(NPC target) => AIState == ActionState.Alert;
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => AIState == ActionState.Alert;
 
         public override void ModifyNPCLoot(NPCLoot npcLoot)
@@ -241,12 +246,12 @@ namespace Redemption.NPCs.Lab
             npcLoot.Add(ItemDropRule.OneFromOptions(50, ModContent.ItemType<SneakloneHelmet1>(), ModContent.ItemType<SneakloneHelmet2>(), ModContent.ItemType<SneakloneSuit>(), ModContent.ItemType<SneakloneLegs>()));
         }
 
-        public override void ModifyHitPlayer(Player target, ref int damage, ref bool crit)
+        public override void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers)
         {
             if (Main.rand.NextBool(2) || Main.expertMode)
                 target.AddBuff(ModContent.BuffType<GreenRashesDebuff>(), Main.rand.Next(400, 1600));
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -274,8 +279,7 @@ namespace Redemption.NPCs.Lab
         {
             bestiaryEntry.Info.AddRange(new IBestiaryInfoElement[]
             {
-                new FlavorTextBestiaryInfoElement(
-                    "An unfortunate scientist, disfigured and mutilated beyond recognition by the Xenomite infection. This strain is very aggressive and leaks a strange liquidy substance... God, does it smell awful.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.OozingScientist"))
             });
         }
     }

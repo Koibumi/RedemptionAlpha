@@ -12,32 +12,17 @@ namespace Redemption.Items.Placeable.Furniture.Misc
 	{
 		public override void SetStaticDefaults()
 		{
-			SacrificeTotal = 100;
+            ItemID.Sets.Torches[Type] = true;
+            ItemID.Sets.SingleUseInGamepad[Type] = true;
+            ItemID.Sets.ShimmerTransformToItem[Type] = ItemID.ShimmerTorch;
+            Item.ResearchUnlockCount = 100;
 		}
 
 		public override void SetDefaults()
-		{
-			Item.flame = true;
-			Item.noWet = true;
-			Item.useStyle = ItemUseStyleID.Swing;
-			Item.useTurn = true;
-			Item.useAnimation = 15;
-			Item.useTime = 10;
-			Item.holdStyle = ItemHoldStyleID.HoldFront;
-			Item.autoReuse = true;
-			Item.maxStack = 9999;
-			Item.consumable = true;
-			Item.createTile = ModContent.TileType<WastelandTorchTile>();
-			Item.width = 10;
-			Item.height = 12;
-			Item.value = 50;
-		}
-
-		public override void ModifyResearchSorting(ref ContentSamples.CreativeHelper.ItemGroup itemGroup)
-		{
-			itemGroup = ContentSamples.CreativeHelper.ItemGroup.Torches;
-		}
-
+        {
+            Item.DefaultToTorch(ModContent.TileType<WastelandTorchTile>(), 0, false);
+            Item.value = 50;
+        }
 		public override void HoldItem(Player player)
 		{
 			if (Main.rand.NextBool(player.itemAnimation > 0 ? 40 : 80))
@@ -54,11 +39,6 @@ namespace Redemption.Items.Placeable.Furniture.Misc
 		{
 			if (!Item.wet)
 				Lighting.AddLight(Item.Center, 0.85f, 0.7f, 0.7f);
-		}
-
-		public override void AutoLightSelect(ref bool dryTorch, ref bool wetTorch, ref bool glowstick)
-		{
-			dryTorch = true;
 		}
 
 		public override void AddRecipes()

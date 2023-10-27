@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 using Terraria.ID;
@@ -19,6 +20,7 @@ namespace Redemption.Tiles.Natural
             Main.tileLighted[Type] = true;
             Main.tileFrameImportant[Type] = true;
             Main.tileLavaDeath[Type] = false;
+            Main.tileSpelunker[Type] = true;
 
             // Attaches to the ground
             TileObjectData.newTile.CopyFrom(TileObjectData.Style1x1);
@@ -50,11 +52,11 @@ namespace Redemption.Tiles.Natural
             TileObjectData.addAlternate(3);
             TileObjectData.addTile(Type);
 
-            HitSound = SoundID.Item27;
+            HitSound = CustomSounds.CrystalHit;
             DustType = DustID.IceTorch;
-            ItemDrop = ModContent.ItemType<GathicCryoCrystal>();
-            ModTranslation name = CreateMapEntryName();
-            name.SetDefault("Gathic Cryo-Crystal");
+            RegisterItemDrop(ModContent.ItemType<GathicCryoCrystal>());
+            LocalizedText name = CreateMapEntryName();
+            // name.SetDefault("Gathic Cryo-Crystal");
             AddMapEntry(new Color(159, 188, 215), name);
         }
 

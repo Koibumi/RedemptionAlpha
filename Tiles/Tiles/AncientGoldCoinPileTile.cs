@@ -5,6 +5,7 @@ using Terraria.ID;
 using System;
 using Redemption.Items.Usable;
 using Terraria.DataStructures;
+using Redemption.Globals;
 
 namespace Redemption.Tiles.Tiles
 {
@@ -17,11 +18,11 @@ namespace Redemption.Tiles.Tiles
             Main.tileLighted[Type] = false;
             Main.tileBlockLight[Type] = false;
             Main.tileShine[Type] = 1100;
+            TileID.Sets.IsBeam[Type] = true;
             TileID.Sets.Falling[Type] = true;
             DustType = DustID.GoldCoin;
             HitSound = SoundID.Coins;
             AddMapEntry(new Color(208, 200, 48));
-            ItemDrop = ModContent.ItemType<AncientGoldCoin>();
         }
         public override void NumDust(int i, int j, bool fail, ref int num)
 		{
@@ -96,7 +97,7 @@ namespace Redemption.Tiles.Tiles
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Antique Dorul");
+            // DisplayName.SetDefault("Antique Dorul");
             ProjectileID.Sets.ForcePlateDetection[Projectile.type] = true;
         }
 
@@ -166,7 +167,7 @@ namespace Redemption.Tiles.Tiles
             return false;
         }
 
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             if (Projectile.owner == Main.myPlayer && !Projectile.noDropItem)
             {

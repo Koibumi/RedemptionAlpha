@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using Redemption.Biomes;
 using Redemption.NPCs.Bosses.PatientZero;
 using Redemption.NPCs.Lab;
 using Redemption.NPCs.Lab.Behemoth;
@@ -14,21 +15,28 @@ using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
-using static Redemption.Globals.RedeNet;
 
 namespace Redemption.Globals
 {
     public class LabArea : ModSystem
     {
-        public static bool Active;
         public static bool[] labAccess = new bool[6];
-        public override void PreUpdateEntities()
-        {
-            Active = false;
-        }
         public override void PreUpdateWorld()
         {
-            if (!Active || RedeGen.LabVector.X == -1 || RedeGen.LabVector.Y == -1)
+            bool active = Main.LocalPlayer.InModBiome<LabBiome>();
+            if (Main.netMode != NetmodeID.SinglePlayer)
+            {
+                for (int i = 0; i < Main.maxPlayers; i++)
+                {
+                    Terraria.Player player = Main.player[i];
+                    if (!player.active)
+                        continue;
+
+                    if (player.InModBiome<LabBiome>())
+                        active = true;
+                }
+            }
+            if (!active || RedeGen.LabVector.X == -1)
                 return;
 
             Vector2 ToasterPos = new(((RedeGen.LabVector.X + 84) * 16) + 14, (RedeGen.LabVector.Y + 42) * 16);
@@ -68,25 +76,18 @@ namespace Redemption.Globals
             if (!Terraria.NPC.AnyNPCs(ModContent.NPCType<PZ>()) && !Terraria.NPC.AnyNPCs(ModContent.NPCType<PZ_Inactive>()) && !RedeBossDowned.downedPZ)
                 SpawnNPCInWorld(KariPos, ModContent.NPCType<PZ_Inactive>());
         }
-        public static void SpawnNPCInWorld(Vector2 pos, int npcType)
+        public static void SpawnNPCInWorld(Vector2 pos, int npcType, int ai0 = 0, int ai1 = 0, int ai2 = 0, int ai3 = 0)
         {
             if (Main.netMode != NetmodeID.MultiplayerClient)
-                RedeHelper.SpawnNPC(new EntitySource_SpawnNPC(), (int)pos.X, (int)pos.Y, npcType);
-            else if (Main.netMode != NetmodeID.SinglePlayer)
-                Redemption.WriteToPacket(Redemption.Instance.GetPacket(), (byte)ModMessageType.NPCSpawnFromClient, npcType, pos).Send(-1);
+                RedeHelper.SpawnNPC(new EntitySource_SpawnNPC(), (int)pos.X, (int)pos.Y, npcType, ai0, ai1, ai2, ai3);
+            //else if (Main.netMode != NetmodeID.SinglePlayer)
+            //    Redemption.WriteToPacket(Redemption.Instance.GetPacket(), (byte)ModMessageType.NPCSpawnFromClient, npcType, pos).Send(-1);
         }
-        public override void OnWorldLoad()
+        public override void ClearWorld()
         {
             for (int k = 0; k < labAccess.Length; k++)
                 labAccess[k] = false;
         }
-
-        public override void OnWorldUnload()
-        {
-            for (int k = 0; k < labAccess.Length; k++)
-                labAccess[k] = false;
-        }
-
         public override void SaveWorldData(TagCompound tag)
         {
             var lists = new List<string>();

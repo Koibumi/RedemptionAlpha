@@ -14,7 +14,9 @@ namespace Redemption.Items.Weapons.HM.Ranged
         public override string Texture => "Redemption/Items/Weapons/HM/Ranged/ToxicGrenade";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Toxic Grenade");
+            // DisplayName.SetDefault("Toxic Grenade");
+            ElementID.ProjPoison[Type] = true;
+            ElementID.ProjExplosive[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -33,7 +35,7 @@ namespace Redemption.Items.Weapons.HM.Ranged
             Projectile.rotation += Projectile.velocity.X / 20;
             Projectile.velocity.Y += 0.2f;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             if (!Main.dedServ)
                 SoundEngine.PlaySound(CustomSounds.Gas1 with { Volume = 0.7f }, Projectile.position);
@@ -50,7 +52,7 @@ namespace Redemption.Items.Weapons.HM.Ranged
                     continue;
 
                 target.immune[Projectile.whoAmI] = 20;
-                int hitDirection = Projectile.Center.X > target.Center.X ? -1 : 1;
+                int hitDirection = target.RightOfDir(Projectile);
                 BaseAI.DamageNPC(target, Projectile.damage, Projectile.knockBack, hitDirection, Projectile, crit: Projectile.HeldItemCrit());
             }
             for (int i = 0; i < 20; i++)
@@ -76,7 +78,7 @@ namespace Redemption.Items.Weapons.HM.Ranged
             if (Projectile.owner == Main.myPlayer)
                 Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center, Vector2.Zero, ModContent.ProjectileType<ToxicGas_Proj>(), Projectile.damage / 2, 0, Projectile.owner);
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.immune[Projectile.whoAmI] = 20;
         }

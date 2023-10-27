@@ -1,11 +1,9 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Redemption.Base;
 using Redemption.Biomes;
 using Redemption.Globals;
 using Redemption.NPCs.Friendly;
 using System;
-using System.Security.AccessControl;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.GameContent.UI;
@@ -18,9 +16,11 @@ namespace Redemption.Items.Donator.Lizzy
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Lizzy");
+            // DisplayName.SetDefault("Lizzy");
             Main.projFrames[Projectile.type] = 11;
             Main.projPet[Projectile.type] = true;
+            ProjectileID.Sets.CharacterPreviewAnimations[Projectile.type] = ProjectileID.Sets.SimpleLoop(1, 8, 5)
+                .WithOffset(2, 0).WithSpriteDirection(-1);
         }
 
         public override void SetDefaults()

@@ -21,12 +21,30 @@ using Redemption.Items.Armor.Vanity;
 using Redemption.BaseExtension;
 using Redemption.Items.Weapons.PostML.Magic;
 using Redemption.Items.Weapons.PostML.Summon;
+using ReLogic.Content;
+using Terraria.Localization;
+using Redemption.Globals.NPC;
+using Redemption.Helpers;
 
 namespace Redemption.NPCs.Bosses.ADD
 {
     [AutoloadBossHead]
     public class Akka : ModNPC
     {
+        private static Asset<Texture2D> magicAni;
+        private static Asset<Texture2D> magicGlow;
+        public override void Load()
+        {
+            if (Main.dedServ)
+                return;
+            magicAni = ModContent.Request<Texture2D>(Texture + "_Spell");
+            magicGlow = ModContent.Request<Texture2D>(Texture + "_Spell_Glow");
+        }
+        public override void Unload()
+        {
+            magicAni = null;
+            magicGlow = null;
+        }
         private Player player;
         public enum ActionState
         {
@@ -46,7 +64,7 @@ namespace Redemption.NPCs.Bosses.ADD
         public ref float AITimer => ref NPC.ai[2];
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Akka");
+            // DisplayName.SetDefault("Akka");
             Main.npcFrameCount[NPC.type] = 6;
             NPCID.Sets.TrailCacheLength[NPC.type] = 8;
             NPCID.Sets.TrailingMode[NPC.type] = 0;
@@ -54,18 +72,8 @@ namespace Redemption.NPCs.Bosses.ADD
             NPCID.Sets.MPAllowedEnemies[Type] = true;
             NPCID.Sets.BossBestiaryPriority.Add(Type);
 
-            NPCDebuffImmunityData debuffData = new()
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Poisoned,
-                    BuffID.Confused,
-                    ModContent.BuffType<InfestedDebuff>(),
-                    ModContent.BuffType<NecroticGougeDebuff>(),
-                    ModContent.BuffType<ViralityDebuff>(),
-                    ModContent.BuffType<DirtyWoundDebuff>()
-                }
-            };
-            NPCID.Sets.DebuffImmunitySets.Add(Type, debuffData);
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Inorganic);
+            NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Confused] = true;
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0)
             {
@@ -73,6 +81,8 @@ namespace Redemption.NPCs.Bosses.ADD
                 PortraitPositionYOverride = 0
             };
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
+            ElementID.NPCNature[Type] = true;
+            ElementID.NPCEarth[Type] = true;
         }
         public int GuardPointMax;
         public override void SetDefaults()
@@ -97,55 +107,34 @@ namespace Redemption.NPCs.Bosses.ADD
             NPC.RedemptionGuard().GuardBroken = true;
             NPC.BossBar = ModContent.GetInstance<AkkaHealthBar>();
             if (!Main.dedServ)
-                Music = MusicLoader.GetMusicSlot(Mod, "Sounds/Music/BossForest2");
+                Music = MusicLoader.GetMusicSlot(Mod, "Sounds/Music/BossUkkoAkka");
+
+            NPC.GetGlobalNPC<ElementalNPC>().OverrideMultiplier[ElementID.Blood] *= .75f;
+            NPC.GetGlobalNPC<ElementalNPC>().OverrideMultiplier[ElementID.Earth] *= .75f;
+            NPC.GetGlobalNPC<ElementalNPC>().OverrideMultiplier[ElementID.Nature] *= .75f;
+            NPC.GetGlobalNPC<ElementalNPC>().OverrideMultiplier[ElementID.Poison] *= .9f;
+            NPC.GetGlobalNPC<ElementalNPC>().OverrideMultiplier[ElementID.Water] *= .9f;
+            NPC.GetGlobalNPC<ElementalNPC>().OverrideMultiplier[ElementID.Fire] *= 1.25f;
+            NPC.GetGlobalNPC<ElementalNPC>().OverrideMultiplier[ElementID.Wind] *= 1.1f;
         }
-        public override void ModifyHitByItem(Player player, Item item, ref int damage, ref float knockback, ref bool crit)
+        public override void ModifyHitByProjectile(Projectile projectile, ref NPC.HitModifiers modifiers)
         {
-            if (!RedeConfigClient.Instance.ElementDisable)
-            {
-                if (ItemLists.Blood.Contains(item.type) || ItemLists.Earth.Contains(item.type) || ItemLists.Nature.Contains(item.type))
-                    NPC.Redemption().elementDmg *= 0.75f;
-
-                if (ItemLists.Poison.Contains(item.type) || ItemLists.Water.Contains(item.type))
-                    NPC.Redemption().elementDmg *= 0.9f;
-
-                if (ItemLists.Fire.Contains(item.type))
-                    NPC.Redemption().elementDmg *= 1.25f;
-
-                if (ItemLists.Wind.Contains(item.type))
-                    NPC.Redemption().elementDmg *= 1.1f;
-            }
-        }
-        public override void ModifyHitByProjectile(Projectile projectile, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
-        {
-            if (!RedeConfigClient.Instance.ElementDisable)
-            {
-                if (ProjectileLists.Blood.Contains(projectile.type) || ProjectileLists.Earth.Contains(projectile.type) || ProjectileLists.Nature.Contains(projectile.type))
-                    NPC.Redemption().elementDmg *= 0.75f;
-
-                if (ProjectileLists.Water.Contains(projectile.type))
-                    NPC.Redemption().elementDmg *= 0.9f;
-
-                if (ProjectileLists.Fire.Contains(projectile.type) || ProjectileLists.Wind.Contains(projectile.type))
-                    NPC.Redemption().elementDmg *= 1.05f;
-            }
+            if (projectile.type == ProjectileID.LastPrismLaser)
+                modifiers.FinalDamage /= 3;
 
             if (ProjectileID.Sets.CultistIsResistantTo[projectile.type])
-                damage = (int)(damage * .75f);
+                modifiers.FinalDamage *= .75f;
         }
-        public override bool StrikeNPC(ref double damage, int defense, ref float knockback, int hitDirection, ref bool crit)
+        public override void ModifyIncomingHit(ref NPC.HitModifiers modifiers)
         {
-            bool vDmg = false;
-            if (NPC.RedemptionGuard().GuardPoints >= 0)
+            if (RedeBossDowned.downedGGBossFirst == 1 && RedeBossDowned.downedGGBossFirst == 2)
+                modifiers.FinalDamage *= .75f;
+
+            if (NPC.RedemptionGuard().GuardPoints >= 0 && !NPC.RedemptionGuard().GuardBroken)
             {
-                NPC.RedemptionGuard().GuardHit(NPC, ref vDmg, ref damage, ref knockback, SoundID.Dig with { Pitch = -.1f });
-                if (Main.netMode == NetmodeID.MultiplayerClient)
-                    NetMessage.SendData(MessageID.DamageNPC, -1, -1, null, NPC.whoAmI, (float)damage, knockback, hitDirection, 0, 0, 0);
-                if (NPC.RedemptionGuard().GuardPoints >= 0)
-                    return vDmg;
+                modifiers.DisableCrit();
+                modifiers.ModifyHitInfo += (ref NPC.HitInfo n) => NPC.RedemptionGuard().GuardHit(ref n, NPC, SoundID.Dig with { Pitch = -.1f }, .25f, false, DustID.t_LivingWood, SoundID.Item43, 10, 1, 2000);
             }
-            NPC.RedemptionGuard().GuardBreakCheck(NPC, DustID.t_LivingWood, SoundID.Item43, 10, 1, 2000);
-            return true;
         }
         public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
         {
@@ -153,7 +142,7 @@ namespace Redemption.NPCs.Bosses.ADD
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Biomes.Surface,
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Visuals.Rain,
 
-                new FlavorTextBestiaryInfoElement("Little has been recorded of Akka during her youth, it is believed by the locals that her spirit infused with a great tree in the Spirit Realm, where she would sleep until awoken by her husband to be worshipped once more.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.Akka"))
             });
         }
         public override void ModifyNPCLoot(NPCLoot npcLoot)
@@ -167,14 +156,15 @@ namespace Redemption.NPCs.Bosses.ADD
 
             LeadingConditionRule notExpertRule = new(new Conditions.NotExpert());
 
-            notExpertRule.OnSuccess(ItemDropRule.Common(ModContent.ItemType<AkkaMask>(), 7));
+            notExpertRule.OnSuccess(ItemDropRule.NotScalingWithLuck(ModContent.ItemType<AkkaMask>(), 7));
 
             notExpertRule.OnSuccess(ItemDropRule.OneFromOptions(1, ModContent.ItemType<PoemOfIlmatar>(), ModContent.ItemType<Pihlajasauva>()));
 
             npcLoot.Add(notExpertRule);
         }
-        public override void OnKill()
+        public override void BossLoot(ref string name, ref int potionType)
         {
+            potionType = ItemID.SuperHealingPotion;
             if (!RedeBossDowned.downedADD && !NPC.AnyNPCs(ModContent.NPCType<Ukko>()))
             {
                 for (int p = 0; p < Main.maxPlayers; p++)
@@ -185,22 +175,23 @@ namespace Redemption.NPCs.Bosses.ADD
 
                     CombatText.NewText(player.getRect(), Color.Gray, "+0", true, false);
 
-                    if (!player.HasItem(ModContent.ItemType<AlignmentTeller>()))
+                    if (!RedeWorld.alignmentGiven)
                         continue;
 
                     if (!Main.dedServ)
-                        RedeSystem.Instance.ChaliceUIElement.DisplayDialogue("It is unknown how these forgotten deities ruled, perhaps defeating them was for the best, or worst.", 300, 30, 0, Color.DarkGoldenrod);
+                        RedeSystem.Instance.ChaliceUIElement.DisplayDialogue(Language.GetTextValue("Mods.Redemption.UI.Chalice.ADDDefeat"), 300, 30, 0, Color.DarkGoldenrod);
 
                 }
             }
+            if (!NPC.AnyNPCs(ModContent.NPCType<Ukko>()) && !RedeBossDowned.downedADD && RedeBossDowned.downedGGBossFirst == 0)
+                RedeBossDowned.downedGGBossFirst = 3;
             NPC.SetEventFlagCleared(ref RedeBossDowned.downedADD, -1);
         }
-        public override void ScaleExpertStats(int numPlayers, float bossLifeScale)
+        public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment)
         {
-            NPC.lifeMax = (int)(NPC.lifeMax * 0.6f * bossLifeScale);  //boss life scale in expertmode
-            NPC.damage = (int)(NPC.damage * 0.6f);  //boss damage increase in expermode
+            NPC.lifeMax = (int)(NPC.lifeMax * 0.75f * balance * bossAdjustment);
+            NPC.damage = (int)(NPC.damage * 0.75f);
         }
-
 
         private Vector2 MoveVector2;
         private int islandCooldown = 10;
@@ -212,8 +203,8 @@ namespace Redemption.NPCs.Bosses.ADD
         {
             Target();
 
-            DespawnHandler();
-
+            if (NPC.DespawnHandler(0, 20))
+                return;
             Player player = Main.player[NPC.target];
             NPC.rotation = 0f;
             NPC.LookAtEntity(player);
@@ -224,11 +215,11 @@ namespace Redemption.NPCs.Bosses.ADD
             bool ukkoActive = false;
             if (NPC.ai[3] > -1 && Main.npc[(int)NPC.ai[3]].active && Main.npc[(int)NPC.ai[3]].type == ModContent.NPCType<Ukko>())
                 ukkoActive = true;
-            Vector2 EarthProtectPos = new(player.Center.X + (player.Center.X > NPC.Center.X ? -500 : 500), player.Center.Y - 100);
+            Vector2 EarthProtectPos = new(player.Center.X + (500 * NPC.RightOfDir(player)), player.Center.Y - 100);
             switch (AIState)
             {
                 case ActionState.Start:
-                    if (ukkoActive)
+                    if (ukkoActive || RedeBossDowned.ADDDeath < 2)
                     {
                         NPC ukko = Main.npc[(int)NPC.ai[3]];
                         switch (AttackID)
@@ -253,12 +244,12 @@ namespace Redemption.NPCs.Bosses.ADD
                                 if (AITimer == 60)
                                 {
                                     if (!Main.dedServ)
-                                        RedeSystem.Instance.TitleCardUIElement.DisplayTitle("Akka", 60, 90, 0.8f, 0, Color.PaleGreen, "Ancient Goddess of Nature");
+                                        RedeSystem.Instance.TitleCardUIElement.DisplayTitle(Language.GetTextValue("Mods.Redemption.TitleCard.Akka.Name"), 60, 90, 0.8f, 0, Color.PaleGreen, Language.GetTextValue("Mods.Redemption.TitleCard.Akka.Modifier"));
 
                                     EmoteBubble.NewBubble(0, new WorldUIAnchor(NPC), 50);
                                 }
 
-                                if (AITimer++ >= 120)
+                                if (AITimer++ >= 170)
                                 {
                                     AIState = ActionState.ResetVars; ;
                                     AITimer = 0;
@@ -271,9 +262,9 @@ namespace Redemption.NPCs.Bosses.ADD
                     else
                     {
                         if (!Main.dedServ)
-                            RedeSystem.Instance.TitleCardUIElement.DisplayTitle("Akka", 60, 90, 0.8f, 0, Color.LightGreen, "Ancient Goddess of Nature");
+                            RedeSystem.Instance.TitleCardUIElement.DisplayTitle(Language.GetTextValue("Mods.Redemption.TitleCard.Akka.Name"), 60, 90, 0.8f, 0, Color.PaleGreen, Language.GetTextValue("Mods.Redemption.TitleCard.Akka.Modifier"));
 
-                        AIState = ActionState.ResetVars; ;
+                        AIState = ActionState.ResetVars;
                         AITimer = 0;
                         NPC.netUpdate = true;
                     }
@@ -311,7 +302,7 @@ namespace Redemption.NPCs.Bosses.ADD
                             AITimer++;
                             if (AITimer % 3 == 0 && AITimer < 60)
                             {
-                                int p = Projectile.NewProjectile(NPC.GetSource_FromAI(), NPC.Center.X, NPC.Center.Y, Main.rand.NextFloat(-8f, 8f), Main.rand.NextFloat(-8f, 8f), ModContent.ProjectileType<AkkaPoisonBubble>(), (int)(NPC.damage * 0.95f) / 4, 1);
+                                int p = Projectile.NewProjectile(NPC.GetSource_FromAI(), NPC.Center.X, NPC.Center.Y, Main.rand.NextFloat(-8f, 8f), Main.rand.NextFloat(-8f, 8f), ModContent.ProjectileType<AkkaPoisonBubble>(), NPCHelper.HostileProjDamage((int)(NPC.damage * 0.95f)), 1);
                                 Main.projectile[p].netUpdate = true;
                             }
                             if (AITimer >= 65)
@@ -333,7 +324,7 @@ namespace Redemption.NPCs.Bosses.ADD
                                     if (!Main.dedServ)
                                         SoundEngine.PlaySound(CustomSounds.Quake with { Volume = 1.4f, PitchVariance = 0.1f });
 
-                                    int p = Projectile.NewProjectile(NPC.GetSource_FromAI(), player.Center.X, player.Center.Y - 1000, 0f, 0f, ModContent.ProjectileType<AkkaIslandSummoner>(), (int)(NPC.damage * 1.5f) / 4, 1, Main.myPlayer);
+                                    int p = Projectile.NewProjectile(NPC.GetSource_FromAI(), player.Center.X, player.Center.Y - 1000, 0f, 0f, ModContent.ProjectileType<AkkaIslandSummoner>(), NPCHelper.HostileProjDamage((int)(NPC.damage * 1.5f)), 1, Main.myPlayer);
                                     Main.projectile[p].netUpdate = true;
                                 }
                                 if (AITimer >= 200)
@@ -368,9 +359,8 @@ namespace Redemption.NPCs.Bosses.ADD
                                 TremorTimer++;
                                 if (TremorTimer > 50 && TremorTimer % 40 == 0)
                                 {
-                                    int hitDirection = NPC.Center.X > player.Center.X ? 1 : -1;
-                                    player.Hurt(PlayerDeathReason.ByNPC(NPC.whoAmI),
-                                        40, hitDirection, false, false, false, 0);
+                                    int hitDirection = NPC.RightOfDir(player);
+                                    player.Hurt(PlayerDeathReason.ByNPC(NPC.whoAmI), 40, hitDirection);
                                     player.AddBuff(ModContent.BuffType<StunnedDebuff>(), 60);
                                 }
                             }
@@ -436,11 +426,11 @@ namespace Redemption.NPCs.Bosses.ADD
                                 int p = Projectile.NewProjectile(NPC.GetSource_FromAI(), NPC.Center.X, NPC.position.Y - 4, 0f, -10f, ModContent.ProjectileType<Moonbeam>(), 0, 0, Main.myPlayer);
                                 Main.projectile[p].alpha = 150;
                                 Main.projectile[p].hostile = false;
-                                Main.projectile[p].netUpdate2 = true;
+                                Main.projectile[p].netUpdate = true;
                             }
                             if (AITimer == 25)
                             {
-                                Projectile.NewProjectile(NPC.GetSource_FromAI(), player.Center.X, player.Center.Y - 1000, 0f, 10f, ModContent.ProjectileType<Moonbeam>(), (int)(NPC.damage * 0.98f) / 4, 1, Main.myPlayer);
+                                Projectile.NewProjectile(NPC.GetSource_FromAI(), player.Center.X, player.Center.Y - 1000, 0f, 10f, ModContent.ProjectileType<Moonbeam>(), NPCHelper.HostileProjDamage((int)(NPC.damage * 0.98f)), 1, Main.myPlayer);
                             }
                             if (AITimer >= 70)
                             {
@@ -461,7 +451,7 @@ namespace Redemption.NPCs.Bosses.ADD
 
                         #region Healing Spirit
                         case 6:
-                            if (NPC.life < (int)(NPC.lifeMax * 0.6f) && healingCooldown == 0)
+                            if (NPC.life < (int)(NPC.lifeMax * 0.6f) && ukkoActive && Main.npc[(int)NPC.ai[3]].life < (int)(Main.npc[(int)NPC.ai[3]].lifeMax * 0.75f) && healingCooldown == 0)
                             {
                                 AITimer++;
                                 if (AITimer % 10 == 0 && AITimer > 20 && AITimer < 200)
@@ -521,7 +511,7 @@ namespace Redemption.NPCs.Bosses.ADD
                                     if (AITimer++ % 2 == 0 && AITimer < 70)
                                     {
                                         for (int i = 0; i < 2; i++)
-                                            NPC.Shoot(NPC.Center, ModContent.ProjectileType<AkkaBubble>(), NPC.damage, RedeHelper.Spread(16), false, SoundID.Item1);
+                                            NPC.Shoot(NPC.Center, ModContent.ProjectileType<AkkaBubble>(), NPC.damage, RedeHelper.Spread(16));
                                     }
                                     if (AITimer >= 120)
                                     {
@@ -609,35 +599,17 @@ namespace Redemption.NPCs.Bosses.ADD
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => false;
         public Vector2 Pos()
         {
-            Vector2 Pos1 = new(player.Center.X > NPC.Center.X ? player.Center.X + Main.rand.Next(-300, -200) : player.Center.X + Main.rand.Next(200, 300), player.Center.Y + Main.rand.Next(-400, 200));
+            Vector2 Pos1 = new(player.Center.X + (Main.rand.Next(200, 300) * NPC.RightOfDir(player)), player.Center.Y + Main.rand.Next(-400, 200));
             return Pos1;
         }
         private void Target()
         {
             player = Main.player[NPC.target];
         }
-
-        private void DespawnHandler()
-        {
-            if (!player.active || player.dead)
-            {
-                NPC.TargetClosest(false);
-                player = Main.player[NPC.target];
-                if (!player.active || player.dead)
-                {
-                    NPC.velocity = new Vector2(0f, -20f);
-                    if (NPC.timeLeft > 10)
-                        NPC.timeLeft = 10;
-                    return;
-                }
-            }
-        }
         private float drawTimer;
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
             Texture2D texture = TextureAssets.Npc[NPC.type].Value;
-            Texture2D magicAni = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Spell").Value;
-            Texture2D magicGlow = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Spell_Glow").Value;
             var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             int shader = ContentSamples.CommonlyUsedContentSamples.ColorOnlyShaderIndex;
             Color shaderColor = BaseUtility.MultiLerpColor(Main.LocalPlayer.miscCounter % 100 / 100f, Color.LightGreen, Color.SpringGreen * 0.7f, Color.LightGreen);
@@ -648,15 +620,15 @@ namespace Redemption.NPCs.Bosses.ADD
                     if (!NPC.IsABestiaryIconDummy)
                     {
                         spriteBatch.End();
-                        spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
-                        GameShaders.Armor.ApplySecondary(shader, Main.player[Main.myPlayer], null);
+                        spriteBatch.BeginAdditive(true);
+                        GameShaders.Armor.ApplySecondary(shader, Main.LocalPlayer, null);
                         for (int i = 0; i < NPCID.Sets.TrailCacheLength[NPC.type]; i++)
                         {
                             Vector2 oldPos = NPC.oldPos[i];
                             spriteBatch.Draw(texture, oldPos + NPC.Size / 2f - screenPos + new Vector2(0, NPC.gfxOffY), NPC.frame, NPC.GetAlpha(shaderColor) * ((NPC.oldPos.Length - i) / (float)NPC.oldPos.Length), NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
                         }
                         spriteBatch.End();
-                        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+                        spriteBatch.BeginDefault();
                     }
                     if (NPC.RedemptionGuard().GuardPoints > 0)
                         RedeDraw.DrawTreasureBagEffect(Main.spriteBatch, texture, ref drawTimer, NPC.Center - screenPos, NPC.frame, Color.LightGreen * NPC.Opacity, NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects);
@@ -664,33 +636,33 @@ namespace Redemption.NPCs.Bosses.ADD
                     spriteBatch.Draw(texture, NPC.Center - screenPos, NPC.frame, drawColor * NPC.Opacity, NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0f);
                     break;
                 case 1:
-                    int magicHeight = magicAni.Height / 6;
+                    int magicHeight = magicAni.Value.Height / 6;
                     int magicY = magicHeight * magicFrame;
-                    int magicGlowHeight = magicGlow.Height / 6;
+                    int magicGlowHeight = magicGlow.Value.Height / 6;
                     int magicGlowY = magicGlowHeight * magicFrame;
                     Vector2 glowCenter = NPC.Center + new Vector2(15 * NPC.spriteDirection, -24);
 
                     spriteBatch.End();
-                    spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
-                    GameShaders.Armor.ApplySecondary(shader, Main.player[Main.myPlayer], null);
+                    spriteBatch.BeginAdditive(true);
+                    GameShaders.Armor.ApplySecondary(shader, Main.LocalPlayer, null);
                     for (int i = 0; i < NPCID.Sets.TrailCacheLength[NPC.type]; i++)
                     {
                         Vector2 oldPos = NPC.oldPos[i];
-                        spriteBatch.Draw(magicAni, oldPos + NPC.Size / 2f - screenPos + new Vector2(0, NPC.gfxOffY), new Rectangle?(new Rectangle(0, magicY, magicAni.Width, magicHeight)), NPC.GetAlpha(shaderColor) * ((NPC.oldPos.Length - i) / (float)NPC.oldPos.Length), NPC.rotation, new Vector2(magicAni.Width / 2f, magicHeight / 2f), NPC.scale, effects, 0);
+                        spriteBatch.Draw(magicAni.Value, oldPos + NPC.Size / 2f - screenPos + new Vector2(0, NPC.gfxOffY), new Rectangle?(new Rectangle(0, magicY, magicAni.Value.Width, magicHeight)), NPC.GetAlpha(shaderColor) * ((NPC.oldPos.Length - i) / (float)NPC.oldPos.Length), NPC.rotation, new Vector2(magicAni.Value.Width / 2f, magicHeight / 2f), NPC.scale, effects, 0);
                     }
                     spriteBatch.End();
-                    spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+                    spriteBatch.BeginDefault();
 
                     if (NPC.RedemptionGuard().GuardPoints > 0)
-                        RedeDraw.DrawTreasureBagEffect(Main.spriteBatch, magicAni, ref drawTimer, NPC.Center - screenPos, new Rectangle?(new Rectangle(0, magicY, magicAni.Width, magicHeight)), Color.LightGreen * NPC.Opacity, NPC.rotation, new Vector2(magicAni.Width / 2f, magicHeight / 2f), NPC.scale, effects);
+                        RedeDraw.DrawTreasureBagEffect(Main.spriteBatch, magicAni.Value, ref drawTimer, NPC.Center - screenPos, new Rectangle?(new Rectangle(0, magicY, magicAni.Value.Width, magicHeight)), Color.LightGreen * NPC.Opacity, NPC.rotation, new Vector2(magicAni.Value.Width / 2f, magicHeight / 2f), NPC.scale, effects);
 
-                    spriteBatch.Draw(magicAni, NPC.Center - screenPos, new Rectangle?(new Rectangle(0, magicY, magicAni.Width, magicHeight)), drawColor * NPC.Opacity, NPC.rotation, new Vector2(magicAni.Width / 2f, magicHeight / 2f), NPC.scale, effects, 0f);
-                    spriteBatch.Draw(magicGlow, glowCenter - screenPos, new Rectangle?(new Rectangle(0, magicGlowY, magicGlow.Width, magicGlowHeight)), Color.White * NPC.Opacity, NPC.rotation, new Vector2(magicGlow.Width / 2f, magicGlowHeight / 2f), NPC.scale, effects, 0f);
+                    spriteBatch.Draw(magicAni.Value, NPC.Center - screenPos, new Rectangle?(new Rectangle(0, magicY, magicAni.Value.Width, magicHeight)), drawColor * NPC.Opacity, NPC.rotation, new Vector2(magicAni.Value.Width / 2f, magicHeight / 2f), NPC.scale, effects, 0f);
+                    spriteBatch.Draw(magicGlow.Value, glowCenter - screenPos, new Rectangle?(new Rectangle(0, magicGlowY, magicGlow.Value.Width, magicGlowHeight)), Color.White * NPC.Opacity, NPC.rotation, new Vector2(magicGlow.Value.Width / 2f, magicGlowHeight / 2f), NPC.scale, effects, 0f);
                     break;
             }
             return false;
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {

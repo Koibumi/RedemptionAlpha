@@ -9,6 +9,8 @@ using Terraria.Graphics.Effects;
 using Redemption.NPCs.Bosses.Neb.Phase2;
 using Redemption.NPCs.Bosses.Neb.Clone;
 using Redemption.NPCs.Bosses.ADD;
+using Redemption.NPCs.Friendly;
+using Redemption.NPCs.Bosses.Obliterator;
 
 namespace Redemption.Globals
 {
@@ -28,6 +30,15 @@ namespace Redemption.Globals
         public override bool IsSceneEffectActive(Terraria.Player player)
         {
             return RedeWorld.SkeletonInvasion && player.ZoneOverworldHeight;
+        }
+    }
+    public class ChaliceIntroMusic : ModSceneEffect
+    {
+        public override int Music => MusicLoader.GetMusicSlot("Redemption/Sounds/Music/HallofHeroes");
+        public override SceneEffectPriority Priority => SceneEffectPriority.Event;
+        public override bool IsSceneEffectActive(Terraria.Player player)
+        {
+            return Terraria.NPC.AnyNPCs(ModContent.NPCType<Chalice_Intro>());
         }
     }
     public class NukeMusic : ModSceneEffect
@@ -99,6 +110,22 @@ namespace Redemption.Globals
         public override bool IsSceneEffectActive(Terraria.Player player)
         {
             return Terraria.NPC.AnyNPCs(ModContent.NPCType<Nebuleus>()) || Terraria.NPC.AnyNPCs(ModContent.NPCType<Nebuleus_Clone>());
+        }
+    }
+    public class OOSkyScene : ModSceneEffect
+    {
+        public override SceneEffectPriority Priority => SceneEffectPriority.BossHigh;
+        public override void SpecialVisuals(Terraria.Player player, bool isActive)
+        {
+            player.ManageSpecialBiomeVisuals("MoR:OOSky", isActive);
+            if (isActive)
+                SkyManager.Instance.Activate("MoR:OOSky");
+            else
+                SkyManager.Instance.Deactivate("MoR:OOSky");
+        }
+        public override bool IsSceneEffectActive(Terraria.Player player)
+        {
+            return Terraria.NPC.AnyNPCs(ModContent.NPCType<OO>()) && Redemption.grooveTimer >= 824;
         }
     }
     public class NebSky2Scene : ModSceneEffect

@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -10,7 +11,7 @@ namespace Redemption.NPCs.Bosses.Neb
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Transition");
+            // DisplayName.SetDefault("Transition");
         }
         public override void SetDefaults()
         {
@@ -24,6 +25,10 @@ namespace Redemption.NPCs.Bosses.Neb
             Projectile.alpha = 255;
             Projectile.timeLeft = 500;
             Projectile.scale = 1f;
+        }
+        public override void DrawBehind(int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI)
+        {
+            overPlayers.Add(index);
         }
         public override void AI()
         {

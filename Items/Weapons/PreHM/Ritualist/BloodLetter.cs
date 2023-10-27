@@ -14,9 +14,9 @@ namespace Redemption.Items.Weapons.PreHM.Ritualist
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Right-click to swap between a normal slash and blood letting\n" +
-                "Holding left-click in blood letting will drain the player's Spirit Gauge in exchange for increased life regeneration");
-            SacrificeTotal = 1;
+            /* Tooltip.SetDefault("Right-click to swap between a normal slash and blood letting\n" +
+                "Holding left-click in blood letting will drain the player's Spirit Gauge in exchange for increased life regeneration"); */
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -93,6 +93,7 @@ namespace Redemption.Items.Weapons.PreHM.Ritualist
 
             return false;
         }
+        /*
         public override void AddRecipes()
         {
             CreateRecipe()
@@ -100,6 +101,6 @@ namespace Redemption.Items.Weapons.PreHM.Ritualist
                 .AddIngredient(ItemID.TissueSample, 5)
                 .AddTile(TileID.Anvils)
                 .Register();
-        }
+        }*/
     }
 }

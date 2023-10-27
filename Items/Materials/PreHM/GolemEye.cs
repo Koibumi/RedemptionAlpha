@@ -1,5 +1,6 @@
 using Terraria.ID;
 using Terraria;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -13,9 +14,9 @@ namespace Redemption.Items.Materials.PreHM
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Eye of the Eaglecrest Golem");
+            // DisplayName.SetDefault("Eye of the Eaglecrest Golem");
 
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -42,11 +43,11 @@ namespace Redemption.Items.Materials.PreHM
         }
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
-            string text = "Contains a storm of energy, it would be best to keep it around";
+            string text = Language.GetTextValue("Mods.Redemption.Items.GolemEye.Tip1");
             TooltipLine line = new(Mod, "text", text) { OverrideColor = Color.White };
             if (NPC.downedMoonlord)
             {
-                text = "Encase the eye within the stones of its origins, and it's true power will present itself";
+                text = Language.GetTextValue("Mods.Redemption.Items.GolemEye.Tip2");
                 line = new(Mod, "text", text) { OverrideColor = Color.LightGoldenrodYellow };
             }
             tooltips.Insert(2, line);
@@ -64,8 +65,8 @@ namespace Redemption.Items.Materials.PreHM
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix);
 
-                spriteBatch.Draw(glow, position + new Vector2(5, 5), new Rectangle(0, 0, glow.Width, glow.Height), color, glowRot, origin2, scale, SpriteEffects.None, 0f);
-                spriteBatch.Draw(glow, position + new Vector2(5, 5), new Rectangle(0, 0, glow.Width, glow.Height), color, -glowRot, origin2, scale, SpriteEffects.None, 0f);
+                spriteBatch.Draw(glow, position, new Rectangle(0, 0, glow.Width, glow.Height), color, glowRot, origin2, scale, SpriteEffects.None, 0f);
+                spriteBatch.Draw(glow, position, new Rectangle(0, 0, glow.Width, glow.Height), color, -glowRot, origin2, scale, SpriteEffects.None, 0f);
 
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.Default, RasterizerState.CullNone, null, Main.UIScaleMatrix);

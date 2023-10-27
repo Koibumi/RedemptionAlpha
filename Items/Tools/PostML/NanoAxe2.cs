@@ -10,9 +10,9 @@ namespace Redemption.Items.Tools.PostML
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("CREATIVE PICKAXE OF RECOLOURED DOOOOOOOM!!!!");
-            Tooltip.SetDefault("Developer/builder tool.");
-            SacrificeTotal = 1;
+            // DisplayName.SetDefault("CREATIVE PICKAXE OF RECOLOURED DOOOOOOOM!!!!");
+            // Tooltip.SetDefault("Developer/builder tool.");
+            Item.ResearchUnlockCount = 1;
         }
         public override void SetDefaults()
         {
@@ -32,7 +32,7 @@ namespace Redemption.Items.Tools.PostML
             Item.autoReuse = true;
             if (!Main.dedServ)
             {
-                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Item.ModItem.Texture + "_Glow").Value;
+                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
             }
         }
     }

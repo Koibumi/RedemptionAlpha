@@ -16,16 +16,16 @@ namespace Redemption.Items.Usable
 	{
 		public override void SetStaticDefaults()
 		{
-			DisplayName.SetDefault("Treasure Bag (Nebuleus)");
-			Tooltip.SetDefault("{$CommonItemTooltip.RightClickToOpen}");
+			// DisplayName.SetDefault("Treasure Bag (Nebuleus)");
+			// Tooltip.SetDefault("{$CommonItemTooltip.RightClickToOpen}");
 
             ItemID.Sets.BossBag[Type] = true;
-            SacrificeTotal = 3;
+            Item.ResearchUnlockCount = 3;
         }
 
         public override void SetDefaults()
 		{
-            Item.maxStack = 9999;
+            Item.maxStack = Item.CommonMaxStack;
             Item.consumable = true;
             Item.width = 44;
             Item.height = 32;
@@ -50,6 +50,7 @@ namespace Redemption.Items.Usable
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<HamSandwich>()));
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<GalaxyHeart>()));
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<NebWings>()));
+            itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<ThankYouLetter>()));
         }
 
         public override Color? GetAlpha(Color lightColor)

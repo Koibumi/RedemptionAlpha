@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using Redemption.Globals;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -8,6 +9,7 @@ namespace Redemption.Walls
     {
         public override void SetStaticDefaults()
         {
+            RedeTileHelper.CannotTeleportInFront[Type] = true;
             Main.wallHouse[Type] = false;
             AddMapEntry(new Color(92, 94, 98));
         }
@@ -16,10 +18,10 @@ namespace Redemption.Walls
     }
     public class VentWall : PlaceholderTile
     {
-        public override string Texture => "Redemption/Placeholder";
-        public override void SetStaticDefaults()
+        public override string Texture => Redemption.PLACEHOLDER_TEXTURE;
+        public override void SetSafeStaticDefaults()
         {
-            Tooltip.SetDefault("[c/ff0000:Unbreakable]");
+            // Tooltip.SetDefault("[c/ff0000:Unbreakable]");
         }
 
         public override void SetDefaults()

@@ -2,10 +2,11 @@ using Terraria;
 using Terraria.ID;
 using Microsoft.Xna.Framework;
 using Terraria.ModLoader;
-using Redemption.Globals;
 using Redemption.WorldGeneration;
 using Terraria.Audio;
 using Redemption.Base;
+using Redemption.Biomes;
+using Terraria.Localization;
 
 namespace Redemption.NPCs.Lab.Blisterface
 {
@@ -14,7 +15,7 @@ namespace Redemption.NPCs.Lab.Blisterface
         public override string Texture => "Redemption/NPCs/Lab/Blisterface/Blisterface";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("");
+            // DisplayName.SetDefault("");
             Main.npcFrameCount[NPC.type] = 8;
             NPCID.Sets.DontDoHardmodeScaling[Type] = true;
 
@@ -41,10 +42,11 @@ namespace Redemption.NPCs.Lab.Blisterface
             NPC.noTileCollide = false;
             NPC.dontTakeDamage = true;
             AnimationType = NPCID.Piranha;
+            NPC.ShowNameOnHover = false;
         }
         public override bool CheckActive()
         {
-            return !LabArea.Active;
+            return !Main.LocalPlayer.InModBiome<LabBiome>();
         }
         public override void AI()
         {
@@ -53,13 +55,13 @@ namespace Redemption.NPCs.Lab.Blisterface
             if (NPC.Center.Y > (RedeGen.LabVector.Y + 191) * 16)
                 NPC.velocity.Y -= 0.1f;
 
-            Player player = Main.player[Main.myPlayer];
+            Player player = Main.LocalPlayer;
             Rectangle activeZone = new((int)(RedeGen.LabVector.X + 204) * 16, (int)(RedeGen.LabVector.Y + 168) * 16, 7 * 16, 20 * 16);
             if (player.Hitbox.Intersects(activeZone) && !player.dead && player.active)
             {
                 if (!Main.dedServ)
                 {
-                    RedeSystem.Instance.TitleCardUIElement.DisplayTitle("Blisterface", 60, 90, 0.8f, 0, Color.Green, "An Unfortunate Goldfish");
+                    RedeSystem.Instance.TitleCardUIElement.DisplayTitle(Language.GetTextValue("Mods.Redemption.TitleCard.Blisterface.Name"), 60, 90, 0.8f, 0, Color.Green, Language.GetTextValue("Mods.Redemption.TitleCard.Blisterface.Modifier"));
                     SoundEngine.PlaySound(CustomSounds.SpookyNoise, NPC.position);
                 }
                 NPC.SetDefaults(ModContent.NPCType<Blisterface>());
@@ -79,6 +81,6 @@ namespace Redemption.NPCs.Lab.Blisterface
             }
         }
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => false;
-        public override bool? CanHitNPC(NPC target) => false ? null : false;
+        public override bool CanHitNPC(NPC target) => false;
     }
 }

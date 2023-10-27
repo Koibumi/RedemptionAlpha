@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using ParticleLibrary;
 using Redemption.Base;
 using Redemption.Effects.PrimitiveTrails;
+using Redemption.Globals;
 using Redemption.Particles;
 using ReLogic.Content;
 using Terraria;
@@ -18,9 +19,10 @@ namespace Redemption.NPCs.Bosses.Neb
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Shooting Star");
+            // DisplayName.SetDefault("Shooting Star");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 5;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjCelestial[Type] = true;
         }
 
         public override void SetDefaults()
@@ -46,7 +48,7 @@ namespace Redemption.NPCs.Bosses.Neb
             else
                 Projectile.velocity = Projectile.velocity.RotatedBy(Math.PI / -180) * Projectile.ai[0];
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             ParticleManager.NewParticle(Projectile.Center, Vector2.Zero, new RainbowParticle(), Color.White, 1);
         }
@@ -67,7 +69,7 @@ namespace Redemption.NPCs.Bosses.Neb
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Shooting Star");
+            // DisplayName.SetDefault("Shooting Star");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 5;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
         }
@@ -121,7 +123,7 @@ namespace Redemption.NPCs.Bosses.Neb
         public override string Texture => "Redemption/NPCs/Bosses/Neb/CurvingStar_Tele";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Shooting Star");
+            // DisplayName.SetDefault("Shooting Star");
         }
         public override void SetDefaults()
         {

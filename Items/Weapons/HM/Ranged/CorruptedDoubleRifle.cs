@@ -4,24 +4,25 @@ using Redemption.BaseExtension;
 using Redemption.Globals;
 using Redemption.Globals.Player;
 using Redemption.Items.Materials.HM;
-using Redemption.Items.Weapons.HM.Ammo;
 using Redemption.Projectiles.Ranged;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.Items.Weapons.HM.Ranged
 {
     public class CorruptedDoubleRifle : ModItem
     {
+        public override LocalizedText Tooltip => base.Tooltip.WithFormatArgs(ElementID.ThunderS);
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Converts normal bullets into high velocity bullets\n" +
-                "(3[i:" + ModContent.ItemType<EnergyPack>() + "]) Every 3rd shot fires a small laser beam if an Energy Pack is in your inventory\n" +
-                "33% chance not to consume ammo");
-            SacrificeTotal = 1;
+            /* Tooltip.SetDefault("Converts normal bullets into high velocity bullets\n" +
+                "(3[i:" + ModContent.ItemType<EnergyPack>() + "]) Every 3rd shot fires a small laser beam if an Energy Pack is in your inventory, dealing " + ElementID.ThunderS + " damage\n" +
+                "33% chance not to consume ammo"); */
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -36,14 +37,15 @@ namespace Redemption.Items.Weapons.HM.Ranged
             Item.noMelee = true;
             Item.knockBack = 4;
             Item.value = Item.sellPrice(0, 10, 0, 0);
-            Item.rare = ItemRarityID.Red;
+            Item.rare = ItemRarityID.Yellow;
             Item.UseSound = SoundID.Item36;
             Item.autoReuse = true;
             Item.shoot = ProjectileID.PurificationPowder;
             Item.shootSpeed = 90;
             Item.useAmmo = AmmoID.Bullet;
+            Item.ExtraItemShoot(ModContent.ProjectileType<CorruptedDoubleRifle_Beam>());
             if (!Main.dedServ)
-                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Item.ModItem.Texture + "_Glow").Value;
+                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
         }
         public override bool CanConsumeAmmo(Item ammo, Player player)
         {

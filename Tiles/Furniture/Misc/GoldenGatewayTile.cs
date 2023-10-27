@@ -2,18 +2,18 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria.Enums;
 using System;
 using ReLogic.Content;
-using Terraria.Localization;
-using Redemption.Items.Placeable.Trophies;
+using Redemption.Globals;
 
 namespace Redemption.Tiles.Furniture.Misc
 {
-	public class GoldenGatewayTile : ModTile
+    public class GoldenGatewayTile : ModTile
 	{
 		public const int FrameWidth = 16 * 12;
 		public const int FrameHeight = 16 * 3;
@@ -39,8 +39,8 @@ namespace Redemption.Tiles.Furniture.Misc
 		{
 			Main.tileShine[Type] = 400;
 			Main.tileFrameImportant[Type] = true;
-
-			TileObjectData.newTile.Width = 12;
+            RedeTileHelper.CannotMineTileBelow[Type] = true;
+            TileObjectData.newTile.Width = 12;
 			TileObjectData.newTile.Height = 3;
 			TileObjectData.newTile.CoordinateHeights = new int[] { 16, 16, 16 };
 			TileObjectData.newTile.UsesCustomCanPlace = true;
@@ -52,11 +52,11 @@ namespace Redemption.Tiles.Furniture.Misc
 			TileObjectData.newTile.LavaDeath = false;
 			TileObjectData.newTile.DrawYOffset = 2;
 			TileObjectData.addTile(Type);
-
-			DustType = DustID.GoldCoin;
-			ModTranslation name = CreateMapEntryName();
-			name.SetDefault("Golden Gateway");
-			AddMapEntry(new Color(203, 179, 73));
+            HitSound = CustomSounds.MetalHit;
+            DustType = DustID.GoldCoin;
+            LocalizedText name = CreateMapEntryName();
+			// name.SetDefault("Golden Gateway");
+			AddMapEntry(new Color(203, 179, 73), name);
 		}
         public override bool CanExplode(int i, int j) => false;
 		public override bool CanKillTile(int i, int j, ref bool blockDamaged) => false;
@@ -110,11 +110,11 @@ namespace Redemption.Tiles.Furniture.Misc
 	}
 	public class GoldenGatewayItem : PlaceholderTile
 	{
-		public override string Texture => "Redemption/Placeholder";
-		public override void SetStaticDefaults()
+		public override string Texture => Redemption.PLACEHOLDER_TEXTURE;
+		public override void SetSafeStaticDefaults()
 		{
-			DisplayName.SetDefault("Golden Gateway");
-			Tooltip.SetDefault("[c/ff0000:Unbreakable]");
+			// DisplayName.SetDefault("Golden Gateway");
+			// Tooltip.SetDefault("[c/ff0000:Unbreakable]");
 		}
 
 		public override void SetDefaults()

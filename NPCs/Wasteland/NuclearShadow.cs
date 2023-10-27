@@ -11,6 +11,8 @@ using Terraria.GameContent.Bestiary;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Redemption.BaseExtension;
+using System.IO;
+using Terraria.Localization;
 
 namespace Redemption.NPCs.Wasteland
 {
@@ -34,10 +36,7 @@ namespace Redemption.NPCs.Wasteland
         public override void SetStaticDefaults()
         {
             Main.npcFrameCount[NPC.type] = 17;
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                ImmuneToAllBuffsThatAreNotWhips = true
-            });
+            NPCID.Sets.ImmuneToRegularBuffs[Type] = true;
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0)
             {
@@ -59,14 +58,24 @@ namespace Redemption.NPCs.Wasteland
             NPC.knockBackResist = 0f;
             NPC.alpha = 150;
             NPC.rarity = 2;
+            NPC.chaseable = false;
             SpawnModBiomes = new int[1] { ModContent.GetInstance<WastelandPurityBiome>().Type };
             Banner = NPC.type;
             BannerItem = ModContent.ItemType<NuclearShadowBanner>();
+        }
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.WriteVector2(moveTo);
+        }
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            moveTo = reader.ReadVector2();
         }
         private Vector2 moveTo;
         public override void OnSpawn(IEntitySource source)
         {
             TimerRand = Main.rand.Next(80, 120);
+            NPC.netUpdate = true;
         }
         public override void AI()
         {
@@ -90,6 +99,7 @@ namespace Redemption.NPCs.Wasteland
                         AITimer = 0;
                         TimerRand = Main.rand.Next(120, 260);
                         AIState = ActionState.Wander;
+                        NPC.netUpdate = true;
                     }
                     break;
 
@@ -100,10 +110,11 @@ namespace Redemption.NPCs.Wasteland
                         AITimer = 0;
                         TimerRand = Main.rand.Next(80, 120);
                         AIState = ActionState.Idle;
+                        NPC.netUpdate = true;
                     }
 
-                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20);
-                    RedeHelper.HorizontallyMove(NPC, moveTo * 16, 0.4f, 1.2f, 8, 8, NPC.Center.Y > player.Center.Y);
+                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20, (moveTo.Y - 32) * 16);
+                    NPCHelper.HorizontallyMove(NPC, moveTo * 16, 0.4f, 1.2f, 8, 8, NPC.Center.Y > moveTo.Y * 16);
                     break;
             }
         }
@@ -147,19 +158,12 @@ namespace Redemption.NPCs.Wasteland
             spriteBatch.Draw(TextureAssets.Npc[NPC.type].Value, NPC.Center - screenPos + new Vector2(0, 2), NPC.frame, NPC.GetAlpha(drawColor), NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
             return false;
         }
-        public override bool? CanBeHitByItem(Player player, Item item)
-        {
-            return player.RedemptionAbility().SpiritwalkerActive || ItemLists.Arcane.Contains(item.type) || ItemLists.Celestial.Contains(item.type) || ItemLists.Holy.Contains(item.type) || ItemLists.Psychic.Contains(item.type) || RedeConfigClient.Instance.ElementDisable ? null : false;
-        }
-        public override bool? CanBeHitByProjectile(Projectile projectile)
-        {
-            Player player = Main.player[projectile.owner];
-            return player.RedemptionAbility().SpiritwalkerActive || ProjectileLists.Arcane.Contains(projectile.type) || ProjectileLists.Celestial.Contains(projectile.type) || ProjectileLists.Holy.Contains(projectile.type) || ProjectileLists.Psychic.Contains(projectile.type) || RedeConfigClient.Instance.ElementDisable;
-        }
-        public override bool? CanHitNPC(NPC target) => false;
+        public override bool? CanBeHitByItem(Player player, Item item) => RedeHelper.CanHitSpiritCheck(player, item);
+        public override bool? CanBeHitByProjectile(Projectile projectile) => RedeHelper.CanHitSpiritCheck(projectile);
+        public override bool CanHitNPC(NPC target) => false;
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => false;
 
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -169,10 +173,10 @@ namespace Redemption.NPCs.Wasteland
         }
         public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
         {
+            bestiaryEntry.UIInfoProvider = new CustomCollectionInfoProvider(ContentSamples.NpcBestiaryCreditIdsByNpcNetIds[Type], false, 10);
             bestiaryEntry.Info.AddRange(new IBestiaryInfoElement[]
             {
-                new FlavorTextBestiaryInfoElement(
-                    "A Human Shadow Etched in Stone, all that remains of someone who was vaporized by a nuclear blast. Also known as a Human Shadow of Death.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.NuclearShadow"))
             });
         }
     }

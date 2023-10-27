@@ -1,7 +1,9 @@
 using Microsoft.Xna.Framework;
+using Redemption.Items.Weapons.PreHM.Ranged;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.Items.Weapons.PreHM.Melee
@@ -10,13 +12,13 @@ namespace Redemption.Items.Weapons.PreHM.Melee
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Zephos' Sword Slicer");
-            Tooltip.SetDefault("Hitting armed enemies inflicts Disarmed\n" +
+            // DisplayName.SetDefault("Zephos' Sword Slicer");
+            /* Tooltip.SetDefault("Hitting armed enemies inflicts Disarmed\n" +
                 "Disarmed heavily decreases contact damage and their weapon damage\n" +
-                "Blocks weak physical projectiles");
-
+                "Blocks weak physical projectiles"); */
+            ItemID.Sets.ShimmerTransformToItem[Type] = ModContent.ItemType<SilverwoodBow>();
             ItemID.Sets.SkipsInitialUseSound[Item.type] = true;
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -49,9 +51,7 @@ namespace Redemption.Items.Weapons.PreHM.Melee
         {
             if (Main.keyState.PressingShift())
             {
-                TooltipLine line = new(Mod, "Lore",
-                    "'Given to Zephos by Draven, his uncle, during training. The slit in the middle is used to catch the opponent's blades,\n" +
-                    "one with great strength can use this advantage to twist the opponent's blade until it snaps, leaving them disarmed.'")
+                TooltipLine line = new(Mod, "Lore", Language.GetTextValue("Mods.Redemption.Items.SwordSlicer.Lore"))
                 {
                     OverrideColor = Color.LightGray
                 };
@@ -59,15 +59,14 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             }
             else
             {
-                TooltipLine line = new(Mod, "HoldShift", "Hold [Shift] to view lore")
+                TooltipLine line = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.SpecialTooltips.Viewer"))
                 {
                     OverrideColor = Color.Gray,
                 };
                 tooltips.Add(line);
             }
-
-            TooltipLine axeLine = new(Mod, "SharpBonus", "Slash Bonus: Small chance to decapitate skeletons, killing them instantly") { OverrideColor = Colors.RarityOrange };
-            tooltips.Add(axeLine);
+            TooltipLine slashLine = new(Mod, "SharpBonus", Language.GetTextValue("Mods.Redemption.GenericTooltips.Bonuses.SlashBonus")) { OverrideColor = Colors.RarityOrange };
+            tooltips.Add(slashLine);
         }
     }
 }

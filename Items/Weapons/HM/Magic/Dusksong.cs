@@ -10,10 +10,10 @@ namespace Redemption.Items.Weapons.HM.Magic
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Dusksong, Bond of Twilight");
-            Tooltip.SetDefault("Casts a large dusksong that splits upon hitting enemies");
+            // DisplayName.SetDefault("Dusksong, Bond of Twilight");
+            // Tooltip.SetDefault("Casts a large dusksong that splits upon hitting enemies");
 
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -29,7 +29,6 @@ namespace Redemption.Items.Weapons.HM.Magic
             Item.noMelee = true;
             Item.autoReuse = true;
             Item.knockBack = 6;
-            Item.channel = true;
             Item.value = Item.sellPrice(0, 10, 0, 0);
             Item.rare = ItemRarityID.LightRed;
             Item.shootSpeed = 10;

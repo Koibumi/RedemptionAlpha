@@ -1,8 +1,6 @@
-using Redemption.Buffs.Debuffs;
-using Redemption.Buffs.NPCBuffs;
 using Redemption.Globals;
+using Redemption.Globals.NPC;
 using Terraria;
-using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Utilities;
@@ -13,19 +11,11 @@ namespace Redemption.NPCs.Minibosses.EaglecrestGolem
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Sleeping Stones");
+            // DisplayName.SetDefault("Sleeping Stones");
             NPCID.Sets.MPAllowedEnemies[Type] = true;
 
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Poisoned,
-                    ModContent.BuffType<InfestedDebuff>(),
-                    ModContent.BuffType<NecroticGougeDebuff>(),
-                    ModContent.BuffType<ViralityDebuff>(),
-                    ModContent.BuffType<DirtyWoundDebuff>()
-                }
-            });
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Inorganic);
+            NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Electrified] = true;
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0)
             {
@@ -47,13 +37,18 @@ namespace Redemption.NPCs.Minibosses.EaglecrestGolem
             NPC.aiStyle = -1;
             NPC.chaseable = false;
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             Dust.NewDust(NPC.position + NPC.velocity, NPC.width, NPC.height, DustID.Stone, NPC.velocity.X * 0.5f, NPC.velocity.Y * 0.5f, 20, default, 3f);
         }
+        public override void ModifyHitByItem(Player player, Item item, ref NPC.HitModifiers modifiers)
+        {
+            if (item.pick > 0)
+                modifiers.FlatBonusDamage += item.pick / 2;
+        }
         public override bool CheckDead()
         {
-            NPC.SetDefaults(ModContent.NPCType<EaglecrestGolem>());
+            NPC.Transform(ModContent.NPCType<EaglecrestGolem>());
             return false;
         }
         public override float SpawnChance(NPCSpawnInfo spawnInfo)

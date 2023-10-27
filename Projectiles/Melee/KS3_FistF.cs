@@ -7,6 +7,7 @@ using Terraria.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria.GameContent;
 using Redemption.Globals.NPC;
+using Redemption.Globals;
 
 namespace Redemption.Projectiles.Melee
 {
@@ -15,8 +16,9 @@ namespace Redemption.Projectiles.Melee
         public override string Texture => "Redemption/NPCs/Bosses/KSIII/KS3_Fist";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Fist Rocket");
+            // DisplayName.SetDefault("Fist Rocket");
             Main.projFrames[Projectile.type] = 4;
+            ElementID.ProjExplosive[Type] = true;
         }
 
 		public override void SetDefaults()
@@ -27,6 +29,7 @@ namespace Redemption.Projectiles.Melee
             Projectile.hostile = false;
             Projectile.penetrate = 1;
             Projectile.tileCollide = true;
+            Projectile.DamageType = DamageClass.Melee;
             Projectile.timeLeft = 80;
 		}
 
@@ -77,7 +80,7 @@ namespace Redemption.Projectiles.Melee
                 vector *= 12f / magnitude;
             }
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(SoundID.Item14, Projectile.position);
             for (int i = 0; i < 25; i++)

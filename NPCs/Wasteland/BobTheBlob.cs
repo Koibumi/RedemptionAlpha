@@ -2,24 +2,23 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.Biomes;
 using Redemption.Buffs.Debuffs;
-using Redemption.Buffs.NPCBuffs;
 using Redemption.Dusts;
 using Redemption.Globals;
+using Redemption.Globals.NPC;
 using Redemption.Items.Accessories.HM;
-using Redemption.Items.Armor.Vanity;
 using Redemption.Items.Armor.Vanity.Intruder;
-using Redemption.Items.Donator.Sneaklone;
 using Redemption.Items.Materials.HM;
-using Redemption.Items.Materials.PreHM;
 using Redemption.Items.Placeable.Banners;
 using Redemption.Items.Usable.Potions;
 using Redemption.Items.Weapons.HM.Ranged;
+using System.IO;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.NPCs.Wasteland
@@ -44,26 +43,16 @@ namespace Redemption.NPCs.Wasteland
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Bob the Blob");
+            // DisplayName.SetDefault("Bob the Blob");
             Main.npcFrameCount[NPC.type] = 5;
 
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Poisoned,
-                    ModContent.BuffType<BileDebuff>(),
-                    ModContent.BuffType<GreenRashesDebuff>(),
-                    ModContent.BuffType<GlowingPustulesDebuff>(),
-                    ModContent.BuffType<FleshCrystalsDebuff>(),
-                    ModContent.BuffType<InfestedDebuff>(),
-                    ModContent.BuffType<NecroticGougeDebuff>(),
-                    ModContent.BuffType<DirtyWoundDebuff>()
-                }
-            });
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.NoBlood);
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Infected);
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0);
-
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
+            ElementID.NPCWater[Type] = true;
+            ElementID.NPCPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -84,7 +73,7 @@ namespace Redemption.NPCs.Wasteland
             Banner = NPC.type;
             BannerItem = ModContent.ItemType<BobTheBlobBanner>();
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -108,7 +97,7 @@ namespace Redemption.NPCs.Wasteland
         public override void ModifyNPCLoot(NPCLoot npcLoot)
         {
             npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<DAN>(), 2));
-            npcLoot.Add(ItemDropRule.ByCondition(new Conditions.BeatAnyMechBoss(), ModContent.ItemType<XenomiteShard>(), 1, 26, 48));
+            npcLoot.Add(ItemDropRule.ByCondition(new Conditions.BeatAnyMechBoss(), ModContent.ItemType<Xenomite>(), 1, 12, 24));
             npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<ToxicBile>(), 1, 6, 12));
             npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<HazmatSuit>(), 10));
             npcLoot.Add(ItemDropRule.OneFromOptions(3, ModContent.ItemType<IntruderMask>(), ModContent.ItemType<IntruderArmour>(), ModContent.ItemType<IntruderPants>()));
@@ -116,11 +105,19 @@ namespace Redemption.NPCs.Wasteland
             npcLoot.Add(ItemDropRule.Common(ItemID.SlimeStaff, 1000));
             npcLoot.Add(ItemDropRule.Food(ModContent.ItemType<StarliteDonut>(), 150));
         }
-
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.Write(Xvel);
+        }
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            Xvel = reader.ReadInt32();
+        }
         public int Xvel;
         public override void OnSpawn(IEntitySource source)
         {
             TimerRand = Main.rand.Next(10, 60);
+            NPC.netUpdate = true;
         }
         public override void AI()
         {
@@ -145,15 +142,14 @@ namespace Redemption.NPCs.Wasteland
                         AITimer = 0;
                         TimerRand = Main.rand.Next(10, 60);
                         AIState = ActionState.Bounce;
+                        NPC.netUpdate = true;
                     }
                     break;
 
                 case ActionState.Bounce:
                     NPC.velocity.X = Xvel * NPC.spriteDirection;
                     if (NPC.collideY || NPC.velocity.Y == 0)
-                    {
                         AIState = ActionState.Idle;
-                    }
                     break;
             }
         }
@@ -187,17 +183,17 @@ namespace Redemption.NPCs.Wasteland
 
             return false;
         }
-        public override void ModifyHitPlayer(Player target, ref int damage, ref bool crit)
+        public override void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers)
         {
             if (Main.rand.NextBool(2) || Main.expertMode)
                 target.AddBuff(ModContent.BuffType<GreenRashesDebuff>(), Main.rand.Next(200, 2400));
         }
         public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
         {
+            bestiaryEntry.UIInfoProvider = new CustomCollectionInfoProvider(ContentSamples.NpcBestiaryCreditIdsByNpcNetIds[Type], false, 10);
             bestiaryEntry.Info.AddRange(new IBestiaryInfoElement[]
             {
-                new FlavorTextBestiaryInfoElement(
-                    "A mess of radioactive sludge coating some poor skeleton. They don't look happy about their situation.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.BobTheBlob"))
             });
         }
     }

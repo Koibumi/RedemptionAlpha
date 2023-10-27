@@ -4,12 +4,14 @@ using Redemption.BaseExtension;
 using Redemption.Globals;
 using Redemption.Items.Armor.Single;
 using Redemption.Items.Critters;
+using Redemption.Items.Placeable.Banners;
 using Redemption.NPCs.PreHM;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.NPCs.Critters
@@ -34,6 +36,7 @@ namespace Redemption.NPCs.Critters
         public override void SetStaticDefaults()
         {
             Main.npcFrameCount[Type] = 6;
+            NPCID.Sets.ShimmerTransformToNPC[NPC.type] = NPCID.Shimmerfly;
             NPCID.Sets.CountsAsCritter[Type] = true;
             NPCID.Sets.DontDoHardmodeScaling[Type] = true;
             NPCID.Sets.TakesDamageFromHostilesWithoutBeingFriendly[Type] = true;
@@ -53,6 +56,8 @@ namespace Redemption.NPCs.Critters
             NPC.knockBackResist = 0.5f;
             NPC.aiStyle = -1;
             NPC.catchItem = (short)ModContent.ItemType<KabucraItem>();
+            Banner = NPC.type;
+            BannerItem = ModContent.ItemType<KabucraBanner>();
         }
         public NPC npcTarget;
         public Vector2 moveTo;
@@ -115,9 +120,7 @@ namespace Redemption.NPCs.Critters
 
                     if (RedeHelper.ClosestNPC(ref npcTarget, 100, NPC.Center) && npcTarget.damage > 0)
                     {
-                        RedeHelper.HorizontallyMove(NPC,
-                            new Vector2(npcTarget.Center.X < NPC.Center.X ? NPC.Center.X + 50 : NPC.Center.X - 50,
-                                NPC.Center.Y), 0.5f, 2, 4, 2, false);
+                        NPCHelper.HorizontallyMove(NPC, new Vector2(npcTarget.Center.X < NPC.Center.X ? NPC.Center.X + 50 : NPC.Center.X - 50, NPC.Center.Y), 0.5f, 2, 4, 2, false);
                         return;
                     }
 
@@ -129,7 +132,7 @@ namespace Redemption.NPCs.Critters
                         AIState = ActionState.Idle;
                     }
 
-                    RedeHelper.HorizontallyMove(NPC, moveTo * 16, 0.2f, 1, 4, 2, false);
+                    NPCHelper.HorizontallyMove(NPC, moveTo * 16, 0.2f, 1, 4, 2, false);
                     break;
 
                 case ActionState.Hop:
@@ -151,6 +154,11 @@ namespace Redemption.NPCs.Critters
                         AIState = ActionState.Idle;
                     }
                     break;
+            }
+            if (NPC.frame.Y >= 4 * 22)
+            {
+                NPC.defense = 90;
+                NPC.knockBackResist = 0.1f;
             }
         }
         public bool HideCheck()
@@ -244,11 +252,6 @@ namespace Redemption.NPCs.Critters
                         NPC.frame.Y = 5 * frameHeight;
                 }
             }
-            if (NPC.frame.Y >= 4 * frameHeight)
-            {
-                NPC.defense = 90;
-                NPC.knockBackResist = 0.1f;
-            }
         }
 
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => false;
@@ -262,12 +265,11 @@ namespace Redemption.NPCs.Critters
             bestiaryEntry.Info.AddRange(new IBestiaryInfoElement[]
             {
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Biomes.Ocean,
-                new FlavorTextBestiaryInfoElement(
-                    "Kabucra, or Shell Crabs, find and use sturdy seashells as armour against predators. Due to their tiny size, they can escape by burying into the ground in case their shells aren't enough protection.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.Kabucra"))
             });
         }
 
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (AIState is ActionState.Idle)
             {

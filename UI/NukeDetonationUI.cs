@@ -9,6 +9,7 @@ using Terraria.Audio;
 using Redemption.Globals;
 using Terraria.Localization;
 using Terraria.Chat;
+using Terraria.GameInput;
 
 namespace Redemption.UI
 {
@@ -41,14 +42,14 @@ namespace Redemption.UI
             SwitchSprite1.Top.Set(108, 0f);
             SwitchSprite1.Width.Set(52, 0f);
             SwitchSprite1.Height.Set(48, 0f);
-            SwitchSprite1.OnClick += new MouseEvent(Switch1Clicked);
+            SwitchSprite1.OnLeftClick += new MouseEvent(Switch1Clicked);
             BgSprite.Append(SwitchSprite1);
 
             SwitchSprite2.Left.Set(216, 0f);
             SwitchSprite2.Top.Set(192, 0f);
             SwitchSprite2.Width.Set(52, 0f);
             SwitchSprite2.Height.Set(48, 0f);
-            SwitchSprite2.OnClick += new MouseEvent(Switch2Clicked);
+            SwitchSprite2.OnLeftClick += new MouseEvent(Switch2Clicked);
             BgSprite.Append(SwitchSprite2);
 
             ButtonSprite.Left.Set(8, 0f);
@@ -59,7 +60,7 @@ namespace Redemption.UI
             Button.Top.Set(104, 0f);
             Button.Width.Set(164, 0f);
             Button.Height.Set(164, 0f);
-            Button.OnClick += new MouseEvent(NukeButtonClicked);
+            Button.OnLeftClick += new MouseEvent(NukeButtonClicked);
             BgSprite.Append(ButtonSprite);
             BgSprite.Append(Button);
 
@@ -70,7 +71,7 @@ namespace Redemption.UI
             closeButton.Left.Set(608 - 30, 0f);
             closeButton.Top.Set(8, 0f);
 
-            closeButton.OnClick += new MouseEvent(CloseMenu);
+            closeButton.OnLeftClick += new MouseEvent(CloseMenu);
             //closeButton.MouseOver 
             BgSprite.Append(closeButton);
 
@@ -92,7 +93,6 @@ namespace Redemption.UI
         }
         private void NukeButtonClicked(UIMouseEvent evt, UIElement listeningElement)
         {
-            Main.isMouseLeftConsumedByUI = true;
             SoundEngine.PlaySound(SoundID.MenuTick);
             if (Switch1State && Switch2State)
             {
@@ -105,7 +105,7 @@ namespace Redemption.UI
                         int type = Main.tile[tileToWarhead.X + x, tileToWarhead.Y + y].TileType;
                         if (Main.tile[tileToWarhead.X + x, tileToWarhead.Y + y] != null && Main.tile[tileToWarhead.X + x, tileToWarhead.Y + y].HasTile)
                         {
-                            if (Main.tileDungeon[type] || type == 88 || type == 21 || type == 26 || type == 107 || type == 108 || type == 111 || type == 226 || type == 237 || type == 221 || type == 222 || type == 223 || type == 211 || type == 404)
+                            if (Main.tileDungeon[type] || type == 88 || type == 21 || type == 26 || type == 107 || type == 108 || type == 111 || type == 226 || type == 237 || type == 221 || type == 222 || type == 223 || type == 211)
                                 fail = true; 
                             if (!TileLoader.CanExplode(tileToWarhead.X + x, tileToWarhead.Y + y))
                                 fail = true;
@@ -145,12 +145,12 @@ namespace Redemption.UI
             }
 
         }
-        public override void MouseOver(UIMouseEvent evt)
-        {
-            Main.isMouseLeftConsumedByUI = true;
-        }
         public override void Update(GameTime gameTime)
         {
+            base.Update(gameTime);
+            if (ContainsPoint(Main.MouseScreen) && !PlayerInput.IgnoreMouseInterface)
+                Main.LocalPlayer.mouseInterface = true;
+
             if (ButtonState != 2 && !Main.LocalPlayer.releaseInventory)
                 Visible = false;
 

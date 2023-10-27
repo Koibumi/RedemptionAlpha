@@ -11,7 +11,7 @@ namespace Redemption.Projectiles.Ranged
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("D.A.N Bull-et");
+            // DisplayName.SetDefault("D.A.N Bull-et");
             Main.projFrames[Projectile.type] = 2;
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 4;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
@@ -48,7 +48,7 @@ namespace Redemption.Projectiles.Ranged
             Collision.HitTiles(Projectile.position, oldVelocity, Projectile.width, Projectile.height);
             return true;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             for (int i = 0; i < 6; i++)
             {

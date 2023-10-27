@@ -10,6 +10,7 @@ using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.Enums;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 using static Redemption.Globals.RedeNet;
@@ -33,11 +34,11 @@ namespace Redemption.Tiles.Furniture.Lab
             TileObjectData.newTile.AnchorBottom = new AnchorData(AnchorType.SolidTile | AnchorType.SolidWithTop | AnchorType.SolidSide, TileObjectData.newTile.Width, 0);
             TileObjectData.addTile(Type);
             DustType = DustID.GreenBlood;
-            MinPick = 500;
+            MinPick = 1000;
             MineResist = 8f;
             HitSound = SoundID.NPCHit13;
-            ModTranslation name = CreateMapEntryName();
-            name.SetDefault("Hazmat Corpse");
+            LocalizedText name = CreateMapEntryName();
+            // name.SetDefault("Hazmat Corpse");
             AddMapEntry(new Color(242, 183, 111), name);
         }
         public override void MouseOver(int i, int j)
@@ -64,7 +65,7 @@ namespace Redemption.Tiles.Furniture.Lab
                         int index1 = NPC.NewNPC(new EntitySource_TileInteraction(player, i, j), i * 16, (j + 1) * 16, ModContent.NPCType<HazmatCorpse_Ghost>());
                         SoundEngine.PlaySound(SoundID.Item74, Main.npc[index1].position);
                         Main.npc[index1].velocity.Y -= 4;
-                        Main.npc[index1].netUpdate2 = true;
+                        Main.npc[index1].netUpdate = true;
                     }
                     else
                     {
@@ -75,23 +76,25 @@ namespace Redemption.Tiles.Furniture.Lab
                         SoundEngine.PlaySound(SoundID.Item74, player.position);
                     }
                 }
+                return true;
             }
             else
             {
                 if (Main.tile[left, top].TileFrameX == 0)
                 {
                     player.QuickSpawnItem(new EntitySource_TileInteraction(player, i, j), ModContent.ItemType<HazmatSuit2>());
-                }
-                for (int x = left; x < left + 3; x++)
-                {
-                    for (int y = top; y < top + 2; y++)
+                    for (int x = left; x < left + 3; x++)
                     {
-                        if (Main.tile[x, y].TileFrameX < 54)
-                            Main.tile[x, y].TileFrameX += 54;
+                        for (int y = top; y < top + 2; y++)
+                        {
+                            if (Main.tile[x, y].TileFrameX < 54)
+                                Main.tile[x, y].TileFrameX += 54;
+                        }
                     }
+                    return true;
                 }
             }
-            return true;
+            return false;
         }
         public override void KillMultiTile(int i, int j, int frameX, int frameY)
         {
@@ -100,7 +103,6 @@ namespace Redemption.Tiles.Furniture.Lab
             if (Main.tile[left, top].TileFrameX == 0)
             {
                 Player player = Main.LocalPlayer;
-                //player.QuickSpawnItem(ModContent.ItemType<Crowbar>());
                 player.QuickSpawnItem(new EntitySource_TileBreak(i, j), ModContent.ItemType<HazmatSuit2>());
             }
         }
@@ -109,7 +111,7 @@ namespace Redemption.Tiles.Furniture.Lab
             if (!Main.LocalPlayer.RedemptionAbility().SpiritwalkerActive)
                 return true;
 
-            Texture2D flare = ModContent.Request<Texture2D>("Redemption/Textures/WhiteFlare").Value;
+            Texture2D flare = Redemption.WhiteFlare.Value;
             Rectangle rect = new(0, 0, flare.Width, flare.Height);
             Vector2 zero = new(Main.offScreenRange, Main.offScreenRange);
             if (Main.drawToScreen)
@@ -132,12 +134,12 @@ namespace Redemption.Tiles.Furniture.Lab
     }
     public class HazmatCorpse : PlaceholderTile
     {
-        public override string Texture => "Redemption/Placeholder";
-        public override void SetStaticDefaults()
+        public override string Texture => Redemption.PLACEHOLDER_TEXTURE;
+        public override void SetSafeStaticDefaults()
         {
-            DisplayName.SetDefault("Hazmat Corpse");
-            Tooltip.SetDefault("Gives Crowbar and Hazmat Suit" +
-                "\n[c/ff0000:Unbreakable (500% Pickaxe Power)]");
+            // DisplayName.SetDefault("Hazmat Corpse");
+            /* Tooltip.SetDefault("Gives Hazmat Suit" +
+                "\n[c/ff0000:Unbreakable (500% Pickaxe Power)]"); */
         }
 
         public override void SetDefaults()

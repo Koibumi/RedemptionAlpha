@@ -5,6 +5,7 @@ using Terraria.ModLoader;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria.ID;
 using Terraria.GameContent;
+using Redemption.Globals;
 
 namespace Redemption.NPCs.Bosses.Neb.Phase2
 {
@@ -12,9 +13,10 @@ namespace Redemption.NPCs.Bosses.Neb.Phase2
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Star Bolt");
+            // DisplayName.SetDefault("Star Bolt");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 5;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjCelestial[Type] = true;
         }
         public override void SetDefaults()
         {

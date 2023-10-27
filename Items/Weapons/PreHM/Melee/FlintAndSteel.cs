@@ -1,3 +1,4 @@
+using Redemption.Globals;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -8,11 +9,11 @@ namespace Redemption.Items.Weapons.PreHM.Melee
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Flint and Steel");
-            Tooltip.SetDefault("Releases a tiny spark which lights enemies on fire\n" +
-                "'Doesn't work on obsidian'");
+            // DisplayName.SetDefault("Flint and Steel");
+            /* Tooltip.SetDefault("Releases a tiny spark which lights enemies on fire\n" +
+                "'Doesn't work on obsidian'"); */
 
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -20,7 +21,7 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             Item.damage = 1;
             Item.DamageType = DamageClass.Generic;
             Item.width = 30;
-            Item.height = 26;
+            Item.height = 24;
             Item.useTime = 20;
             Item.useAnimation = 20;
             Item.useStyle = ItemUseStyleID.Swing;
@@ -39,7 +40,8 @@ namespace Redemption.Items.Weapons.PreHM.Melee
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Spark");
+            // DisplayName.SetDefault("Spark");
+            ElementID.ProjFire[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -61,7 +63,7 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             dust.velocity *= 0.2f;
             dust.noGravity = false;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.OnFire, 300);
         }

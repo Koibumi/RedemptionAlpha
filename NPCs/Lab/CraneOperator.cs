@@ -11,11 +11,30 @@ using Redemption.Globals;
 using Redemption.WorldGeneration;
 using Redemption.Biomes;
 using Redemption.BaseExtension;
+using ReLogic.Content;
+using Terraria.Localization;
 
 namespace Redemption.NPCs.Lab
 {
     public class CraneOperator : ModNPC
     {
+        private static Asset<Texture2D> Anims;
+        private static Asset<Texture2D> StepAni;
+        private static Asset<Texture2D> WalkAni;
+        public override void Load()
+        {
+            if (Main.dedServ)
+                return;
+            Anims = ModContent.Request<Texture2D>(Texture + "_Anims");
+            StepAni = ModContent.Request<Texture2D>(Texture + "_Step");
+            WalkAni = ModContent.Request<Texture2D>(Texture + "_Walk");
+        }
+        public override void Unload()
+        {
+            Anims = null;
+            StepAni = null;
+            WalkAni = null;
+        }
         public static int BodyType() => ModContent.NPCType<MACEProject>();
         public enum ActionState
         {
@@ -69,12 +88,14 @@ namespace Redemption.NPCs.Lab
             bestiaryEntry.UIInfoProvider = new CommonEnemyUICollectionInfoProvider(ContentSamples.NpcBestiaryCreditIdsByNpcNetIds[associatedNPCType], quickUnlock: true);
 
             bestiaryEntry.Info.AddRange(new List<IBestiaryInfoElement> {
-                new FlavorTextBestiaryInfoElement("A timid android with ambitious goals. She does small, odd jobs around the Laboratory. Usually ones that required an operator.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.CraneOperator"))
             });
         }
         private Vector2 moveTo;
         public override void AI()
         {
+            CustomFrames(58);
+
             if (!NPC.AnyNPCs(BodyType()))
             {
                 AITimer = 0;
@@ -155,16 +176,13 @@ namespace Redemption.NPCs.Lab
                     {
                         moveTo = new((RedeGen.LabVector.X + 114) * 16, (RedeGen.LabVector.Y + 156) * 16);
 
-                        NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20);
-                        RedeHelper.HorizontallyMove(NPC, moveTo, 0.4f, 1f, 8, 8, NPC.Center.Y > moveTo.Y);
+                        NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20, moveTo.Y);
+                        NPCHelper.HorizontallyMove(NPC, moveTo, 0.4f, 1f, 8, 8, NPC.Center.Y > moveTo.Y);
                     }
                     break;
             }
         }
-        public override bool? CanFallThroughPlatforms() => NPC.Redemption().fallDownPlatform;
-        private int AniFrameY;
-        private int AniFrameX;
-        public override void FindFrame(int frameHeight)
+        private void CustomFrames(int frameHeight)
         {
             switch (AIState)
             {
@@ -280,45 +298,66 @@ namespace Redemption.NPCs.Lab
                     break;
             }
         }
+        public override bool? CanFallThroughPlatforms() => NPC.Redemption().fallDownPlatform;
+        private int AniFrameY;
+        private int AniFrameX;
+        public override void FindFrame(int frameHeight)
+        {
+            if (NPC.IsABestiaryIconDummy)
+            {
+                if (++NPC.frameCounter >= 6)
+                {
+                    NPC.frameCounter = 0;
+                    if (TimerRand == 1)
+                    {
+                        NPC.frame.Y += frameHeight;
+                        if (NPC.frame.Y > 3 * frameHeight)
+                        {
+                            TimerRand = 0;
+                            NPC.frame.Y = 0 * frameHeight;
+                        }
+                    }
+                    else if (Main.rand.NextBool(20))
+                        TimerRand = 1;
+                }
+            }
+        }
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
             Texture2D texture = TextureAssets.Npc[NPC.type].Value;
-            Texture2D Anims = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Anims").Value;
-            Texture2D StepAni = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Step").Value;
-            Texture2D WalkAni = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Walk").Value;
             var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
             if (AIState is ActionState.WalkAway)
             {
-                int Height = WalkAni.Height / 8;
+                int Height = WalkAni.Value.Height / 8;
                 int y = Height * AniFrameY;
-                Rectangle rect = new(0, y, WalkAni.Width, Height);
-                Vector2 origin = new(WalkAni.Width / 2f, Height / 2f);
-                spriteBatch.Draw(WalkAni, NPC.Center - screenPos + new Vector2(12, -4), new Rectangle?(rect), NPC.GetAlpha(drawColor), NPC.rotation, origin, NPC.scale, effects, 0);
+                Rectangle rect = new(0, y, WalkAni.Value.Width, Height);
+                Vector2 origin = new(WalkAni.Value.Width / 2f, Height / 2f);
+                spriteBatch.Draw(WalkAni.Value, NPC.Center - screenPos + new Vector2(12, -4), new Rectangle?(rect), NPC.GetAlpha(drawColor), NPC.rotation, origin, NPC.scale, effects, 0);
             }
             else if (AIState is ActionState.Kick)
             {
-                int Height = StepAni.Height / 3;
+                int Height = StepAni.Value.Height / 3;
                 int y = Height * AniFrameY;
-                Rectangle rect = new(0, y, StepAni.Width, Height);
-                Vector2 origin = new(StepAni.Width / 2f, Height / 2f);
-                spriteBatch.Draw(StepAni, NPC.Center - screenPos + new Vector2(1, -10), new Rectangle?(rect), NPC.GetAlpha(drawColor), NPC.rotation, origin, NPC.scale, effects, 0);
+                Rectangle rect = new(0, y, StepAni.Value.Width, Height);
+                Vector2 origin = new(StepAni.Value.Width / 2f, Height / 2f);
+                spriteBatch.Draw(StepAni.Value, NPC.Center - screenPos + new Vector2(1, -10), new Rectangle?(rect), NPC.GetAlpha(drawColor), NPC.rotation, origin, NPC.scale, effects, 0);
             }
             else if (AIState != ActionState.Idle)
             {
-                int Height = Anims.Height / 18;
+                int Height = Anims.Value.Height / 18;
                 int y = Height * AniFrameY;
-                int Width = Anims.Width / 2;
+                int Width = Anims.Value.Width / 2;
                 int x = Width * AniFrameX;
                 Rectangle rect = new(x, y, Width, Height);
                 Vector2 origin = new(Width / 2f, Height / 2f);
-                spriteBatch.Draw(Anims, NPC.Center - screenPos + new Vector2(2, -4), new Rectangle?(rect), NPC.GetAlpha(drawColor), NPC.rotation, origin, NPC.scale, effects, 0);
+                spriteBatch.Draw(Anims.Value, NPC.Center - screenPos + new Vector2(2, -4), new Rectangle?(rect), NPC.GetAlpha(drawColor), NPC.rotation, origin, NPC.scale, effects, 0);
             }
             else
                 spriteBatch.Draw(texture, NPC.Center - screenPos + new Vector2(1, 1), NPC.frame, NPC.GetAlpha(drawColor), NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0f);
             return false;
         }
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => false;
-        public override bool? CanHitNPC(NPC target) => false;
+        public override bool CanHitNPC(NPC target) => false;
     }
 }

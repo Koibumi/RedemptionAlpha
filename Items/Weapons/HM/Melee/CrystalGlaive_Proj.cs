@@ -10,7 +10,6 @@ using Terraria.Audio;
 using ReLogic.Content;
 using Redemption.BaseExtension;
 using Redemption.Effects.PrimitiveTrails;
-using log4net.Core;
 
 namespace Redemption.Items.Weapons.HM.Melee
 {
@@ -18,7 +17,8 @@ namespace Redemption.Items.Weapons.HM.Melee
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Crystal Glaive");
+            // DisplayName.SetDefault("Crystal Glaive");
+            ElementID.ProjHoly[Type] = true;
         }
         private Vector2 startVector;
         public override void SetDefaults()
@@ -55,10 +55,11 @@ namespace Redemption.Items.Weapons.HM.Melee
             else
                 Projectile.rotation = (Projectile.Center - player.Center).ToRotation() - MathHelper.Pi - MathHelper.PiOver4;
 
+            player.SetCompositeArmFront(true, Length >= 100 ? Player.CompositeArmStretchAmount.Full : Player.CompositeArmStretchAmount.Quarter, (player.Center - Projectile.Center).ToRotation() + MathHelper.PiOver2);
+
             switch (Projectile.ai[0])
             {
                 case 0:
-                    player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, (player.Center - Projectile.Center).ToRotation() + MathHelper.PiOver2);
                     if (Timer++ == 0)
                     {
                         startVector = RedeHelper.PolarVector(1, Projectile.velocity.ToRotation() - (MathHelper.PiOver2 * Projectile.spriteDirection));
@@ -84,7 +85,6 @@ namespace Redemption.Items.Weapons.HM.Melee
                     Length = MathHelper.Clamp(Length, 60, 120);
                     break;
                 case 1:
-                    player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, (player.Center - Projectile.Center).ToRotation() + MathHelper.PiOver2);
                     if (Timer++ == 0)
                     {
                         startVector = RedeHelper.PolarVector(1, Projectile.velocity.ToRotation() + (MathHelper.PiOver2 * Projectile.spriteDirection));
@@ -165,7 +165,7 @@ namespace Redemption.Items.Weapons.HM.Melee
             dust.shader = GameShaders.Armor.GetSecondaryShader(77, Main.player[Projectile.owner]);
             return false;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Player player = Main.player[Projectile.owner];
             if (Projectile.ai[0] == 2 && player.Redemption().crystalGlaiveShotCount <= 0)

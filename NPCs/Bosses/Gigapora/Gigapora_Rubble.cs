@@ -15,7 +15,7 @@ namespace Redemption.NPCs.Bosses.Gigapora
         public override string Texture => "Redemption/Projectiles/Magic/Rockslide_Proj";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Rubble");
+            // DisplayName.SetDefault("Rubble");
             Main.projFrames[Projectile.type] = 4;
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 6;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
@@ -30,7 +30,7 @@ namespace Redemption.NPCs.Bosses.Gigapora
             Projectile.tileCollide = false;
             Projectile.ignoreWater = false;
             Projectile.timeLeft = 600;
-            Projectile.rotation = Main.rand.NextFloat(0, MathHelper.TwoPi);
+            Projectile.rotation = RedeHelper.RandomRotation();
             Projectile.frame = Main.rand.Next(4);
             Projectile.spriteDirection = Main.rand.NextBool() ? 1 : -1;
         }
@@ -39,12 +39,13 @@ namespace Redemption.NPCs.Bosses.Gigapora
         {
             Projectile.rotation += Projectile.velocity.X / 40 * Projectile.direction;
             Projectile.velocity.Y += 0.35f;
+            Projectile.velocity.Y = MathHelper.Min(Projectile.velocity.Y, 10);
             if (Projectile.velocity.Y > 0)
                 Projectile.tileCollide = true;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
-            Player player = Main.player[Main.myPlayer];
+            Player player = Main.LocalPlayer;
             player.RedemptionScreen().ScreenShakeOrigin = Projectile.Center;
             player.RedemptionScreen().ScreenShakeIntensity += 3;
 
@@ -72,7 +73,7 @@ namespace Redemption.NPCs.Bosses.Gigapora
                 Color color = Projectile.GetAlpha(Color.OrangeRed) * ((Projectile.oldPos.Length - k) / (float)Projectile.oldPos.Length);
                 Main.EntitySpriteDraw(texture, drawPos, new Rectangle?(rect), color, Projectile.rotation, drawOrigin, Projectile.scale, SpriteEffects.None, 0);
             }
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, new Rectangle?(rect), Projectile.GetAlpha(lightColor), Projectile.rotation, drawOrigin, Projectile.scale, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, new Rectangle?(rect), Projectile.GetAlpha(Color.OrangeRed) * 2, Projectile.rotation, drawOrigin, Projectile.scale, SpriteEffects.None, 0);
             return false;
         }
     }

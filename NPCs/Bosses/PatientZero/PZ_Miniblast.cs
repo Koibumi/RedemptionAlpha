@@ -6,6 +6,7 @@ using Terraria.Audio;
 using Redemption.Globals;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria.GameContent;
+using Redemption.Buffs.Debuffs;
 
 namespace Redemption.NPCs.Bosses.PatientZero
 {
@@ -13,9 +14,10 @@ namespace Redemption.NPCs.Bosses.PatientZero
 	{
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Xenium Blast");
+            // DisplayName.SetDefault("Xenium Blast");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 5;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjPoison[Type] = true;
         }
         public override void SetDefaults()
 		{
@@ -29,6 +31,7 @@ namespace Redemption.NPCs.Bosses.PatientZero
             Projectile.timeLeft = 160;
             Projectile.alpha = 255;
         }
+        public override void OnHitPlayer(Player target, Player.HurtInfo info) => target.AddBuff(ModContent.BuffType<BileDebuff>(), 120);
         public override void AI()
         {
             if (Main.rand.NextBool(5))
@@ -43,7 +46,7 @@ namespace Redemption.NPCs.Bosses.PatientZero
             if (Projectile.localAI[0]++ > 10)
                 Projectile.tileCollide = true;
         }
-        public override void ModifyHitPlayer(Player target, ref int damage, ref bool crit)
+        public override void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers)
         {
             Projectile.Kill();
         }
@@ -54,7 +57,7 @@ namespace Redemption.NPCs.Bosses.PatientZero
             Vector2 drawOrigin = new(texture.Width / 2, Projectile.height / 2);
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginAdditive();
 
             for (int k = 0; k < Projectile.oldPos.Length; k++)
             {
@@ -63,12 +66,12 @@ namespace Redemption.NPCs.Bosses.PatientZero
             }
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginDefault();
 
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, new Rectangle?(rect), Projectile.GetAlpha(Color.White), Projectile.rotation, drawOrigin, Projectile.scale, SpriteEffects.None, 0);
             return false;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = .2f }, Projectile.position);
             for (int i = 0; i < 10; i++)

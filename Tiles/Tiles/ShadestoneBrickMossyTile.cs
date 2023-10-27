@@ -1,9 +1,11 @@
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.Localization;
 using Terraria.ModLoader;
-using Terraria.ID;
 using Redemption.Tiles.Plants;
 using Redemption.Dusts.Tiles;
+using Redemption.Items.Tools.PostML;
+using Redemption.Dusts;
 
 namespace Redemption.Tiles.Tiles
 {
@@ -23,14 +25,28 @@ namespace Redemption.Tiles.Tiles
             DustType = ModContent.DustType<ShadestoneDust>();
             MinPick = 500;
             MineResist = 11f;
-            HitSound = SoundID.Tink;
-            ModTranslation name = CreateMapEntryName();
-            name.SetDefault("Mossy Shadestone Brick");
+            HitSound = CustomSounds.BrickHit;
+            LocalizedText name = CreateMapEntryName();
+            // name.SetDefault("Mossy Shadestone Brick");
             AddMapEntry(new Color(22, 26, 35));
+        }
+        public override void FloorVisuals(Player player)
+        {
+            if (player.velocity.X != 0f && Main.rand.NextBool(20))
+            {
+                Dust dust = Dust.NewDustDirect(player.Bottom, 0, 0, ModContent.DustType<VoidFlame>(), 0f, -Main.rand.NextFloat(2f));
+                dust.noGravity = true;
+                dust.fadeIn = 1f;
+            }
         }
         public override void NumDust(int i, int j, bool fail, ref int num) => num = fail ? 1 : 3;
         public override bool CanExplode(int i, int j) => false;
-        public override bool CanKillTile(int i, int j, ref bool blockDamaged) => false;
+        public override bool CanKillTile(int i, int j, ref bool blockDamaged)
+        {
+            if (Main.LocalPlayer.HeldItem.type == ModContent.ItemType<NanoAxe2>())
+                return true;
+            return false;
+        }
         public override void KillTile(int i, int j, ref bool fail, ref bool effectOnly, ref bool noItem)
         {
             if (!fail)
@@ -46,21 +62,21 @@ namespace Redemption.Tiles.Tiles
                 if (Main.rand.NextBool(5))
                 {
                     WorldGen.PlaceObject(i, j + 1, ModContent.TileType<Nooseroot_Small>(), true, Main.rand.Next(3));
-                    NetMessage.SendObjectPlacment(-1, i, j + 1, ModContent.TileType<Nooseroot_Small>(), Main.rand.Next(3), 0, -1, -1);
+                    NetMessage.SendObjectPlacement(-1, i, j + 1, ModContent.TileType<Nooseroot_Small>(), Main.rand.Next(3), 0, -1, -1);
                 }
                 if (Main.rand.NextBool(7))
                 {
                     WorldGen.PlaceObject(i, j + 1, ModContent.TileType<Nooseroot_Medium>(), true, Main.rand.Next(3));
-                    NetMessage.SendObjectPlacment(-1, i, j + 1, ModContent.TileType<Nooseroot_Medium>(), Main.rand.Next(3), 0, -1, -1);
+                    NetMessage.SendObjectPlacement(-1, i, j + 1, ModContent.TileType<Nooseroot_Medium>(), Main.rand.Next(3), 0, -1, -1);
                 }
                 if (Main.rand.NextBool(12))
                 {
                     WorldGen.PlaceObject(i, j + 1, ModContent.TileType<Nooseroot_Large>(), true, Main.rand.Next(3));
-                    NetMessage.SendObjectPlacment(-1, i, j + 1, ModContent.TileType<Nooseroot_Large>(), Main.rand.Next(3), 0, -1, -1);
+                    NetMessage.SendObjectPlacement(-1, i, j + 1, ModContent.TileType<Nooseroot_Large>(), Main.rand.Next(3), 0, -1, -1);
                 }
             }
             if (Main.rand.NextBool(8))
-                WorldGen.SpreadGrass(i + Main.rand.Next(-1, 1), j + Main.rand.Next(-1, 1), ModContent.TileType<ShadestoneBrickTile>(), Type, false, 0);
+                WorldGen.SpreadGrass(i + Main.rand.Next(-1, 1), j + Main.rand.Next(-1, 1), ModContent.TileType<ShadestoneBrickTile>(), Type, false);
         }
     }
 }

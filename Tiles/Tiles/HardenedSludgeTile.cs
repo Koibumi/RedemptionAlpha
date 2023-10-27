@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Redemption.Dusts;
 using Terraria.ID;
@@ -17,16 +18,23 @@ namespace Redemption.Tiles.Tiles
 			Main.tileMergeDirt[Type] = true;
             Main.tileBlockLight[Type] = true;
             Main.tileMerge[Type][ModContent.TileType<LabPlatingTileUnsafe>()] = true;
+            Main.tileMerge[Type][ModContent.TileType<LabPlatingTileUnsafe2>()] = true;
             Main.tileMerge[Type][ModContent.TileType<OvergrownLabPlatingTile>()] = true;
             Main.tileMerge[Type][ModContent.TileType<LabPlatingTile>()] = true;
+            Main.tileMerge[Type][ModContent.TileType<OvergrownLabPlatingTile2>()] = true;
             DustType = ModContent.DustType<SludgeDust>();
             MinPick = 200;
             MineResist = 2f;
             HitSound = SoundID.NPCHit13;
-            ModTranslation name = CreateMapEntryName();
-            name.SetDefault("Hardened Sludge");
+            LocalizedText name = CreateMapEntryName();
+            // name.SetDefault("Hardened Sludge");
             AddMapEntry(new Color(54, 193, 59), name);
-		}
+        }
+        public override void FloorVisuals(Player player)
+        {
+            if (player.velocity.X != 0f && Main.rand.NextBool(4))
+                Dust.NewDustDirect(player.BottomLeft, player.width, 0, DustType, -player.velocity.X / 4, -Main.rand.NextFloat(1f));
+        }
         public override void KillTile(int i, int j, ref bool fail, ref bool effectOnly, ref bool noItem)
         {
             if (Main.rand.NextBool(6) && !fail && Main.netMode != NetmodeID.MultiplayerClient)

@@ -1,18 +1,16 @@
 ﻿using Terraria;
 using Terraria.ModLoader;
 using Microsoft.Xna.Framework;
-using Terraria.ID;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.Globals;
 using Terraria.Audio;
-using Terraria.Graphics.Shaders;
 using Terraria.GameContent;
 using Redemption.Base;
 using Redemption.Particles;
 using Redemption.Buffs.NPCBuffs;
 using System.Collections.Generic;
-using System.Diagnostics;
 using ReLogic.Utilities;
+using Redemption.BaseExtension;
 
 namespace Redemption.Items.Weapons.PostML.Magic
 {
@@ -21,7 +19,8 @@ namespace Redemption.Items.Weapons.PostML.Magic
         public override string Texture => "Redemption/Items/Weapons/PostML/Magic/TeslaCoil";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Tesla Coil");
+            // DisplayName.SetDefault("Tesla Coil");
+            ElementID.ProjThunder[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -34,13 +33,14 @@ namespace Redemption.Items.Weapons.PostML.Magic
             Projectile.DamageType = DamageClass.Magic;
             Projectile.ownerHitCheck = true;
             Projectile.ignoreWater = true;
+            Projectile.Redemption().TechnicallyMelee = true;
         }
         private readonly List<int> targets = new();
 
         public float glow;
         private NPC target2;
         private SlotId loop;
-        private float loopVolume;
+        private ActiveSound sound;
         public override void AI()
         {
             Player player = Main.player[Projectile.owner];
@@ -58,11 +58,12 @@ namespace Redemption.Items.Weapons.PostML.Magic
                         {
                             if (BasePlayer.ReduceMana(player, 3))
                             {
-                                loopVolume = 1;
+                                if (sound == null)
+                                    loop = SoundEngine.PlaySound(CustomSounds.ElectricLoop, Projectile.position);
                                 for (int k = 0; k < Main.rand.Next(2, 4); k++)
                                 {
                                     Vector2 lightningArc = coilPos + RedeHelper.PolarVector(Main.rand.Next(40, 71), -MathHelper.Pi + Main.rand.NextFloat(0, MathHelper.Pi));
-                                    DustHelper.DrawParticleElectricity(lightningArc, coilPos, new LightningParticle(), 1f, 20, 0.05f);
+                                    DustHelper.DrawParticleElectricity<LightningParticle>(lightningArc, coilPos, 1f, 20, 0.05f);
                                     int side = -1;
                                     if (lightningArc.X > coilPos.X)
                                         side = 1;
@@ -97,7 +98,7 @@ namespace Redemption.Items.Weapons.PostML.Magic
                                     float lagReduce = 0.05f;
                                     if (lightningArc.DistanceSQ(lightningArc2) > 400 * 400)
                                         lagReduce = 0.2f;
-                                    DustHelper.DrawParticleElectricity(lightningArc, lightningArc2, new LightningParticle(), 1f, 20, lagReduce);
+                                    DustHelper.DrawParticleElectricity<LightningParticle>(lightningArc, lightningArc2, 1f, 20, lagReduce);
                                     for (int i = 0; i < Main.maxNPCs; i++)
                                     {
                                         NPC npc = Main.npc[i];
@@ -110,7 +111,7 @@ namespace Redemption.Items.Weapons.PostML.Magic
                                             if (whoAmI != -1)
                                             {
                                                 if (Projectile.ai[1] == 1)
-                                                { 
+                                                {
                                                     if (npc.whoAmI != whoAmI || !Main.rand.NextBool(2))
                                                         continue;
                                                 }
@@ -120,17 +121,29 @@ namespace Redemption.Items.Weapons.PostML.Magic
                                         if (npc.DistanceSQ(lightningArc2) > 60 * 60)
                                             continue;
 
-                                        int hitDirection = Projectile.Center.X > npc.Center.X ? -1 : 1;
-                                        BaseAI.DamageNPC(npc, Projectile.damage, Projectile.knockBack, hitDirection, Projectile, crit: Projectile.HeldItemCrit());
+                                        int hitDirection = npc.RightOfDir(Projectile);
+                                        BaseAI.DamageNPC(npc, Projectile.damage + (npc.defense / 2), Projectile.knockBack, hitDirection, Projectile, crit: Projectile.HeldItemCrit());
                                     }
                                 }
                                 glow += Main.rand.Next(-5, 6);
                                 glow = (int)MathHelper.Clamp(glow, 0, 20);
                             }
+                            else
+                            {
+                                if (sound != null)
+                                {
+                                    sound.Stop();
+                                    loop = SlotId.Invalid;
+                                }
+                                glow = 0;
+                            }
                         }
                         break;
                 }
             }
+            SoundEngine.TryGetActiveSound(loop, out sound);
+            if (sound != null)
+                sound.Position = Projectile.position;
 
             Projectile.spriteDirection = player.direction;
             Projectile.Center = playerCenter + new Vector2(6 * player.direction, -20);
@@ -138,15 +151,16 @@ namespace Redemption.Items.Weapons.PostML.Magic
             player.heldProj = Projectile.whoAmI;
             player.itemTime = 2;
             player.itemAnimation = 2;
-
-            CustomSounds.UpdateLoopingSound(ref loop, CustomSounds.ElectricLoop, loopVolume, 0, Projectile.position);
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
-            loopVolume = 0;
-            CustomSounds.UpdateLoopingSound(ref loop, CustomSounds.ElectricLoop, loopVolume, 0, Projectile.position);
+            if (sound != null)
+            {
+                sound.Stop();
+                loop = SlotId.Invalid;
+            }
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(ModContent.BuffType<ElectrifiedDebuff>(), 180);
         }

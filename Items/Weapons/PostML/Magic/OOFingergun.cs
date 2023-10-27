@@ -11,10 +11,10 @@ namespace Redemption.Items.Weapons.PostML.Magic
 	{
 		public override void SetStaticDefaults()
 		{
-            DisplayName.SetDefault("Omega Finger Gun");
-            Tooltip.SetDefault("Gradually increases fire rate");
+            // DisplayName.SetDefault("Omega Finger Gun");
+            // Tooltip.SetDefault("Gradually increases fire rate");
             ItemID.Sets.SkipsInitialUseSound[Item.type] = true;
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -36,7 +36,7 @@ namespace Redemption.Items.Weapons.PostML.Magic
             Item.UseSound = SoundID.Item1;
             Item.autoReuse = true;
             Item.shoot = ModContent.ProjectileType<OOFingergun_Laser>();
-            Item.shootSpeed = 20;
+            Item.shootSpeed = 13;
         }
         public override void ModifyShootStats(Player player, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
         {

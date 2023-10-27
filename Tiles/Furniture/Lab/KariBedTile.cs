@@ -1,8 +1,10 @@
 using Microsoft.Xna.Framework;
+using Redemption.Items.Tools.PostML;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.Enums;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 
@@ -25,22 +27,27 @@ namespace Redemption.Tiles.Furniture.Lab
             TileObjectData.newTile.AnchorBottom = new AnchorData(AnchorType.SolidTile | AnchorType.SolidWithTop | AnchorType.SolidSide, TileObjectData.newTile.Width, 0);
             TileObjectData.addTile(Type);
             DustType = DustID.GreenBlood;
-            MinPick = 500;
+            MinPick = 1000;
             MineResist = 3f;
-            ModTranslation name = CreateMapEntryName();
-            name.SetDefault("Kari's Hospital Bed");
-            AddMapEntry(new Color(56, 78, 210));
+            LocalizedText name = CreateMapEntryName();
+            // name.SetDefault("Kari's Hospital Bed");
+            AddMapEntry(new Color(56, 78, 210), name);
         }
-        public override bool CanKillTile(int i, int j, ref bool blockDamaged) => false;
+        public override bool CanKillTile(int i, int j, ref bool blockDamaged)
+        {
+            if (Main.LocalPlayer.HeldItem.type == ModContent.ItemType<NanoAxe2>())
+                return true;
+            return false;
+        }
         public override bool CanExplode(int i, int j) => false;
     }
     public class KariBed : PlaceholderTile
     {
-        public override string Texture => "Redemption/Placeholder";
-        public override void SetStaticDefaults()
+        public override string Texture => Redemption.PLACEHOLDER_TEXTURE;
+        public override void SetSafeStaticDefaults()
         {
-            DisplayName.SetDefault("Kari's Hospital Bed");
-            Tooltip.SetDefault("[c/ff0000:Unbreakable]");
+            // DisplayName.SetDefault("Kari's Hospital Bed");
+            // Tooltip.SetDefault("[c/ff0000:Unbreakable]");
         }
 
         public override void SetDefaults()

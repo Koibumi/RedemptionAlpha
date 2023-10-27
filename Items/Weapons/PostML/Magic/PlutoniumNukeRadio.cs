@@ -3,10 +3,8 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
 using Redemption.Projectiles.Magic;
 using Terraria.DataStructures;
-using Redemption.Items.Materials.PreHM;
 using Redemption.Items.Materials.PostML;
 using Redemption.Items.Materials.HM;
 using Redemption.BaseExtension;
@@ -17,11 +15,11 @@ namespace Redemption.Items.Weapons.PostML.Magic
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("P-2-Warhead Receiver");
-            Tooltip.SetDefault("Calls plutonium nukes from the sky"
+            // DisplayName.SetDefault("P-2-Warhead Receiver");
+            /* Tooltip.SetDefault("Calls plutonium nukes from the sky"
                 + "\nDoesn't destroy tiles\n" +
-                "'TACTICAL NUKE INCOMING!'");
-            SacrificeTotal = 1;
+                "'TACTICAL NUKE INCOMING!'"); */
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -44,7 +42,7 @@ namespace Redemption.Items.Weapons.PostML.Magic
             Item.shoot = ModContent.ProjectileType<PlutoniumNuke_Proj>();
             Item.shootSpeed = 25f;
             if (!Main.dedServ)
-                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Item.ModItem.Texture + "_Glow").Value;
+                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
         }
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
@@ -57,7 +55,7 @@ namespace Redemption.Items.Weapons.PostML.Magic
             CreateRecipe()
                 .AddIngredient(ModContent.ItemType<Plutonium>(), 8)
                 .AddIngredient(ModContent.ItemType<Plating>(), 6)
-                .AddIngredient(ModContent.ItemType<Capacitator>())
+                .AddIngredient(ModContent.ItemType<Capacitor>())
                 .AddIngredient(ModContent.ItemType<CarbonMyofibre>(), 4)
                 .AddTile(TileID.LunarCraftingStation)
                 .Register();

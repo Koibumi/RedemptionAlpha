@@ -15,7 +15,7 @@ namespace Redemption.NPCs.Minibosses.SkullDigger
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Skull Digger");
+            // DisplayName.SetDefault("Skull Digger");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 5;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
         }
@@ -70,7 +70,7 @@ namespace Redemption.NPCs.Minibosses.SkullDigger
                                 break;
                             case 1:
                                 Projectile.localAI[0]++;
-                                if (Projectile.localAI[0] >= 40 && Projectile.localAI[0] % 20 == 0)
+                                if (Projectile.localAI[0] >= 40 && Projectile.localAI[0] % 20 == 0 && !Main.dedServ)
                                     SoundEngine.PlaySound(CustomSounds.ChainSwing with { PitchVariance = .1f }, Projectile.position);
 
                                 rot += speed * host.spriteDirection;
@@ -79,7 +79,8 @@ namespace Redemption.NPCs.Minibosses.SkullDigger
                                 Projectile.Center = originPos + new Vector2(0, 1).RotatedBy(rot) * length;
                                 if (Projectile.localAI[0] >= 120)
                                 {
-                                    SoundEngine.PlaySound(CustomSounds.ChainSwing with { PitchVariance = .1f }, Projectile.position);
+                                    if (!Main.dedServ)
+                                        SoundEngine.PlaySound(CustomSounds.ChainSwing with { PitchVariance = .1f }, Projectile.position);
 
                                     Projectile.velocity = RedeHelper.PolarVector(14 + (Projectile.Distance(player.Center) / 30), (player.Center - Projectile.Center).ToRotation());
                                     host.velocity = RedeHelper.PolarVector(14, (player.Center - host.Center).ToRotation());
@@ -124,7 +125,7 @@ namespace Redemption.NPCs.Minibosses.SkullDigger
                                 break;
                             case 1:
                                 Projectile.localAI[0]++;
-                                if (Projectile.localAI[0] % 50 == 0)
+                                if (Projectile.localAI[0] % 50 == 0 && !Main.dedServ)
                                     SoundEngine.PlaySound(CustomSounds.ChainSwing with { PitchVariance = .1f }, Projectile.position);
 
                                 length++;
@@ -164,11 +165,11 @@ namespace Redemption.NPCs.Minibosses.SkullDigger
             }
         }
 
-        public override void ModifyHitPlayer(Player target, ref int damage, ref bool crit)
+        public override void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers)
         {
             NPC host = Main.npc[(int)Projectile.ai[0]];
             if (host.RedemptionNPCBuff().disarmed)
-                damage = (int)(damage * 0.2f);
+                modifiers.FinalDamage *= 0.66f;
         }
 
         public override bool CanHitPlayer(Player target)

@@ -1,11 +1,8 @@
-using System;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Redemption.Buffs.Debuffs;
 using Redemption.Globals;
 using Terraria;
 using Terraria.Audio;
-using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -16,11 +13,12 @@ namespace Redemption.Projectiles.Ranged
         public override string Texture => "Redemption/NPCs/Bosses/SeedOfInfection/SeedGrowth";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Swarm Growth");
+            // DisplayName.SetDefault("Swarm Growth");
             Main.projFrames[Projectile.type] = 4;
             ProjectileID.Sets.CultistIsResistantTo[Projectile.type] = true;
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 4;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -58,7 +56,7 @@ namespace Redemption.Projectiles.Ranged
                 Projectile.velocity.Y = -oldVelocity.Y;
             return false;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(SoundID.NPCDeath1 with { Volume = 0.3f }, Projectile.position);
             for (int i = 0; i < 10; i++)
@@ -76,7 +74,7 @@ namespace Redemption.Projectiles.Ranged
         {
             return true;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Projectile.localNPCImmunity[target.whoAmI] = 10;
             target.immune[Projectile.owner] = 0;

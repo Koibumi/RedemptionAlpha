@@ -1,14 +1,14 @@
 ﻿using Microsoft.Xna.Framework;
-using Redemption.Items.Placeable.Furniture.PetrifiedWood;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 
 namespace Redemption.Tiles.Furniture.PetrifiedWood
 {
-	public class PetrifiedWoodSofaTile : ModTile
+    public class PetrifiedWoodSofaTile : ModTile
 	{
 		public override void SetStaticDefaults()
 		{
@@ -20,14 +20,14 @@ namespace Redemption.Tiles.Furniture.PetrifiedWood
 			TileObjectData.newTile.DrawYOffset = 2;
 			TileObjectData.addTile(Type);
 
-			ModTranslation name = CreateMapEntryName();
-			name.SetDefault("Petrified Wood Sofa");
+			LocalizedText name = CreateMapEntryName();
+			// name.SetDefault("Petrified Wood Sofa");
 			AddMapEntry(new Color(100, 100, 100), name);
 
-			AdjTiles = new int[] { TileID.Benches };
+            AddToArray(ref TileID.Sets.RoomNeeds.CountsAsChair);
+            AdjTiles = new int[] { TileID.Benches };
 			DustType = DustID.Ash;
 		}
 		public override void NumDust(int i, int j, bool fail, ref int num) => num = fail ? 1 : 3;
-		public override void KillMultiTile(int i, int j, int frameX, int frameY) => Item.NewItem(new EntitySource_TileBreak(i, j), new Vector2(i, j) * 16f, ModContent.ItemType<PetrifiedWoodSofa>());
 	}
 }

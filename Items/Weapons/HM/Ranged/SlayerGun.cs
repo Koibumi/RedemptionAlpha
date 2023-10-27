@@ -5,11 +5,12 @@ using System.Collections.Generic;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Redemption.BaseExtension;
 using Redemption.Items.Materials.HM;
-using Redemption.Items.Weapons.HM.Ammo;
 using Redemption.Globals.Player;
+using Redemption.Globals;
 
 namespace Redemption.Items.Weapons.HM.Ranged
 {
@@ -17,11 +18,11 @@ namespace Redemption.Items.Weapons.HM.Ranged
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Hyper-Tech Blaster");
-            Tooltip.SetDefault("\n(2-6[i:" + ModContent.ItemType<EnergyPack>() + "]) Replaces normal bullets with Energy Bolts"
+            // DisplayName.SetDefault("Hyper-Tech Blaster");
+            /* Tooltip.SetDefault("\n(2-6[i:" + ModContent.ItemType<EnergyPack>() + "]) Replaces normal bullets with Energy Bolts"
                 + "\nRight-clicking changes type of fire\n" +
-                "Requires an Energy Pack to be in your inventory");
-            SacrificeTotal = 1;
+                "Requires an Energy Pack to be in your inventory"); */
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -36,14 +37,15 @@ namespace Redemption.Items.Weapons.HM.Ranged
             Item.noMelee = true;
             Item.knockBack = 3;
             Item.value = Item.sellPrice(0, 15, 0, 0);
-            Item.rare = ItemRarityID.Cyan;
+            Item.rare = ItemRarityID.LightPurple;
             Item.UseSound = CustomSounds.Gun1KS;
             Item.autoReuse = true;
             Item.shoot = ProjectileID.PurificationPowder;
             Item.shootSpeed = 8;
             Item.useAmmo = AmmoID.Bullet;
             if (!Main.dedServ)
-                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Item.ModItem.Texture + "_Glow").Value;
+                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
+            Item.ExtraItemShoot(ModContent.ProjectileType<KS3_EnergyBolt>());
         }
 
         public int AttackMode;
@@ -92,13 +94,13 @@ namespace Redemption.Items.Weapons.HM.Ranged
                 switch (AttackMode)
                 {
                     case 0:
-                        CombatText.NewText(player.getRect(), Color.LightCyan, "Barrage Shot", true, false);
+                        CombatText.NewText(player.getRect(), Color.LightCyan, Language.GetTextValue("Mods.Redemption.Items.SlayerGun.Mode1"), true, false);
                         break;
                     case 1:
-                        CombatText.NewText(player.getRect(), Color.LightCyan, "Spread Shot", true, false);
+                        CombatText.NewText(player.getRect(), Color.LightCyan, Language.GetTextValue("Mods.Redemption.Items.SlayerGun.Mode2"), true, false);
                         break;
                     case 2:
-                        CombatText.NewText(player.getRect(), Color.LightCyan, "Rebound Shot", true, false);
+                        CombatText.NewText(player.getRect(), Color.LightCyan, Language.GetTextValue("Mods.Redemption.Items.SlayerGun.Mode3"), true, false);
                         break;
                 }
             }
@@ -113,7 +115,7 @@ namespace Redemption.Items.Weapons.HM.Ranged
                         Main.projectile[proj].friendly = true;
                         Main.projectile[proj].DamageType = DamageClass.Ranged;
                         Main.projectile[proj].tileCollide = true;
-                        Main.projectile[proj].netUpdate2 = true;
+                        Main.projectile[proj].netUpdate = true;
                         break;
                     case 1:
                         player.itemAnimationMax = Item.useTime * 3;
@@ -132,7 +134,7 @@ namespace Redemption.Items.Weapons.HM.Ranged
                             Main.projectile[proj3].friendly = true;
                             Main.projectile[proj3].DamageType = DamageClass.Ranged;
                             Main.projectile[proj3].tileCollide = true;
-                            Main.projectile[proj3].netUpdate2 = true;
+                            Main.projectile[proj3].netUpdate = true;
                         }
                         player.GetModPlayer<EnergyPlayer>().statEnergy -= 6;
                         int proj2 = Projectile.NewProjectile(source, position, velocity, ModContent.ProjectileType<KS3_EnergyBolt>(), damage, knockback, player.whoAmI);
@@ -140,7 +142,7 @@ namespace Redemption.Items.Weapons.HM.Ranged
                         Main.projectile[proj2].friendly = true;
                         Main.projectile[proj2].DamageType = DamageClass.Ranged;
                         Main.projectile[proj2].tileCollide = true;
-                        Main.projectile[proj2].netUpdate2 = true;
+                        Main.projectile[proj2].netUpdate = true;
                         break;
                     case 2:
                         damage = (int)(damage * 1.4f);
@@ -152,7 +154,7 @@ namespace Redemption.Items.Weapons.HM.Ranged
                         Main.projectile[proj4].hostile = false;
                         Main.projectile[proj4].friendly = true;
                         Main.projectile[proj4].DamageType = DamageClass.Ranged;
-                        Main.projectile[proj4].netUpdate2 = true;
+                        Main.projectile[proj4].netUpdate = true;
                         break;
 
                 }
@@ -163,7 +165,7 @@ namespace Redemption.Items.Weapons.HM.Ranged
         {
             CreateRecipe()
                 .AddIngredient(ModContent.ItemType<CyberPlating>(), 6)
-                .AddIngredient(ModContent.ItemType<Capacitator>(), 2)
+                .AddIngredient(ModContent.ItemType<Capacitor>(), 2)
                 .AddTile(TileID.MythrilAnvil)
                 .Register();
         }
@@ -186,13 +188,13 @@ namespace Redemption.Items.Weapons.HM.Ranged
             switch (AttackMode)
             {
                 case 0:
-                    shotType = "Barrage Shot";
+                    shotType = Language.GetTextValue("Mods.Redemption.Items.SlayerGun.Mode1");
                     break;
                 case 1:
-                    shotType = "Spread Shot";
+                    shotType = Language.GetTextValue("Mods.Redemption.Items.SlayerGun.Mode2");
                     break;
                 case 2:
-                    shotType = "Rebound Shot";
+                    shotType = Language.GetTextValue("Mods.Redemption.Items.SlayerGun.Mode3");
                     break;
             }
             TooltipLine line = new(Mod, "ShotName", shotType)

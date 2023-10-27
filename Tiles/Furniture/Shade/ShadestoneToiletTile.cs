@@ -1,6 +1,5 @@
 using Microsoft.Xna.Framework;
 using Redemption.Dusts.Tiles;
-using Redemption.Items.Placeable.Furniture.Shade;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.Enums;
@@ -10,6 +9,7 @@ using Terraria.ObjectData;
 using Terraria.Localization;
 using Terraria.GameContent.ObjectInteractions;
 using Terraria.GameContent;
+using Redemption.Items.Placeable.Furniture.Shade;
 
 namespace Redemption.Tiles.Furniture.Shade
 {
@@ -42,6 +42,7 @@ namespace Redemption.Tiles.Furniture.Shade
 			TileObjectData.newTile.StyleWrapLimit = 2;
 			TileObjectData.newTile.StyleMultiplier = 2;
 			TileObjectData.newTile.StyleHorizontal = true;
+			TileObjectData.newTile.DrawYOffset = 2;
 			TileObjectData.newTile.CoordinatePaddingFix = new Point16(0, 2);
 			TileObjectData.newAlternate.CopyFrom(TileObjectData.newTile);
 			TileObjectData.newAlternate.Direction = TileObjectDirection.PlaceRight;
@@ -50,9 +51,6 @@ namespace Redemption.Tiles.Furniture.Shade
 		}
 
 		public override void NumDust(int i, int j, bool fail, ref int num) => num = fail ? 1 : 3;
-
-		public override void KillMultiTile(int i, int j, int frameX, int frameY) => Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 16, 32, ModContent.ItemType<ShadestoneToilet>());
-
 		public override bool HasSmartInteract(int i, int j, SmartInteractScanSettings settings)
 		{
 			return settings.player.IsWithinSnappngRangeToTile(i, j, PlayerSittingHelper.ChairSittingMaxDistance);

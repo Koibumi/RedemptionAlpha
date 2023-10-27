@@ -11,6 +11,7 @@ using Redemption.Base;
 using Redemption.Buffs.NPCBuffs;
 using Terraria.GameContent;
 using Redemption.Particles;
+using ReLogic.Utilities;
 
 namespace Redemption.Items.Weapons.HM.Magic
 {
@@ -19,7 +20,7 @@ namespace Redemption.Items.Weapons.HM.Magic
         public override string Texture => "Redemption/Items/Weapons/HM/Magic/GlobalDischarge";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Global Discharge");
+            // DisplayName.SetDefault("Global Discharge");
         }
         public override void SetDefaults()
         {
@@ -101,8 +102,9 @@ namespace Redemption.Items.Weapons.HM.Magic
         public override string Texture => "Redemption/Textures/StaticBall";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Global Discharge");
+            // DisplayName.SetDefault("Global Discharge");
             Main.projFrames[Projectile.type] = 3;
+            ElementID.ProjThunder[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -110,16 +112,18 @@ namespace Redemption.Items.Weapons.HM.Magic
             Projectile.height = 164;
             Projectile.penetrate = -1;
             Projectile.hostile = false;
-            Projectile.friendly = false;
+            Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
             Projectile.timeLeft = 600;
             Projectile.alpha = 255;
-            Projectile.scale = 0.1f;
+            Projectile.scale = 1f;
         }
         private float godrayFade;
-        private NPC target;
+        private float speed = 6;
+        private SlotId loop;
+        private ActiveSound sound;
         public override void AI()
         {
             if (++Projectile.frameCounter >= 5)
@@ -129,7 +133,6 @@ namespace Redemption.Items.Weapons.HM.Magic
                     Projectile.frame = 0;
             }
             Projectile.rotation += 0.01f;
-            Projectile.velocity *= 0.95f;
             Projectile.timeLeft = 10;
             Projectile staff = Main.projectile[(int)Projectile.ai[0]];
             Player player = Main.player[staff.owner];
@@ -163,13 +166,13 @@ namespace Redemption.Items.Weapons.HM.Magic
             }
             if (Main.rand.NextBool(10))
             {
-                DustHelper.DrawParticleElectricity(Projectile.Center, Projectile.Center + RedeHelper.PolarVector(90 * Projectile.scale, Main.rand.NextFloat(0, MathHelper.TwoPi)), new LightningParticle(), 1.5f, 20, 0.1f);
-                DustHelper.DrawParticleElectricity(Projectile.Center, Projectile.Center + RedeHelper.PolarVector(90 * Projectile.scale, Main.rand.NextFloat(0, MathHelper.TwoPi)), new LightningParticle(), 1.5f, 20, 0.1f);
+                DustHelper.DrawParticleElectricity<LightningParticle>(Projectile.Center, Projectile.Center + RedeHelper.PolarVector(90 * Projectile.scale, RedeHelper.RandomRotation()), 1.5f, 20, 0.1f);
+                DustHelper.DrawParticleElectricity<LightningParticle>(Projectile.Center, Projectile.Center + RedeHelper.PolarVector(90 * Projectile.scale, RedeHelper.RandomRotation()), 1.5f, 20, 0.1f);
             }
             if (Projectile.ai[1] < 0 && Main.rand.NextBool(2))
             {
-                DustHelper.DrawParticleElectricity(Projectile.Center, Projectile.Center + RedeHelper.PolarVector(180 * Projectile.scale, Main.rand.NextFloat(0, MathHelper.TwoPi)), new LightningParticle(), 1.5f, 20, 0.1f);
-                DustHelper.DrawParticleElectricity(Projectile.Center, Projectile.Center + RedeHelper.PolarVector(180 * Projectile.scale, Main.rand.NextFloat(0, MathHelper.TwoPi)), new LightningParticle(), 1.5f, 20, 0.1f);
+                DustHelper.DrawParticleElectricity<LightningParticle>(Projectile.Center, Projectile.Center + RedeHelper.PolarVector(180 * Projectile.scale, RedeHelper.RandomRotation()), 1.5f, 20, 0.1f);
+                DustHelper.DrawParticleElectricity<LightningParticle>(Projectile.Center, Projectile.Center + RedeHelper.PolarVector(180 * Projectile.scale, RedeHelper.RandomRotation()), 1.5f, 20, 0.1f);
             }
 
             if (Projectile.owner == Main.myPlayer)
@@ -177,6 +180,12 @@ namespace Redemption.Items.Weapons.HM.Magic
                 switch (Projectile.ai[1])
                 {
                     case -2:
+                        if (sound != null)
+                        {
+                            sound.Stop();
+                            loop = SlotId.Invalid;
+                        }
+
                         godrayFade += 0.04f;
                         Projectile.scale += 0.01f;
                         Projectile.alpha -= 1;
@@ -188,6 +197,12 @@ namespace Redemption.Items.Weapons.HM.Magic
                         }
                         break;
                     case -1:
+                        if (sound != null)
+                        {
+                            sound.Stop();
+                            loop = SlotId.Invalid;
+                        }
+
                         godrayFade += 0.02f;
                         Projectile.scale += 0.01f;
                         Projectile.alpha -= 1;
@@ -203,9 +218,9 @@ namespace Redemption.Items.Weapons.HM.Magic
                                 if (Projectile.DistanceSQ(npc.Center) > 600 * 600)
                                     continue;
 
-                                DustHelper.DrawParticleElectricity(Projectile.Center, npc.Center, new LightningParticle(), 2f, 20, 0.05f);
-                                DustHelper.DrawParticleElectricity(Projectile.Center, npc.Center, new LightningParticle(), 2f, 20, 0.05f);
-                                int hitDirection = Projectile.Center.X > npc.Center.X ? -1 : 1;
+                                DustHelper.DrawParticleElectricity<LightningParticle>(Projectile.Center, npc.Center, 2f, 20, 0.05f);
+                                DustHelper.DrawParticleElectricity<LightningParticle>(Projectile.Center, npc.Center, 2f, 20, 0.05f);
+                                int hitDirection = npc.RightOfDir(Projectile);
                                 BaseAI.DamageNPC(npc, Projectile.damage * 2, Projectile.knockBack, hitDirection, Projectile, crit: Projectile.HeldItemCrit());
                             }
                             RedeDraw.SpawnExplosion(Projectile.Center, Color.White, DustID.Electric, 60, 40, 2, 5);
@@ -213,11 +228,20 @@ namespace Redemption.Items.Weapons.HM.Magic
                         }
                         break;
                     case 0:
+                        if (Projectile.localAI[0] == 0)
+                        {
+                            if (sound == null)
+                                loop = SoundEngine.PlaySound(CustomSounds.ElectricLoop, Projectile.position);
+                            Projectile.scale = .1f;
+                            Projectile.localAI[0] = 1;
+                        }
                         Projectile.scale += 0.03f;
+                        Projectile.velocity *= 0.95f;
                         if (Projectile.alpha > 0)
                             Projectile.alpha -= 8;
                         if (Projectile.scale >= 1)
                         {
+                            Projectile.localAI[0] = 0;
                             Projectile.localAI[1] = 30;
                             Projectile.scale = 1;
                             if (player.channel)
@@ -232,39 +256,57 @@ namespace Redemption.Items.Weapons.HM.Magic
                         }
                         break;
                     case 1:
-                        Projectile.localAI[0]++;
-                        if (RedeHelper.ClosestNPC(ref target, 80, Main.MouseWorld, true))
+                        if (sound == null)
+                            loop = SoundEngine.PlaySound(CustomSounds.ElectricLoop, Projectile.position);
+
+                        if (Projectile.DistanceSQ(staff.Center + RedeHelper.PolarVector(140, staff.velocity.ToRotation())) >= 300 * 300)
                         {
-                            if (Projectile.localAI[0] >= Projectile.localAI[1] && BasePlayer.ReduceMana(player, 3))
-                            {
-                                if (!Main.dedServ)
-                                    SoundEngine.PlaySound(CustomSounds.Zap2, Projectile.position);
-
-                                if (Projectile.localAI[1] > 5)
-                                    Projectile.localAI[1]--;
-
-                                DustHelper.DrawParticleElectricity(Projectile.Center, target.Center, new LightningParticle(), 1.5f, 20, 0.05f);
-                                DustHelper.DrawParticleElectricity(Projectile.Center, target.Center, new LightningParticle(), 1.5f, 20, 0.05f);
-                                int hitDirection = Projectile.Center.X > target.Center.X ? -1 : 1;
-                                BaseAI.DamageNPC(target, Projectile.damage, Projectile.knockBack, hitDirection, Projectile, crit: Projectile.HeldItemCrit());
-
-                                Projectile.localAI[0] = 0;
-                            }
+                            Projectile.Move(staff.Center + RedeHelper.PolarVector(80, staff.velocity.ToRotation()), speed, 6);
+                            speed *= 1.04f;
                         }
-                        if (Projectile.localAI[1] <= 5)
-                            player.AddBuff(BuffID.Electrified, 120);
+                        speed *= .98f;
+                        speed = MathHelper.Clamp(speed, 4, 34);
                         break;
                 }
             }
+            SoundEngine.TryGetActiveSound(loop, out sound);
+            if (sound != null)
+            {
+                sound.Position = Projectile.position;
+                sound.Volume = Projectile.velocity.Length() / 24;
+                sound.Volume = MathHelper.Clamp(sound.Volume, 0, 1);
+            }
         }
-        public override void Kill(int timeLeft)
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
+            modifiers.FinalDamage *= (Projectile.velocity.Length() / 10) + .4f;
+        }
+        public override void OnKill(int timeLeft)
+        {
+            if (sound != null)
+            {
+                sound.Stop();
+                loop = SlotId.Invalid;
+            }
             if (!Main.dedServ)
                 SoundEngine.PlaySound(CustomSounds.MissileExplosion, Projectile.position);
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(ModContent.BuffType<ElectrifiedDebuff>(), 360);
+            if (Projectile.ai[1] != 1)
+                return;
+            float f = (Projectile.velocity.Length() / 28) + 1;
+            if (!Main.dedServ)
+                SoundEngine.PlaySound(CustomSounds.Zap2 with { Volume = f * .5f }, Projectile.position);
+            if (target.knockBackResist != 0)
+                target.velocity += Projectile.velocity * target.knockBackResist;
+
+            for (int i = 0; i < 4; i++)
+            {
+                DustHelper.DrawParticleElectricity<LightningParticle>(Projectile.Center, Projectile.Center + RedeHelper.PolarVector(90 * Projectile.scale * f, RedeHelper.RandomRotation()), 1.5f * f, 20, 0.1f);
+                DustHelper.DrawParticleElectricity<LightningParticle>(Projectile.Center, Projectile.Center + RedeHelper.PolarVector(90 * Projectile.scale * f, RedeHelper.RandomRotation()), 1.5f * f, 20, 0.1f);
+            }
         }
         public override bool PreDraw(ref Color lightColor)
         {

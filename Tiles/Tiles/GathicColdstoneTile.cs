@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Redemption.Globals;
 using Redemption.Items.Placeable.Tiles;
 using Redemption.Tiles.Natural;
+using Redemption.WorldGeneration;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -15,6 +16,7 @@ namespace Redemption.Tiles.Tiles
             Main.tileSolid[Type] = true;
             Main.tileMergeDirt[Type] = false;
             Main.tileBlockLight[Type] = true;
+            Main.tileBrick[Type] = true;
             Main.tileMerge[Type][ModContent.TileType<AncientHallBrickTile>()] = true;
             Main.tileMerge[ModContent.TileType<AncientHallBrickTile>()][Type] = true;
             Main.tileMerge[Type][ModContent.TileType<GathicGladestoneTile>()] = true;
@@ -46,8 +48,9 @@ namespace Redemption.Tiles.Tiles
             Main.tileMerge[Type][TileID.FleshIce] = true;
             Main.tileMerge[TileID.HallowedIce][Type] = true;
             Main.tileMerge[Type][TileID.HallowedIce] = true;
-            ItemDrop = ModContent.ItemType<GathicColdstone>();
+            RegisterItemDrop(ModContent.ItemType<GathicFroststone>(), 0);
             DustType = DustID.Ice;
+            HitSound = CustomSounds.StoneHit;
             MinPick = 0;
             MineResist = 1.5f;
             AddMapEntry(new Color(125, 135, 186));
@@ -58,27 +61,27 @@ namespace Redemption.Tiles.Tiles
             bool tileDown = !Framing.GetTileSafely(i, j + 1).HasTile;
             bool tileLeft = !Framing.GetTileSafely(i - 1, j).HasTile;
             bool tileRight = !Framing.GetTileSafely(i + 1, j).HasTile;
-            if (Main.rand.NextBool(1000) && j > (int)WorldGen.rockLayer && NPC.downedBoss3 && RedeWorld.alignment >= 0)
+            if (Main.rand.NextBool(1000) && j > (int)(Main.maxTilesY * .25f) && RedeGen.cryoCrystalSpawn)
             {
                 if (tileUp)
                 {
                     WorldGen.PlaceObject(i, j - 1, ModContent.TileType<CryoCrystalTile>(), true);
-                    NetMessage.SendObjectPlacment(-1, i, j - 1, ModContent.TileType<CryoCrystalTile>(), 0, 0, -1, -1);
+                    NetMessage.SendObjectPlacement(-1, i, j - 1, ModContent.TileType<CryoCrystalTile>(), 0, 0, -1, -1);
                 }
                 else if (tileDown)
                 {
                     WorldGen.PlaceObject(i, j + 1, ModContent.TileType<CryoCrystalTile>(), true);
-                    NetMessage.SendObjectPlacment(-1, i, j + 1, ModContent.TileType<CryoCrystalTile>(), 0, 0, -1, -1);
+                    NetMessage.SendObjectPlacement(-1, i, j + 1, ModContent.TileType<CryoCrystalTile>(), 0, 0, -1, -1);
                 }
                 else if (tileLeft)
                 {
                     WorldGen.PlaceObject(i - 1, j, ModContent.TileType<CryoCrystalTile>(), true);
-                    NetMessage.SendObjectPlacment(-1, i - 1, j, ModContent.TileType<CryoCrystalTile>(), 0, 0, -1, -1);
+                    NetMessage.SendObjectPlacement(-1, i - 1, j, ModContent.TileType<CryoCrystalTile>(), 0, 0, -1, -1);
                 }
                 else if (tileRight)
                 {
                     WorldGen.PlaceObject(i + 1, j, ModContent.TileType<CryoCrystalTile>(), true);
-                    NetMessage.SendObjectPlacment(-1, i + 1, j, ModContent.TileType<CryoCrystalTile>(), 0, 0, -1, -1);
+                    NetMessage.SendObjectPlacement(-1, i + 1, j, ModContent.TileType<CryoCrystalTile>(), 0, 0, -1, -1);
                 }
             }
         }

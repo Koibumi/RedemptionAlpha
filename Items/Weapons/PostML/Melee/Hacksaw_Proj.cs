@@ -18,7 +18,7 @@ namespace Redemption.Items.Weapons.PostML.Melee
         public float[] oldrot = new float[4];
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Automated Hacksaw");
+            // DisplayName.SetDefault("Automated Hacksaw");
             Main.projFrames[Projectile.type] = 2;
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 4;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
@@ -27,8 +27,8 @@ namespace Redemption.Items.Weapons.PostML.Melee
         public override bool ShouldUpdatePosition() => false;
         public override void SetSafeDefaults()
         {
-            Projectile.width = 68;
-            Projectile.height = 68;
+            Projectile.width = 94;
+            Projectile.height = 94;
             Projectile.friendly = true;
             Projectile.penetrate = -1;
             Projectile.usesIDStaticNPCImmunity = true;
@@ -55,10 +55,6 @@ namespace Redemption.Items.Weapons.PostML.Melee
                 if (++spinFrame > 3)
                     spinFrame = 0;
             }
-            for (int k = Projectile.oldPos.Length - 1; k > 0; k--)
-                oldrot[k] = oldrot[k - 1];
-            oldrot[0] = Projectile.rotation;
-
             Player player = Main.player[Projectile.owner];
             if (player.noItems || player.CCed || player.dead || !player.active)
                 Projectile.Kill();
@@ -168,15 +164,18 @@ namespace Redemption.Items.Weapons.PostML.Melee
             player.itemTime = 2;
             player.itemAnimation = 2;
             player.itemRotation = (float)Math.Atan2(Projectile.velocity.Y * Projectile.direction, Projectile.velocity.X * Projectile.direction);
+            for (int k = Projectile.oldPos.Length - 1; k > 0; k--)
+                oldrot[k] = oldrot[k - 1];
+            oldrot[0] = Projectile.rotation;
         }
-        public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
             if (Projectile.ai[0] == 2)
             {
                 Projectile.localAI[0] = 20;
                 damageIncrease += 0.04f;
                 damageIncrease = MathHelper.Clamp(damageIncrease, 0, 4);
-                damage = (int)(damage * (damageIncrease + 1));
+                modifiers.FinalDamage *= damageIncrease + 1;
             }
         }
         public override bool PreDraw(ref Color lightColor)
@@ -202,12 +201,12 @@ namespace Redemption.Items.Weapons.PostML.Melee
 
             for (int k = 0; k < Projectile.oldPos.Length; k++)
             {
-                Vector2 drawPos = Projectile.oldPos[k] - Main.screenPosition + drawOrigin + new Vector2(0f, Projectile.gfxOffY) + new Vector2(-5, 19);
+                Vector2 drawPos = Projectile.oldPos[k] - Main.screenPosition + drawOrigin + new Vector2(0f, Projectile.gfxOffY) + new Vector2(0, 29);
                 Color color = Color.LightBlue * ((Projectile.oldPos.Length - k) / (float)Projectile.oldPos.Length);
                 Main.EntitySpriteDraw(texture, drawPos, new Rectangle?(rect), color * 0.5f, oldrot[k], drawOrigin, Projectile.scale, spriteEffects, 0);
             }
             if (Projectile.ai[0] == 0)
-                Main.EntitySpriteDraw(spinTex, player.Center - Main.screenPosition + Vector2.UnitY * Projectile.gfxOffY, new Rectangle?(spinRect), Projectile.GetAlpha(Color.White) * 0.5f, Projectile.rotation, spinOrigin, Projectile.scale + 0.2f, spriteEffects2, 0);
+                Main.EntitySpriteDraw(spinTex, player.Center - Main.screenPosition + Vector2.UnitY * Projectile.gfxOffY, new Rectangle?(spinRect), Projectile.GetAlpha(Color.White) * 0.5f, Projectile.rotation, spinOrigin, Projectile.scale + 0.4f, spriteEffects2, 0);
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);

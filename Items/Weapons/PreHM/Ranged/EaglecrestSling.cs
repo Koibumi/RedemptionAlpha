@@ -1,3 +1,5 @@
+using Redemption.Globals;
+using Redemption.Projectiles.Ranged;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -8,10 +10,10 @@ namespace Redemption.Items.Weapons.PreHM.Ranged
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Hold to swing the sling around the player, release to toss the pebble");
+            // Tooltip.SetDefault("Hold to swing the sling around the player, release to toss the pebble");
 
             ItemID.Sets.SkipsInitialUseSound[Item.type] = true;
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -40,6 +42,7 @@ namespace Redemption.Items.Weapons.PreHM.Ranged
             // Projectile Properties
             Item.shootSpeed = 5f;
             Item.shoot = ModContent.ProjectileType<EaglecrestSling_Throw>();
+            Item.ExtraItemShoot(ModContent.ProjectileType<EaglecrestSling_Proj>());
         }
     }
 }

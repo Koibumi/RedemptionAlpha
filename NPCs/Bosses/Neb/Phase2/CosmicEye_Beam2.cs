@@ -7,7 +7,6 @@ using Terraria.ModLoader;
 using Terraria.Audio;
 using Redemption.Globals;
 using Terraria.GameContent;
-using Redemption.BaseExtension;
 
 namespace Redemption.NPCs.Bosses.Neb.Phase2
 {
@@ -19,7 +18,8 @@ namespace Redemption.NPCs.Bosses.Neb.Phase2
         public override bool ShouldUpdatePosition() => false;
         public override void SetSafeStaticDefaults()
         {
-            DisplayName.SetDefault("Cosmic Ray");
+            // DisplayName.SetDefault("Cosmic Ray");
+            ElementID.ProjCelestial[Type] = true;
         }
         public override void SetSafeDefaults()
         {

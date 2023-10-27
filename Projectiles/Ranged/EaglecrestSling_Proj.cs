@@ -20,6 +20,7 @@ namespace Redemption.Projectiles.Ranged
         {
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 4;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjEarth[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -60,7 +61,7 @@ namespace Redemption.Projectiles.Ranged
             return true;
         }
 
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             Main.LocalPlayer.RedemptionScreen().ScreenShakeOrigin = Projectile.Center;
             Main.LocalPlayer.RedemptionScreen().ScreenShakeIntensity += 5;
@@ -81,7 +82,7 @@ namespace Redemption.Projectiles.Ranged
                     continue;
 
                 target.immune[Projectile.whoAmI] = 20;
-                int hitDirection = Projectile.Center.X > target.Center.X ? -1 : 1;
+                int hitDirection = target.RightOfDir(Projectile);
                 BaseAI.DamageNPC(target, Projectile.damage, Projectile.knockBack, hitDirection, Projectile, crit: Projectile.HeldItemCrit());
             }
         }

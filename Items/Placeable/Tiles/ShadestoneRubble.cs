@@ -1,6 +1,8 @@
 ﻿using Redemption.Rarities;
 using Redemption.Tiles.Tiles;
 using Terraria.ModLoader;
+using Terraria;
+using Terraria.ID;
 
 namespace Redemption.Items.Placeable.Tiles
 {
@@ -8,14 +10,15 @@ namespace Redemption.Items.Placeable.Tiles
 	{
         public override void SetStaticDefaults()
         {
-            SacrificeTotal = 100;
+            Item.ResearchUnlockCount = 100;
+            ItemID.Sets.DisableAutomaticPlaceableDrop[Type] = true;
         }
         public override void SetDefaults()
 		{
             Item.DefaultToPlaceableTile(ModContent.TileType<ShadestoneRubbleTile>(), 0);
             Item.width = 16;
             Item.height = 16;
-            Item.maxStack = 9999;
+            Item.maxStack = Item.CommonMaxStack;
             Item.rare = ModContent.RarityType<SoullessRarity>();
         }
     }

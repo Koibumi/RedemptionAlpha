@@ -1,8 +1,8 @@
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ID;
-using Redemption.Items.Materials.PostML;
 using Redemption.Globals.Player;
 using Redemption.Items.Accessories.HM;
 using Terraria.Audio;
@@ -18,15 +18,16 @@ namespace Redemption.Tiles.Ores
             Main.tileMergeDirt[Type] = true;
             Main.tileBlockLight[Type] = true;
             Main.tileLighted[Type] = true;
+            Main.tileShine2[Type] = true;
+            Main.tileShine[Type] = 975;
             TileID.Sets.Ore[Type] = true;
             Main.tileOreFinderPriority[Type] = 680;
             DustType = DustID.Electric;
-            ItemDrop = ModContent.ItemType<Plutonium>();
             MinPick = 220;
             MineResist = 6f;
             HitSound = SoundID.Tink;
-            ModTranslation name = CreateMapEntryName();
-            name.SetDefault("Plutonium");
+            LocalizedText name = CreateMapEntryName();
+            // name.SetDefault("Plutonium");
             AddMapEntry(new Color(133, 253, 255), name);
         }
         public override void ModifyLight(int i, int j, ref float r, ref float g, ref float b)

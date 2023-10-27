@@ -1,3 +1,4 @@
+using Redemption.BaseExtension;
 using Redemption.Globals;
 using Redemption.NPCs.PreHM;
 using System.Collections.Generic;
@@ -12,19 +13,22 @@ namespace Redemption.Projectiles.Hostile
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Living Root");
+            // DisplayName.SetDefault("Living Root");
+            ProjectileID.Sets.DontAttachHideToAlpha[Type] = true;
+            ElementID.ProjNature[Type] = true;
         }
         public override void SetDefaults()
         {
             Projectile.width = 14;
             Projectile.height = 28;
-            Projectile.hostile = false;
-            Projectile.friendly = false;
+            Projectile.hostile = true;
+            Projectile.friendly = true;
             Projectile.penetrate = -1;
             Projectile.timeLeft = 180;
             Projectile.alpha = 255;
             Projectile.tileCollide = false;
             Projectile.hide = true;
+            Projectile.Redemption().friendlyHostile = true;
         }
         public override void DrawBehind(int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI)
         {
@@ -32,9 +36,13 @@ namespace Redemption.Projectiles.Hostile
         }
         public override bool? CanHitNPC(NPC target)
         {
-            return target.type != ModContent.NPCType<LivingBloom>() && target.type != ModContent.NPCType<ForestNymph>() ? null : false;
+            return Projectile.velocity.Length() != 0 && target.type != ModContent.NPCType<LivingBloom>() && target.type != ModContent.NPCType<ForestNymph>() ? null : false;
         }
-        public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection) => damage *= 4;
+        public override bool CanHitPlayer(Player target)
+        {
+            return Projectile.velocity.Length() != 0;
+        }
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers) => modifiers.FinalDamage *= 4;
         public override void AI()
         {
             if (Main.rand.NextBool(2) && Projectile.localAI[0] < 30)
@@ -44,36 +52,21 @@ namespace Redemption.Projectiles.Hostile
                 Main.dust[dust].velocity.X *= 0f;
                 Main.dust[dust].noGravity = true;
             }
-            if (Projectile.velocity.Length() != 0)
-            {
-                Projectile.hostile = true;
-                Projectile.friendly = true;
-            }
-            else 
-            {
-                Projectile.hostile = false;
-                Projectile.friendly = false;
-            }
             Projectile.localAI[0]++;
             if (Projectile.localAI[0] < 30)
                 Projectile.alpha -= 10;
             else if (Projectile.localAI[0] == 30)
             {
-                Projectile.hostile = true;
                 SoundEngine.PlaySound(SoundID.Item17, Projectile.position);
                 Projectile.velocity.Y -= 3;
             }
             else if (Projectile.localAI[0] == 40)
-            {
                 Projectile.velocity.Y = 0;
-            }
             else if (Projectile.localAI[0] > 45)
             {
                 Projectile.alpha += 10;
                 if (Projectile.alpha >= 255)
-                {
                     Projectile.Kill();
-                }
             }
         }
     }

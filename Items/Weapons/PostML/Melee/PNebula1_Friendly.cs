@@ -21,9 +21,10 @@ namespace Redemption.Items.Weapons.PostML.Melee
         public int proType = 0;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Piercing Nebula");
+            // DisplayName.SetDefault("Piercing Nebula");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 8;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjCelestial[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -84,7 +85,7 @@ namespace Redemption.Items.Weapons.PostML.Melee
             }
             Projectile.rotation = (float)Math.Atan2(Projectile.velocity.Y, Projectile.velocity.X) + 1.57f;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Projectile.localNPCImmunity[target.whoAmI] = 20;
             target.immune[Projectile.owner] = 0;
@@ -94,13 +95,16 @@ namespace Redemption.Items.Weapons.PostML.Melee
             Main.player[Projectile.owner].RedemptionScreen().ScreenShakeIntensity += 2;
             SoundEngine.PlaySound(SoundID.Item27, Projectile.position);
             Texture2D tex = ModContent.Request<Texture2D>("Redemption/NPCs/Bosses/Neb/GiantStar_Proj").Value;
-            RedeDraw.SpawnExplosion(Projectile.Center, Main.DiscoColor * 0.6f, 6, 0, 30, 2, 1 * Projectile.Opacity, true, tex, Main.rand.NextFloat(0, MathHelper.TwoPi));
+            RedeDraw.SpawnExplosion(Projectile.Center, Main.DiscoColor * 0.6f, 6, 0, 30, 2, 1 * Projectile.Opacity, true, tex, RedeHelper.RandomRotation());
         }
-        public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
-            damage = damage * Projectile.timeLeft / 120;
-            if (damage < 40)
-                damage = 40;
+            modifiers.FinalDamage *= 1.4f * Projectile.timeLeft / 120;
+            modifiers.ModifyHitInfo += (ref NPC.HitInfo hitInfo) =>
+            {
+                if (hitInfo.Damage < 40)
+                    hitInfo.Damage = 40;
+            };
         }
         public override bool PreDraw(ref Color lightColor)
         {
@@ -124,7 +128,8 @@ namespace Redemption.Items.Weapons.PostML.Melee
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Piercing Nebula");
+            base.SetStaticDefaults();
+            // DisplayName.SetDefault("Piercing Nebula");
         }
         public override void SetDefaults()
         {
@@ -138,7 +143,8 @@ namespace Redemption.Items.Weapons.PostML.Melee
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Piercing Nebula");
+            base.SetStaticDefaults();
+            // DisplayName.SetDefault("Piercing Nebula");
         }
         public override void SetDefaults()
         {

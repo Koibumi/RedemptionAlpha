@@ -1,7 +1,6 @@
 using Microsoft.Xna.Framework;
 using Redemption.Globals.Player;
 using Redemption.Items.Accessories.HM;
-using Redemption.Items.Placeable.Tiles;
 using Redemption.Tiles.Natural;
 using Terraria;
 using Terraria.Audio;
@@ -19,32 +18,23 @@ namespace Redemption.Tiles.Tiles
             Main.tileMergeDirt[Type] = true;
             Main.tileBlendAll[Type] = true;
             Main.tileBlockLight[Type] = true;
-            TileID.Sets.Conversion.Ice[Type] = true;
-            TileID.Sets.Ices[Type] = true;
+            Main.tileBrick[Type] = true;
             TileID.Sets.IcesSnow[Type] = true;
             TileID.Sets.ChecksForMerge[Type] = true;
             TileID.Sets.CanBeDugByShovel[Type] = true;
             TileID.Sets.CanBeClearedDuringOreRunner[Type] = true;
-            Main.tileMerge[Type][ModContent.TileType<IrradiatedDirtTile>()] = true;
-            Main.tileMerge[ModContent.TileType<IrradiatedDirtTile>()][Type] = true;
-            Main.tileMerge[ModContent.TileType<IrradiatedIceTile>()][Type] = true;
-            Main.tileMerge[Type][ModContent.TileType<IrradiatedIceTile>()] = true;
-            Main.tileMerge[TileID.SnowBlock][Type] = true;
-            Main.tileMerge[Type][TileID.SnowBlock] = true;
-            Main.tileMerge[TileID.IceBlock][Type] = true;
-            Main.tileMerge[Type][TileID.IceBlock] = true;
-            Main.tileMerge[TileID.IceBrick][Type] = true;
-            Main.tileMerge[Type][TileID.IceBrick] = true;
-            Main.tileMerge[TileID.CorruptIce][Type] = true;
-            Main.tileMerge[Type][TileID.CorruptIce] = true;
-            Main.tileMerge[TileID.FleshIce][Type] = true;
-            Main.tileMerge[Type][TileID.FleshIce] = true;
-            Main.tileMerge[TileID.HallowedIce][Type] = true;
-            Main.tileMerge[Type][TileID.HallowedIce] = true;
             DustType = DustID.Ash;
             HitSound = SoundID.Item126;
             AddMapEntry(new Color(204, 215, 191));
-            ItemDrop = ModContent.ItemType<IrradiatedSnow>();
+        }
+        public override void FloorVisuals(Player player)
+        {
+            if (player.velocity.X != 0f && Main.rand.NextBool(20))
+            {
+                Dust dust = Dust.NewDustDirect(player.Bottom, 0, 0, DustType, 0f, -Main.rand.NextFloat(2f));
+                dust.noGravity = true;
+                dust.fadeIn = 1f;
+            }
         }
         public override void KillTile(int i, int j, ref bool fail, ref bool effectOnly, ref bool noItem)
         {
@@ -69,17 +59,22 @@ namespace Redemption.Tiles.Tiles
             if (NPC.downedMechBossAny && !tileAbove.HasTile && Main.tile[i, j].HasTile && Main.rand.NextBool(100))
             {
                 WorldGen.PlaceObject(i, j - 1, ModContent.TileType<XenomiteCrystalTile>(), true);
-                NetMessage.SendObjectPlacment(-1, i, j - 1, ModContent.TileType<XenomiteCrystalTile>(), 0, 0, -1, -1);
+                NetMessage.SendObjectPlacement(-1, i, j - 1, ModContent.TileType<XenomiteCrystalTile>(), 0, 0, -1, -1);
             }
             if (!tileBelow.HasTile && !tileBelow2.HasTile && Main.tile[i, j].HasTile && Main.rand.NextBool(300))
             {
                 WorldGen.PlaceObject(i, j + 1, ModContent.TileType<RadioactiveIciclesTile>(), true);
-                NetMessage.SendObjectPlacment(-1, i, j + 1, ModContent.TileType<RadioactiveIciclesTile>(), 0, 0, -1, -1);
+                NetMessage.SendObjectPlacement(-1, i, j + 1, ModContent.TileType<RadioactiveIciclesTile>(), 0, 0, -1, -1);
             }
             if (!tileBelow.HasTile && Main.tile[i, j].HasTile && Main.rand.NextBool(300))
             {
                 WorldGen.PlaceObject(i, j + 1, ModContent.TileType<RadioactiveIciclesTile>(), true);
-                NetMessage.SendObjectPlacment(-1, i, j + 1, ModContent.TileType<RadioactiveIciclesTile>(), 0, 0, -1, -1);
+                NetMessage.SendObjectPlacement(-1, i, j + 1, ModContent.TileType<RadioactiveIciclesTile>(), 0, 0, -1, -1);
+            }
+            if (NPC.downedMechBossAny && !tileAbove.HasTile && Main.tile[i, j].HasTile && Main.rand.NextBool(600))
+            {
+                WorldGen.PlaceObject(i, j - 1, ModContent.TileType<XenomiteCrystalBigTile>());
+                NetMessage.SendObjectPlacement(-1, i, j - 1, ModContent.TileType<XenomiteCrystalBigTile>(), 0, 0, -1, -1);
             }
         }
     }

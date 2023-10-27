@@ -6,6 +6,7 @@ using System;
 using Terraria.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria.GameContent;
+using Redemption.Globals;
 
 namespace Redemption.NPCs.Bosses.KSIII
 {
@@ -13,8 +14,9 @@ namespace Redemption.NPCs.Bosses.KSIII
 	{
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Fist Rocket");
+            // DisplayName.SetDefault("Fist Rocket");
             Main.projFrames[Projectile.type] = 4;
+            ElementID.ProjExplosive[Type] = true;
         }
 
 		public override void SetDefaults()
@@ -74,11 +76,11 @@ namespace Redemption.NPCs.Bosses.KSIII
                 vector *= 12f / magnitude;
             }
         }
-        public override void OnHitPlayer(Player target, int damage, bool crit)
+        public override void OnHitPlayer(Player target, Player.HurtInfo info)
         {
             Projectile.Kill();
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(SoundID.Item14, Projectile.position);
             for (int i = 0; i < 25; i++)
@@ -95,7 +97,7 @@ namespace Redemption.NPCs.Bosses.KSIII
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
-            Texture2D glow = ModContent.Request<Texture2D>(Projectile.ModProjectile.Texture + "_Glow").Value;
+            Texture2D glow = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
             int height = texture.Height / 4;
             int y = height * Projectile.frame;
             Rectangle rect = new(0, y, texture.Width, height);

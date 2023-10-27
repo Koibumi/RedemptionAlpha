@@ -11,7 +11,9 @@ namespace Redemption.Projectiles.Ranged
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("D.A.N Rocket");
+            // DisplayName.SetDefault("D.A.N Rocket");
+            ProjectileID.Sets.DontCancelChannelOnKill[Type] = true;
+            ElementID.ProjExplosive[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -38,7 +40,7 @@ namespace Redemption.Projectiles.Ranged
             else
                 Projectile.velocity *= 1.03f;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(SoundID.Item14, Projectile.position);
             for (int i = 0; i < 15; i++)

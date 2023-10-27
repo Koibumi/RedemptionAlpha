@@ -8,10 +8,10 @@ namespace Redemption.Items.Weapons.PreHM.Melee
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("After every 3rd hit, the following thrust will additionally fire a damaging egg");
+            // Tooltip.SetDefault("After every 3rd hit, the following thrust will additionally fire a damaging egg");
             ItemID.Sets.SkipsInitialUseSound[Item.type] = true;
             ItemID.Sets.Spears[Item.type] = true;
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -31,7 +31,7 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             Item.channel = true;
 
             // Weapon Properties
-            Item.damage = 15;
+            Item.damage = 10;
             Item.knockBack = 6;
             Item.noUseGraphic = true;
             Item.DamageType = DamageClass.Melee;

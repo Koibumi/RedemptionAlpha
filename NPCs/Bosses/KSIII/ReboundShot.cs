@@ -13,7 +13,7 @@ namespace Redemption.NPCs.Bosses.KSIII
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Rebound Shot");
+            // DisplayName.SetDefault("Rebound Shot");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 16;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
         }
@@ -39,9 +39,7 @@ namespace Redemption.NPCs.Bosses.KSIII
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
             if (!Main.dedServ)
-            {
                 SoundEngine.PlaySound(CustomSounds.BulletBounce, Projectile.position);
-            }
             if (Projectile.velocity.X != oldVelocity.X)
                 Projectile.velocity.X = -oldVelocity.X;
             if (Projectile.velocity.Y != oldVelocity.Y)

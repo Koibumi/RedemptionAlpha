@@ -13,7 +13,7 @@ namespace Redemption.Projectiles.Ranged
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Uranium Ring");
+            // DisplayName.SetDefault("Uranium Ring");
         }
         public override void SetDefaults()
         {
@@ -67,7 +67,7 @@ namespace Redemption.Projectiles.Ranged
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, Projectile.GetAlpha(Color.White), Projectile.rotation, drawOrigin, Projectile.scale, effects, 0);
             return false;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             for (int m = 0; m < 16; m++)
             {
@@ -78,7 +78,7 @@ namespace Redemption.Projectiles.Ranged
             }
             target.immune[Projectile.owner] = 5;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
         }
     }

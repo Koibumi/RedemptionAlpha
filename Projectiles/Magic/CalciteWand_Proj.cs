@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using Redemption.Globals;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -10,8 +11,9 @@ namespace Redemption.Projectiles.Magic
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Calcite Stalagmites");
+            // DisplayName.SetDefault("Calcite Stalagmites");
             Main.projFrames[Projectile.type] = 3;
+            ElementID.ProjEarth[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -38,7 +40,7 @@ namespace Redemption.Projectiles.Magic
                 Projectile.velocity.Y += 0.3f;
             }
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(SoundID.Tink, Projectile.position);
             for (int i = 0; i < 6; i++)
@@ -48,13 +50,13 @@ namespace Redemption.Projectiles.Magic
                 Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.Gold, Scale: 0.5f);
             }
         }
-        public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
-            damage += (int)Projectile.velocity.Y * 3;
+            modifiers.FlatBonusDamage += (int)Projectile.velocity.Y * 3;
         }
-        public override void ModifyHitPlayer(Player target, ref int damage, ref bool crit)
+        public override void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers)
         {
-            damage += (int)Projectile.velocity.Y * 3;
+            modifiers.SourceDamage.Flat += (int)Projectile.velocity.Y * 3;
         }
     }
 }

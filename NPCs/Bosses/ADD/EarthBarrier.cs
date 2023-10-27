@@ -6,7 +6,6 @@ using Terraria.ID;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.Globals;
 using Terraria.GameContent;
-using Redemption.BaseExtension;
 
 namespace Redemption.NPCs.Bosses.ADD
 {
@@ -14,7 +13,7 @@ namespace Redemption.NPCs.Bosses.ADD
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Floating Island");
+            // DisplayName.SetDefault("Floating Island");
             Main.projFrames[Projectile.type] = 5;
         }
         public override void SetDefaults()
@@ -66,7 +65,7 @@ namespace Redemption.NPCs.Bosses.ADD
             var list = Main.projectile.Where(x => x.Hitbox.Intersects(Projectile.Hitbox));
             foreach (var proj in list)
             {
-                if (!proj.active || Projectile == proj || !proj.friendly || proj.minion || proj.Redemption().ParryBlacklist)
+                if (!proj.active || Projectile == proj || !proj.friendly || proj.ProjBlockBlacklist())
                     continue;
 
                 proj.Kill();

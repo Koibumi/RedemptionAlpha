@@ -1,10 +1,7 @@
-using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Redemption.BaseExtension;
 using Redemption.Globals;
 using Terraria;
-using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -15,9 +12,10 @@ namespace Redemption.Projectiles.Melee
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Ukonvasara Fragments");
+            // DisplayName.SetDefault("Ukonvasara Fragments");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 3;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjEarth[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -38,7 +36,7 @@ namespace Redemption.Projectiles.Melee
             Projectile.rotation += Projectile.velocity.X / 40 * Projectile.direction;
             Projectile.velocity.Y += 0.35f;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             for (int i = 0; i < 4; i++)
                 Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.Iron);

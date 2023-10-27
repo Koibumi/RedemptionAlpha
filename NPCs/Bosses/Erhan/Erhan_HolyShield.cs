@@ -8,7 +8,6 @@ using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Redemption.BaseExtension;
 
 namespace Redemption.NPCs.Bosses.Erhan
 {
@@ -16,7 +15,7 @@ namespace Redemption.NPCs.Bosses.Erhan
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Holy Shield");
+            // DisplayName.SetDefault("Holy Shield");
         }
         public override void SetDefaults()
         {
@@ -65,10 +64,10 @@ namespace Redemption.NPCs.Bosses.Erhan
                 for (int i = 0; i < Main.maxProjectiles; i++)
                 {
                     Projectile target = Main.projectile[i];
-                    if (!target.active || target.whoAmI == Projectile.whoAmI || target.hostile || target.minion || !target.friendly || target.damage > 100)
+                    if (!target.active || target.whoAmI == Projectile.whoAmI || target.hostile || !target.friendly || target.damage > 100)
                         continue;
 
-                    if (target.velocity.Length() == 0 || target.Redemption().TechnicallyMelee || target.Redemption().ParryBlacklist || !Projectile.Hitbox.Intersects(target.Hitbox))
+                    if (target.velocity.Length() == 0 || target.ProjBlockBlacklist() || !Projectile.Hitbox.Intersects(target.Hitbox))
                         continue;
 
                     SoundEngine.PlaySound(SoundID.Item29, Projectile.position);
@@ -94,71 +93,13 @@ namespace Redemption.NPCs.Bosses.Erhan
             float scale = BaseUtility.MultiLerp(Main.LocalPlayer.miscCounter % 100 / 100f, 0f, 0.15f, 0f);
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginAdditive();
 
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, Projectile.GetAlpha(Color.White), Projectile.rotation, drawOrigin, Projectile.scale, SpriteEffects.None, 0);
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, Projectile.GetAlpha(Color.White) * 0.5f, Projectile.rotation, drawOrigin, Projectile.scale + scale, SpriteEffects.None, 0);
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
-            return false;
-        }
-    }
-    public class Erhan_HolyShield2 : Erhan_HolyShield
-    {
-        public override string Texture => "Redemption/NPCs/Bosses/Erhan/Erhan_HolyShield";
-        public override void SetStaticDefaults()
-        {
-            DisplayName.SetDefault("Holy Shield");
-        }
-        public override void SetDefaults()
-        {
-            base.SetDefaults();
-        }
-        public override bool PreAI()
-        {
-            NPC host = Main.npc[(int)Projectile.ai[0]];
-            if (!host.active || (host.type != ModContent.NPCType<Erhan>() && host.type != ModContent.NPCType<ErhanSpirit>()))
-                Projectile.Kill();
-            Projectile.timeLeft = 10;
-            Projectile.rotation = (host.Center - Projectile.Center).ToRotation();
-
-            if (host.ai[0] == 3 && host.ai[2] < 3)
-            {
-                Projectile.alpha += 10;
-                if (Projectile.alpha >= 255)
-                    Projectile.Kill();
-            }
-
-            Projectile.localAI[0] += 0.04f;
-            Projectile.Center = host.Center + Vector2.One.RotatedBy(Projectile.localAI[0]) * 80;
-
-            if (Projectile.alpha < 100)
-            {
-                for (int i = 0; i < Main.maxProjectiles; i++)
-                {
-                    Projectile target = Main.projectile[i];
-                    if (!target.active || target.whoAmI == Projectile.whoAmI || target.hostile || target.minion || !target.friendly || target.damage > 100)
-                        continue;
-
-                    if (target.velocity.Length() == 0 || target.Redemption().TechnicallyMelee || target.Redemption().ParryBlacklist || !Projectile.Hitbox.Intersects(target.Hitbox))
-                        continue;
-
-                    SoundEngine.PlaySound(SoundID.Item29, Projectile.position);
-                    DustHelper.DrawCircle(target.Center, DustID.GoldFlame, 1, 4, 4, nogravity: true);
-                    if (ProjectileID.Sets.CultistIsResistantTo[target.type])
-                    {
-                        target.Kill();
-                        continue;
-                    }
-                    if (!target.hostile && target.friendly)
-                    {
-                        target.hostile = true;
-                    }
-                    target.damage /= 4;
-                    target.velocity = -target.velocity;
-                }
-            }
+            Main.spriteBatch.BeginDefault();
             return false;
         }
     }

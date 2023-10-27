@@ -2,6 +2,7 @@ using Redemption.Items.Materials.PreHM;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.Items.Weapons.PreHM.Melee
@@ -10,13 +11,14 @@ namespace Redemption.Items.Weapons.PreHM.Melee
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Keeper's Claw");
-            Tooltip.SetDefault("Hitting enemies inflict Necrotic Gouge\n" +
-                "Deals double damage to undead and skeletons" +
-                "\n'The hand of my beloved, cold and dead...'");
+            // DisplayName.SetDefault("Keeper's Claw");
+            /* Tooltip.SetDefault("Hitting enemies with the slash inflicts Necrotic Gouge, causing them to burst into blood upon death\n" +
+                "Physical slashes deal double damage to undead and skeletons\n" +
+                "Hold left-click to charge a Blood Wave, taking away some of your life to fire life-stealing projectiles" +
+                "\n'The hand of my beloved, cold and dead...'"); */
 
             ItemID.Sets.SkipsInitialUseSound[Item.type] = true;
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -35,11 +37,12 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             Item.autoReuse = true;
 
             // Weapon Properties
-            Item.damage = 36;
+            Item.damage = 26;
             Item.knockBack = 4;
             Item.noUseGraphic = true;
             Item.DamageType = DamageClass.Melee;
             Item.noMelee = true;
+            Item.channel = true;
 
             // Projectile Properties
             Item.shootSpeed = 5f;
@@ -60,8 +63,8 @@ namespace Redemption.Items.Weapons.PreHM.Melee
         }
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
-            TooltipLine axeLine = new(Mod, "SharpBonus", "Slash Bonus: Small chance to decapitate skeletons, killing them instantly") { OverrideColor = Colors.RarityOrange };
-            tooltips.Add(axeLine);
+            TooltipLine slashLine = new(Mod, "SharpBonus", Language.GetTextValue("Mods.Redemption.GenericTooltips.Bonuses.SlashBonus")) { OverrideColor = Colors.RarityOrange };
+            tooltips.Add(slashLine);
         }
     }
 }

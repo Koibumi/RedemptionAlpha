@@ -15,10 +15,11 @@ namespace Redemption.Items.Weapons.PostML.Melee
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Left click to do a close ranged combo attack\n" +
-                "Right click to thrust forward, doing more damage at the tail end of the thrust");
+            /* Tooltip.SetDefault("Left click to do a close ranged combo attack\n" +
+                "Right-click to thrust forward, doing more damage at the tail-end of the thrust\n" +
+                "Hitting with the thrust allows chaining the right-click, while missing gives a 20 second cooldown"); */
             ItemID.Sets.Spears[Item.type] = true;
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -38,6 +39,7 @@ namespace Redemption.Items.Weapons.PostML.Melee
 
             // Weapon Properties
             Item.damage = 450;
+            Item.crit = 26;
             Item.knockBack = 8;
             Item.noUseGraphic = true;
             Item.DamageType = DamageClass.Melee;
@@ -111,7 +113,7 @@ namespace Redemption.Items.Weapons.PostML.Melee
         {
             CreateRecipe()
                 .AddIngredient(ModContent.ItemType<XeniumAlloy>(), 15)
-                .AddIngredient(ModContent.ItemType<Capacitator>())
+                .AddIngredient(ModContent.ItemType<Capacitor>())
                 .AddIngredient(ModContent.ItemType<CarbonMyofibre>(), 8)
                 .AddTile(ModContent.TileType<XeniumRefineryTile>())
                 .Register();

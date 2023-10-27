@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Redemption.Base;
+using Redemption.Globals;
 using Redemption.Items.Materials.HM;
 using Redemption.Projectiles.Magic;
 using Terraria;
@@ -14,8 +15,8 @@ namespace Redemption.Items.Weapons.HM.Magic
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Shoots a wave of notes along the ground");
-            SacrificeTotal = 1;
+            // Tooltip.SetDefault("Shoots a wave of notes along the ground");
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -28,9 +29,10 @@ namespace Redemption.Items.Weapons.HM.Magic
             Item.useAnimation = 32;
             Item.useTime = 32;
             Item.knockBack = 1f;
-            Item.rare = ItemRarityID.LightRed;
+            Item.rare = ItemRarityID.Pink;
             Item.damage = 48;
             Item.shoot = ModContent.ProjectileType<Synthesizer_Proj>();
+            Item.ExtraItemShoot(ModContent.ProjectileType<SynthNote_Proj>());
             Item.shootSpeed = 0;
             Item.DamageType = DamageClass.Magic;
             Item.mana = 15;
@@ -64,7 +66,7 @@ namespace Redemption.Items.Weapons.HM.Magic
         public override void AddRecipes()
         {
             CreateRecipe()
-                .AddIngredient(ModContent.ItemType<XenomiteItem>(), 16)
+                .AddIngredient(ModContent.ItemType<Xenomite>(), 16)
                 .AddIngredient(ModContent.ItemType<ToxicBile>(), 4)
                 .AddIngredient(ItemID.SoulofSight, 15)
                 .AddTile(TileID.MythrilAnvil)
@@ -76,7 +78,7 @@ namespace Redemption.Items.Weapons.HM.Magic
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Synthesizer");
+            // DisplayName.SetDefault("Synthesizer");
         }
         public override void SetDefaults()
         {

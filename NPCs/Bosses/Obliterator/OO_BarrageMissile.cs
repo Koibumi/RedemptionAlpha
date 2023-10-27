@@ -15,8 +15,9 @@ namespace Redemption.NPCs.Bosses.Obliterator
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Barrage Missile");
+            // DisplayName.SetDefault("Barrage Missile");
             Main.projFrames[Projectile.type] = 3;
+            ElementID.ProjExplosive[Type] = true;
         }
 
         public override void SetDefaults()
@@ -97,13 +98,13 @@ namespace Redemption.NPCs.Bosses.Obliterator
                 vector *= 24f / magnitude;
             }
         }
-        public override void OnHitPlayer(Player target, int damage, bool crit)
+        public override void OnHitPlayer(Player target, Player.HurtInfo info)
         {
             Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center, Vector2.Zero, ModContent.ProjectileType<OO_MissileBlast>(), Projectile.damage, 0, Main.myPlayer);
             Projectile.Kill();
         }
         Projectile clearCheck;
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             Projectile projAim = Main.projectile[(int)Projectile.ai[0]];
 
@@ -114,13 +115,14 @@ namespace Redemption.NPCs.Bosses.Obliterator
                     clearCheck.Kill();
             }
 
-            SoundEngine.PlaySound(CustomSounds.MissileExplosion with { Volume = 0.7f }, Projectile.position);
+            if (!Main.dedServ)
+                SoundEngine.PlaySound(CustomSounds.MissileExplosion with { Volume = 0.7f }, Projectile.position);
             RedeDraw.SpawnExplosion(Projectile.Center, Color.IndianRed, DustID.LifeDrain);
         }
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
-            Texture2D glow = ModContent.Request<Texture2D>(Projectile.ModProjectile.Texture + "_Glow").Value;
+            Texture2D glow = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
             int height = texture.Height / 3;
             int y = height * Projectile.frame;
             Vector2 position = Projectile.Center - Main.screenPosition;
@@ -137,8 +139,9 @@ namespace Redemption.NPCs.Bosses.Obliterator
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Explosion");
+            // DisplayName.SetDefault("Explosion");
             Main.projFrames[Projectile.type] = 5;
+            ElementID.ProjExplosive[Type] = true;
         }
 
         public override void SetDefaults()
@@ -177,12 +180,12 @@ namespace Redemption.NPCs.Bosses.Obliterator
             Rectangle rect = new(0, y, texture.Width, height);
             Vector2 origin = new(texture.Width / 2f, height / 2f);
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginAdditive();
 
             Main.EntitySpriteDraw(texture, position, new Rectangle?(rect), Projectile.GetAlpha(Color.White), Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginDefault();
             return false;
         }
     }

@@ -17,6 +17,8 @@ using Redemption.BaseExtension;
 using Redemption.Items.Donator.Sneaklone;
 using Redemption.Items.Usable.Potions;
 using Redemption.Items.Usable;
+using System.IO;
+using Terraria.Localization;
 
 namespace Redemption.NPCs.Lab
 {
@@ -44,20 +46,11 @@ namespace Redemption.NPCs.Lab
         {
             Main.npcFrameCount[NPC.type] = 22;
 
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Poisoned,
-                    ModContent.BuffType<BileDebuff>(),
-                    ModContent.BuffType<GreenRashesDebuff>(),
-                    ModContent.BuffType<GlowingPustulesDebuff>(),
-                    ModContent.BuffType<FleshCrystalsDebuff>()
-                }
-            });
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Infected);
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0);
-
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
+            ElementID.NPCPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -76,24 +69,34 @@ namespace Redemption.NPCs.Lab
             Banner = NPC.type;
             BannerItem = ModContent.ItemType<BloatedScientistBanner>();
         }
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.WriteVector2(moveTo);
+        }
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            moveTo = reader.ReadVector2();
+        }
         private Vector2 moveTo;
         private int runCooldown;
         public override void OnSpawn(IEntitySource source)
         {
             TimerRand = Main.rand.Next(80, 280);
+            NPC.netUpdate = true;
         }
         public override void AI()
         {
-            if (LabArea.Active)
-                NPC.DiscourageDespawn(60);
+            CustomFrames(58);
 
             Player player = Main.player[NPC.target];
+            if (player.InModBiome<LabBiome>())
+                NPC.DiscourageDespawn(60);
             RedeNPC globalNPC = NPC.Redemption();
             NPC.TargetClosest();
             if (AIState is not ActionState.Puke)
                 NPC.LookByVelocity();
 
-            if (Main.rand.NextBool(2000))
+            if (Main.rand.NextBool(2000) && !Main.dedServ)
                 SoundEngine.PlaySound(new("Terraria/Sounds/Zombie_" + (Main.rand.NextBool() ? 1 : 3)), NPC.position);
 
             switch (AIState)
@@ -108,6 +111,7 @@ namespace Redemption.NPCs.Lab
                         AITimer = 0;
                         TimerRand = Main.rand.Next(120, 260);
                         AIState = ActionState.Wander;
+                        NPC.netUpdate = true;
                     }
 
                     SightCheck();
@@ -122,10 +126,11 @@ namespace Redemption.NPCs.Lab
                         AITimer = 0;
                         TimerRand = Main.rand.Next(80, 280);
                         AIState = ActionState.Idle;
+                        NPC.netUpdate = true;
                     }
 
-                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20);
-                    RedeHelper.HorizontallyMove(NPC, moveTo * 16, 0.4f, 0.7f, 6, 6, NPC.Center.Y > player.Center.Y);
+                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20, (moveTo.Y - 32) * 16);
+                    NPCHelper.HorizontallyMove(NPC, moveTo * 16, 0.4f, 0.7f, 6, 6, NPC.Center.Y > moveTo.Y * 16);
                     break;
 
                 case ActionState.Alert:
@@ -148,12 +153,13 @@ namespace Redemption.NPCs.Lab
                         NPC.velocity.Y = 0;
                         NPC.velocity.X = 2 * NPC.spriteDirection;
                         AIState = ActionState.Puke;
+                        NPC.netUpdate = true;
                     }
                     angle = 0;
                     NPC.DamageHostileAttackers(0, 5);
 
-                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20);
-                    RedeHelper.HorizontallyMove(NPC, globalNPC.attacker.Center, 0.15f, 1.4f * (NPC.RedemptionNPCBuff().rallied ? 1.2f : 1), 6, 6, NPC.Center.Y > globalNPC.attacker.Center.Y);
+                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20, globalNPC.attacker.Center.Y);
+                    NPCHelper.HorizontallyMove(NPC, globalNPC.attacker.Center, 0.15f, 1.4f * (NPC.RedemptionNPCBuff().rallied ? 1.2f : 1), 6, 6, NPC.Center.Y > globalNPC.attacker.Center.Y, globalNPC.attacker);
 
                     break;
                 case ActionState.Puke:
@@ -164,6 +170,7 @@ namespace Redemption.NPCs.Lab
                         AITimer = 0;
                         TimerRand = Main.rand.Next(120, 260);
                         AIState = ActionState.Wander;
+                        NPC.netUpdate = true;
                     }
 
                     if (NPC.velocity.Y < 0)
@@ -173,9 +180,7 @@ namespace Redemption.NPCs.Lab
                     break;
             }
         }
-        public override bool? CanFallThroughPlatforms() => NPC.Redemption().fallDownPlatform;
-        float angle;
-        public override void FindFrame(int frameHeight)
+        private void CustomFrames(int frameHeight)
         {
             if (AIState is ActionState.Puke)
             {
@@ -199,11 +204,18 @@ namespace Redemption.NPCs.Lab
                 }
                 if (NPC.frame.Y >= 16 * frameHeight && NPC.frame.Y <= 19 * frameHeight && NPC.frameCounter % 3 == 0)
                 {
-                    NPC.Shoot(NPC.Center + RedeHelper.PolarVector(10, -MathHelper.PiOver2 + (angle * NPC.spriteDirection)), ModContent.ProjectileType<OozeBall_Proj>(), NPC.damage, RedeHelper.PolarVector(11, -MathHelper.PiOver2 + (angle * NPC.spriteDirection)), false, SoundID.Item1, NPC.whoAmI);
+                    NPC.Shoot(NPC.Center + RedeHelper.PolarVector(10, -MathHelper.PiOver2 + (angle * NPC.spriteDirection)), ModContent.ProjectileType<OozeBall_Proj>(), NPC.damage, RedeHelper.PolarVector(11, -MathHelper.PiOver2 + (angle * NPC.spriteDirection)), NPC.whoAmI);
                     angle += 0.12f;
                 }
                 return;
             }
+        }
+        public override bool? CanFallThroughPlatforms() => NPC.Redemption().fallDownPlatform;
+        float angle;
+        public override void FindFrame(int frameHeight)
+        {
+            if (AIState is ActionState.Puke)
+                return;
             if (NPC.collideY || NPC.velocity.Y == 0)
             {
                 NPC.rotation = 0;
@@ -247,7 +259,7 @@ namespace Redemption.NPCs.Lab
             for (int i = 0; i < Main.maxNPCs; i++)
             {
                 NPC target = Main.npc[i];
-                if (!target.active || target.whoAmI == NPC.whoAmI || target.dontTakeDamage || target.type == NPCID.OldMan)
+                if (!target.active || target.whoAmI == NPC.whoAmI || target.dontTakeDamage || target.type == NPCID.OldMan || target.type == NPCID.TargetDummy)
                     continue;
 
                 if (grr)
@@ -305,7 +317,7 @@ namespace Redemption.NPCs.Lab
             }
         }
 
-        public override bool? CanHitNPC(NPC target) => AIState == ActionState.Alert ? null : false;
+        public override bool CanHitNPC(NPC target) => AIState == ActionState.Alert;
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => AIState == ActionState.Alert;
 
         public override void ModifyNPCLoot(NPCLoot npcLoot)
@@ -316,12 +328,12 @@ namespace Redemption.NPCs.Lab
             npcLoot.Add(ItemDropRule.OneFromOptions(50, ModContent.ItemType<SneakloneHelmet1>(), ModContent.ItemType<SneakloneHelmet2>(), ModContent.ItemType<SneakloneSuit>(), ModContent.ItemType<SneakloneLegs>()));
         }
 
-        public override void ModifyHitPlayer(Player target, ref int damage, ref bool crit)
+        public override void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers)
         {
             if (Main.rand.NextBool(2) || Main.expertMode)
                 target.AddBuff(ModContent.BuffType<GreenRashesDebuff>(), Main.rand.Next(800, 3000));
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -350,8 +362,7 @@ namespace Redemption.NPCs.Lab
         {
             bestiaryEntry.Info.AddRange(new IBestiaryInfoElement[]
             {
-                new FlavorTextBestiaryInfoElement(
-                    "An unfortunate scientist, mutilated and disfigured by the Xenomite infection. This strain is mildly aggressive, and has bloated their gastric track to monstrous sizes... God, that must feel vile...")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.BloatedScientist"))
             });
         }
     }

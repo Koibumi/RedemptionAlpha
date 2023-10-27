@@ -1,9 +1,9 @@
 using Microsoft.Xna.Framework;
 using Redemption.DamageClasses;
-using Redemption.Items.Materials.PreHM;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.Items.Weapons.PreHM.Ritualist
@@ -12,8 +12,8 @@ namespace Redemption.Items.Weapons.PreHM.Ritualist
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Grave Steel Secespita");
-            SacrificeTotal = 1;
+            // DisplayName.SetDefault("Grave Steel Secespita");
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -48,6 +48,7 @@ namespace Redemption.Items.Weapons.PreHM.Ritualist
             Vector2 Offset = Vector2.Normalize(velocity) * 50f;
             position += Offset;
         }
+        /*
         public override void AddRecipes()
         {
             CreateRecipe()
@@ -55,10 +56,10 @@ namespace Redemption.Items.Weapons.PreHM.Ritualist
                 .AddIngredient(ModContent.ItemType<LostSoul>())
                 .AddTile(TileID.Anvils)
                 .Register();
-        }
+        }*/
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
-            TooltipLine slashLine = new(Mod, "SharpBonus", "Slash Bonus: Small chance to decapitate skeletons, killing them instantly") { OverrideColor = Colors.RarityOrange };
+            TooltipLine slashLine = new(Mod, "SharpBonus", Language.GetTextValue("Mods.Redemption.GenericTooltips.Bonuses.SlashBonus")) { OverrideColor = Colors.RarityOrange };
             tooltips.Add(slashLine);
         }
     }

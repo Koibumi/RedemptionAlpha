@@ -3,6 +3,7 @@ using Redemption.Dusts.Tiles;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.Enums;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 
@@ -25,10 +26,10 @@ namespace Redemption.Tiles.Furniture.Lab
             TileObjectData.newTile.AnchorBottom = new AnchorData(AnchorType.SolidTile | AnchorType.SolidWithTop | AnchorType.SolidSide, TileObjectData.newTile.Width, 0);
             TileObjectData.addTile(Type);
             DustType = ModContent.DustType<LabPlatingDust>();
-            MinPick = 500;
+            MinPick = 1000;
             MineResist = 7f;
-            ModTranslation name = CreateMapEntryName();
-            name.SetDefault("Janitor Equipment");
+            LocalizedText name = CreateMapEntryName();
+            // name.SetDefault("Janitor Equipment");
             AddMapEntry(new Color(48, 63, 73), name);
         }
         public override void NumDust(int i, int j, bool fail, ref int num) => num = fail ? 1 : 3;
@@ -36,11 +37,11 @@ namespace Redemption.Tiles.Furniture.Lab
     }
     public class JanitorEquipment : PlaceholderTile
     {
-        public override string Texture => "Redemption/Placeholder";
-        public override void SetStaticDefaults()
+        public override string Texture => Redemption.PLACEHOLDER_TEXTURE;
+        public override void SetSafeStaticDefaults()
         {
-            DisplayName.SetDefault("Janitor Equipment");
-            Tooltip.SetDefault("[c/ff0000:Unbreakable (500% Pickaxe Power)]");
+            // DisplayName.SetDefault("Janitor Equipment");
+            // Tooltip.SetDefault("[c/ff0000:Unbreakable (500% Pickaxe Power)]");
         }
 
         public override void SetDefaults()

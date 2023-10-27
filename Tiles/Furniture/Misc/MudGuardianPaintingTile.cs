@@ -4,7 +4,7 @@ using Terraria.ModLoader;
 using Terraria.ObjectData;
 using Terraria.DataStructures;
 using Terraria.ID;
-using Redemption.Items.Placeable.Furniture.Misc;
+using Terraria.Localization;
 
 namespace Redemption.Tiles.Furniture.Misc
 {
@@ -15,6 +15,7 @@ namespace Redemption.Tiles.Furniture.Misc
 			Main.tileFrameImportant[Type] = true;
 			Main.tileLavaDeath[Type] = false;
             Main.tileNoAttach[Type] = true;
+            TileID.Sets.FramesOnKillWall[Type] = true;
             TileObjectData.newTile.Width = 5;
             TileObjectData.newTile.Height = 3;
             TileObjectData.newTile.CoordinateHeights = new int[] { 16, 16, 16 };
@@ -25,11 +26,7 @@ namespace Redemption.Tiles.Furniture.Misc
             TileObjectData.newTile.AnchorWall = true;
             TileObjectData.addTile(Type);
             DustType = DustID.WoodFurniture;
-			AddMapEntry(new Color(96, 67, 55));
-        }
-        public override void KillMultiTile(int i, int j, int frameX, int frameY)
-        {
-            Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 80, 48, ModContent.ItemType<MudGuardianPainting>());
+			AddMapEntry(new Color(96, 67, 55), Language.GetText("MapObject.Painting"));
         }
     }
 }

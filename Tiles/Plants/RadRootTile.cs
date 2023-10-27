@@ -2,8 +2,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.Items.Placeable.Plants;
 using Redemption.Tiles.Tiles;
+using System.Collections.Generic;
 using Terraria;
-using Terraria.DataStructures;
 using Terraria.GameContent.Metadata;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -81,12 +81,18 @@ namespace Redemption.Tiles.Plants
                 spriteEffects = SpriteEffects.FlipHorizontally;
             }
         }
-        public override bool Drop(int i, int j)
+        public override bool CanDrop(int i, int j)
         {
             PlantStage stage = GetStage(i, j);
 
             if (stage == PlantStage.Planted)
                 return false;
+            return true;
+        }
+
+        public override IEnumerable<Item> GetItemDrops(int i, int j)
+        {
+            PlantStage stage = GetStage(i, j);
 
             Vector2 worldPosition = new Vector2(i, j).ToWorldCoordinates();
             Player nearestPlayer = Main.player[Player.FindClosest(worldPosition, 16, 16)];
@@ -95,13 +101,20 @@ namespace Redemption.Tiles.Plants
             int herbItemStack = 1;
 
             if (nearestPlayer.active && nearestPlayer.HeldItem.type == ItemID.StaffofRegrowth)
+            {
+                // Increased yields with Staff of Regrowth, even when not fully grown
                 herbItemStack = Main.rand.Next(1, 3);
+            }
             else if (stage == PlantStage.Grown)
+            {
+                // Default yields, only when fully grown
                 herbItemStack = 1;
+            }
 
             if (herbItemType > 0 && herbItemStack > 0)
-                Item.NewItem(new EntitySource_TileBreak(i, j), worldPosition, herbItemType, herbItemStack);
-            return false;
+            {
+                yield return new Item(herbItemType, herbItemStack);
+            }
         }
         public override bool IsTileSpelunkable(int i, int j)
         {

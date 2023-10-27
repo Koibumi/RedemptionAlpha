@@ -8,7 +8,6 @@ using Terraria.ModLoader;
 using Redemption.Globals;
 using Redemption.Projectiles.Melee;
 using Redemption.Buffs.NPCBuffs;
-using Redemption.BaseExtension;
 
 namespace Redemption.Items.Weapons.PostML.Melee
 {
@@ -18,7 +17,7 @@ namespace Redemption.Items.Weapons.PostML.Melee
         public override string Texture => "Redemption/Items/Weapons/PostML/Melee/MythrilsBane";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Mythril's Bane");
+            // DisplayName.SetDefault("Mythril's Bane");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 6;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
         }
@@ -35,8 +34,10 @@ namespace Redemption.Items.Weapons.PostML.Melee
             Projectile.usesLocalNPCImmunity = true;
             Projectile.extraUpdates = 1;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            RedeProjectile.Decapitation(target, ref damageDone, ref hit.Crit, 50);
+
             Projectile.localNPCImmunity[target.whoAmI] = 10;
             target.immune[Projectile.owner] = 0;
 
@@ -54,10 +55,6 @@ namespace Redemption.Items.Weapons.PostML.Melee
         private float SwingSpeed;
         public override void AI()
         {
-            for (int k = Projectile.oldPos.Length - 1; k > 0; k--)
-                oldrot[k] = oldrot[k - 1];
-            oldrot[0] = Projectile.rotation;
-
             Player player = Main.player[Projectile.owner];
             if (player.noItems || player.CCed || player.dead || !player.active)
                 Projectile.Kill();
@@ -90,8 +87,7 @@ namespace Redemption.Items.Weapons.PostML.Melee
                         if (Timer++ == (int)(5 * SwingSpeed))
                         {
                             Projectile.NewProjectile(Projectile.GetSource_FromAI(), player.Center,
-                                RedeHelper.PolarVector(Main.rand.Next(45, 66), (mouseOrig - player.Center).ToRotation() + Main.rand.NextFloat(-0.2f, 0.2f)),
-                                ModContent.ProjectileType<MythrilsBaneSlash_Proj>(), Projectile.damage, Projectile.knockBack, Projectile.owner);
+                                RedeHelper.PolarVector(Main.rand.Next(45, 66), (mouseOrig - player.Center).ToRotation() + Main.rand.NextFloat(-0.2f, 0.2f)), ModContent.ProjectileType<MythrilsBaneSlash_Proj>(), Projectile.damage, Projectile.knockBack, Projectile.owner);
                         }
                         if (Timer < 5 * SwingSpeed)
                         {
@@ -130,8 +126,7 @@ namespace Redemption.Items.Weapons.PostML.Melee
                         if (Timer++ == (int)(5 * SwingSpeed))
                         {
                             Projectile.NewProjectile(Projectile.GetSource_FromAI(), player.Center,
-                                RedeHelper.PolarVector(Main.rand.Next(45, 66), (mouseOrig - player.Center).ToRotation() + Main.rand.NextFloat(-0.2f, 0.2f)),
-                                ModContent.ProjectileType<MythrilsBaneSlash_Proj>(), Projectile.damage, Projectile.knockBack, Projectile.owner, 1);
+                                RedeHelper.PolarVector(Main.rand.Next(45, 66), (mouseOrig - player.Center).ToRotation() + Main.rand.NextFloat(-0.2f, 0.2f)), ModContent.ProjectileType<MythrilsBaneSlash_Proj>(), Projectile.damage, Projectile.knockBack, Projectile.owner, 1);
                         }
                         if (Timer < 5 * SwingSpeed)
                         {
@@ -161,7 +156,7 @@ namespace Redemption.Items.Weapons.PostML.Melee
                     if (target.damage > 100 / 4 || Projectile.alpha > 0 || target.width + target.height > Projectile.width + Projectile.height)
                         continue;
 
-                    if (target.velocity.Length() == 0 || !Projectile.Hitbox.Intersects(target.Hitbox) || target.alpha > 0 || target.minion || ProjectileID.Sets.CultistIsResistantTo[target.type] || target.Redemption().ParryBlacklist || Main.projPet[target.type])
+                    if (target.velocity.Length() == 0 || !Projectile.Hitbox.Intersects(target.Hitbox) || target.alpha > 0 || target.ProjBlockBlacklist(true))
                         continue;
 
                     SoundEngine.PlaySound(SoundID.Tink, Projectile.position);
@@ -171,15 +166,14 @@ namespace Redemption.Items.Weapons.PostML.Melee
             }
             if (Timer > 1)
                 Projectile.alpha = 0;
+            for (int k = Projectile.oldPos.Length - 1; k > 0; k--)
+                oldrot[k] = oldrot[k - 1];
+            oldrot[0] = Projectile.rotation;
         }
 
         public override bool? CanHitNPC(NPC target)
         {
             return Timer <= 8 && Projectile.ai[0] < 2 ? null : false;
-        }
-        public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
-        {
-            RedeProjectile.Decapitation(target, ref damage, ref crit, 50);
         }
         public override bool PreDraw(ref Color lightColor)
         {

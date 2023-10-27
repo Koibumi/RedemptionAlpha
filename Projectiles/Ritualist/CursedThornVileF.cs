@@ -7,6 +7,7 @@ using Terraria.GameContent;
 using Terraria.ModLoader;
 using Redemption.BaseExtension;
 using Redemption.DamageClasses;
+using Redemption.Globals;
 
 namespace Redemption.Projectiles.Ritualist
 {
@@ -29,7 +30,8 @@ namespace Redemption.Projectiles.Ritualist
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Cursed Thorns");
+            // DisplayName.SetDefault("Cursed Thorns");
+            ElementID.ProjNature[Type] = true;
         }
         public override void SetDefaults()
         {

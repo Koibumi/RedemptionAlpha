@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using Redemption.Globals;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -10,8 +11,9 @@ namespace Redemption.Projectiles.Minions
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Acorn Shard");
+            // DisplayName.SetDefault("Acorn Shard");
             ProjectileID.Sets.MinionShot[Projectile.type] = true;
+            ElementID.ProjNature[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -36,7 +38,7 @@ namespace Redemption.Projectiles.Minions
             SoundEngine.PlaySound(SoundID.Dig with { Volume = .2f }, Projectile.position);
             return true;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             for (int i = 0; i < 2; i++)
                 Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.WoodFurniture, Scale: 1.5f);

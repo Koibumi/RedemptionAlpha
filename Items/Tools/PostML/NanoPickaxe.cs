@@ -10,8 +10,8 @@ namespace Redemption.Items.Tools.PostML
 	{
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Can mine Black Hardened Sludge");
-			SacrificeTotal = 1;
+            // Tooltip.SetDefault("Can mine Black Hardened Sludge");
+			Item.ResearchUnlockCount = 1;
 		}
 
 		public override void SetDefaults()
@@ -32,7 +32,7 @@ namespace Redemption.Items.Tools.PostML
 			Item.useTurn = true;
 			Item.tileBoost += 3;
 			if (!Main.dedServ)
-				Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Item.ModItem.Texture + "_Glow").Value;
+				Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
 		}
 	}
 }

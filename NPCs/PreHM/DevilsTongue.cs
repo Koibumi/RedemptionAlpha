@@ -1,18 +1,18 @@
 using Microsoft.Xna.Framework;
 using Redemption.Base;
 using Redemption.Buffs.Debuffs;
-using Redemption.Buffs.NPCBuffs;
 using Redemption.Globals;
+using Redemption.Globals.NPC;
 using Redemption.Items.Accessories.PreHM;
 using Redemption.Items.Placeable.Banners;
 using Redemption.NPCs.Critters;
 using Redemption.Projectiles.Hostile;
 using Terraria;
 using Terraria.Audio;
-using Terraria.DataStructures;
 using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Utilities;
 
@@ -28,18 +28,13 @@ namespace Redemption.NPCs.PreHM
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Devil's Tongue");
+            // DisplayName.SetDefault("Devil's Tongue");
             Main.npcFrameCount[Type] = 12;
             NPCID.Sets.DontDoHardmodeScaling[Type] = true;
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    ModContent.BuffType<InfestedDebuff>(),
-                    ModContent.BuffType<DevilScentedDebuff>(),
-                    BuffID.Confused,
-                    ModContent.BuffType<NecroticGougeDebuff>()
-                }
-            });
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Inorganic);
+            NPCID.Sets.SpecificDebuffImmunity[Type][ModContent.BuffType<DevilScentedDebuff>()] = true;
+            NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Confused] = true;
+
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0);
 
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
@@ -85,7 +80,7 @@ namespace Redemption.NPCs.PreHM
                     AITimer++;
                     if (AITimer % 8 == 0)
                     {
-                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<DevilsTongueCloud>(), 0, RedeHelper.Spread(3), false, SoundID.Item1);
+                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<DevilsTongueCloud>(), 0, RedeHelper.Spread(3));
                     }
                     if (AITimer > 60)
                     {
@@ -145,7 +140,7 @@ namespace Redemption.NPCs.PreHM
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Biomes.Desert,
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Times.DayTime,
 
-                new FlavorTextBestiaryInfoElement("A carnivorous cactus that grows in deserts. Produces painful clouds of pollen to attract flies to their doom.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.DevilsTongue"))
             });
         }
 
@@ -154,7 +149,7 @@ namespace Redemption.NPCs.PreHM
             for (int i = 0; i < Main.rand.Next(7, 10); i++)
                 RedeHelper.SpawnNPC(NPC.GetSource_FromAI(), (int)NPC.Center.X, (int)NPC.Center.Y, ModContent.NPCType<Fly>());
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {

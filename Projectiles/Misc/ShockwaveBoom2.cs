@@ -9,7 +9,7 @@ namespace Redemption.Projectiles.Misc
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Shockwave Boom");
+            // DisplayName.SetDefault("Shockwave Boom");
         }
         public override void SetDefaults()
         {
@@ -42,7 +42,7 @@ namespace Redemption.Projectiles.Misc
                 }
             }
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             if (!Main.dedServ)
             {
@@ -55,7 +55,7 @@ namespace Redemption.Projectiles.Misc
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Shockwave Boom");
+            // DisplayName.SetDefault("Shockwave Boom");
         }
 
         public override void SetDefaults()
@@ -89,7 +89,7 @@ namespace Redemption.Projectiles.Misc
                 }
             }
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             if (!Main.dedServ)
             {

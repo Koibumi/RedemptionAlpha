@@ -1,5 +1,4 @@
 using Microsoft.Xna.Framework;
-using Redemption.Projectiles.Magic;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -12,9 +11,9 @@ namespace Redemption.Items.Usable
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Violin");
-            Tooltip.SetDefault("Playable Instrument");
-            SacrificeTotal = 1;
+            // DisplayName.SetDefault("Violin");
+            // Tooltip.SetDefault("Playable Instrument");
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()

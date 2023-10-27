@@ -5,7 +5,6 @@ using Microsoft.Xna.Framework;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Utilities;
 using Redemption.Globals;
-using Terraria.DataStructures;
 using Terraria.GameContent.ItemDropRules;
 using Redemption.Items.Materials.PostML;
 
@@ -16,14 +15,12 @@ namespace Redemption.NPCs.PostML
         public override string Texture => "Redemption/NPCs/PostML/BabbyDragonHead";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Star Serpent");
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                ImmuneToAllBuffsThatAreNotWhips = true
-            });
+            // DisplayName.SetDefault("Star Serpent");
+            NPCID.Sets.ImmuneToRegularBuffs[Type] = true;
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0) { Hide = true };
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
+            ElementID.NPCCelestial[Type] = true;
         }
 
         public override void SetDefaults()
@@ -43,11 +40,11 @@ namespace Redemption.NPCs.PostML
             NPC.behindTiles = true;
             NPC.HitSound = SoundID.NPCHit56;
             NPC.DeathSound = SoundID.NPCDeath60;
+            NPC.GetGlobalNPC<ElementalNPC>().OverrideMultiplier[ElementID.Celestial] *= .8f;
         }
 
         public override bool PreAI()
         {
-            Player player = Main.player[NPC.target];
             NPC.spriteDirection = NPC.velocity.X > 0 ? -1 : 1;
             NPC.ai[1]++;
             if (NPC.ai[1] >= 1200)
@@ -290,11 +287,8 @@ namespace Redemption.NPCs.PostML
         public override string Texture => "Redemption/NPCs/PostML/BabbyDragonBody";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Star Serpent");
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                ImmuneToAllBuffsThatAreNotWhips = true
-            });
+            // DisplayName.SetDefault("Star Serpent");
+            NPCID.Sets.ImmuneToRegularBuffs[Type] = true;
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0) { Hide = true };
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
@@ -375,11 +369,8 @@ namespace Redemption.NPCs.PostML
         public override string Texture => "Redemption/NPCs/PostML/BabbyDragonLeg";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Star Serpent");
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                ImmuneToAllBuffsThatAreNotWhips = true
-            });
+            // DisplayName.SetDefault("Star Serpent");
+            NPCID.Sets.ImmuneToRegularBuffs[Type] = true;
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0) { Hide = true };
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
@@ -463,12 +454,8 @@ namespace Redemption.NPCs.PostML
         public override string Texture => "Redemption/NPCs/PostML/BabbyDragonTail1";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Star Serpent");
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                ImmuneToAllBuffsThatAreNotWhips = true
-            });
-
+            // DisplayName.SetDefault("Star Serpent");
+            NPCID.Sets.ImmuneToRegularBuffs[Type] = true;
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0) { Hide = true };
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
         }
@@ -551,11 +538,8 @@ namespace Redemption.NPCs.PostML
         public override string Texture => "Redemption/NPCs/PostML/BabbyDragonTail2";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Star Serpent");
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                ImmuneToAllBuffsThatAreNotWhips = true
-            });
+            // DisplayName.SetDefault("Star Serpent");
+            NPCID.Sets.ImmuneToRegularBuffs[Type] = true;
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0) { Hide = true };
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);

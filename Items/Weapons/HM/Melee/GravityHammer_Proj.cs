@@ -16,8 +16,10 @@ namespace Redemption.Items.Weapons.HM.Melee
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Gravity Hammer");
+            // DisplayName.SetDefault("Gravity Hammer");
             Main.projFrames[Projectile.type] = 11;
+            ElementID.ProjThunder[Type] = true;
+            ElementID.ProjEarth[Type] = true;
         }
         public override bool ShouldUpdatePosition() => false;
         public override void SetSafeDefaults()
@@ -31,11 +33,8 @@ namespace Redemption.Items.Weapons.HM.Melee
             Projectile.usesLocalNPCImmunity = true;
         }
 
-        public override bool? CanCutTiles()
-        {
-            return false;
-        }
-
+        public override bool? CanCutTiles() => Projectile.frame is 8;
+        public override bool? CanHitNPC(NPC target) => Projectile.frame is 8 ? null : false;
         public float SwingSpeed;
         int directionLock = 0;
         private bool miss = false;
@@ -46,7 +45,7 @@ namespace Redemption.Items.Weapons.HM.Melee
         {
             Player player = Main.player[Projectile.owner];
             player.heldProj = Projectile.whoAmI;
-            Rectangle projHitbox = new((int)(Projectile.spriteDirection == -1 ? Projectile.Center.X - 96 : Projectile.Center.X), (int)(Projectile.Center.Y - 66), 96, 94);
+            Projectile.Redemption().swordHitbox = new((int)(Projectile.spriteDirection == -1 ? Projectile.Center.X - 96 : Projectile.Center.X), (int)(Projectile.Center.Y - 66), 96, 94);
 
             SwingSpeed = SetSwingSpeed(52);
 
@@ -95,13 +94,14 @@ namespace Redemption.Items.Weapons.HM.Melee
                     }
                     if (Projectile.frame >= 8 && Projectile.frame <= 10 && SlamOrigin == Vector2.Zero)
                     {
+                        tilePosY = BaseWorldGen.GetFirstTileFloor((int)(player.Center.X / 16), (int)(player.Center.Y / 16));
+                        dist = MathHelper.Clamp(dist, 0, 500);
                         player.velocity.Y = 20;
                         player.position.Y += dist / 10;
-                        dist = MathHelper.Clamp(dist, 0, 500);
                         if (player.position.Y >= tilePosY * 16 - 32)
                             player.position.Y = tilePosY * 16 - 32;
-                        Point tileBelow = new Vector2(projHitbox.Center.X + (30 * Projectile.spriteDirection), projHitbox.Bottom).ToTileCoordinates();
-                        Point tileBelow2 = new Vector2(projHitbox.Center.X + (16 * Projectile.spriteDirection), projHitbox.Bottom).ToTileCoordinates();
+                        Point tileBelow = new Vector2(Projectile.Redemption().swordHitbox.Center.X + (30 * Projectile.spriteDirection), Projectile.Redemption().swordHitbox.Bottom).ToTileCoordinates();
+                        Point tileBelow2 = new Vector2(Projectile.Redemption().swordHitbox.Center.X + (16 * Projectile.spriteDirection), Projectile.Redemption().swordHitbox.Bottom).ToTileCoordinates();
                         Tile tile = Framing.GetTileSafely(tileBelow.X, tileBelow.Y);
                         Tile tile2 = Framing.GetTileSafely(tileBelow2.X, tileBelow2.Y);
                         if ((tile is { HasUnactuatedTile: true } && Main.tileSolid[tile.TileType]) || (tile2 is { HasUnactuatedTile: true } && Main.tileSolid[tile2.TileType]))
@@ -156,7 +156,10 @@ namespace Redemption.Items.Weapons.HM.Melee
             player.itemTime = 2;
             player.itemAnimation = 2;
         }
-
+        public override void ModifyDamageHitbox(ref Rectangle hitbox)
+        {
+            hitbox = Projectile.Redemption().swordHitbox;
+        }
         public override bool PreDraw(ref Color lightColor)
         {
             Player player = Main.player[Projectile.owner];
@@ -180,12 +183,6 @@ namespace Redemption.Items.Weapons.HM.Melee
             if (Projectile.frame >= 2 && Projectile.frame <= 12 && !player.channel)
                 Main.EntitySpriteDraw(slash, Projectile.Center - Main.screenPosition + new Vector2(38 * player.direction, 471 - offset) + Vector2.UnitY * Projectile.gfxOffY, new Rectangle?(rect2), Projectile.GetAlpha(Color.White), Projectile.rotation, drawOrigin2, Projectile.scale, effects, 0);
             return false;
-        }
-
-        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
-        {
-            projHitbox = new((int)(Projectile.spriteDirection == -1 ? Projectile.Center.X - 96 : Projectile.Center.X), (int)(Projectile.Center.Y - 66), 96, 94);
-            return Projectile.frame is 8 && projHitbox.Intersects(targetHitbox);
         }
     }
 }

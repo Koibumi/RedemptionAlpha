@@ -1,7 +1,5 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Redemption.Base;
-using Redemption.Globals;
 using System;
 using Terraria;
 using Terraria.GameContent;
@@ -15,9 +13,11 @@ namespace Redemption.Items.Donator.Megaswave
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Miniswave");
+            // DisplayName.SetDefault("Miniswave");
             Main.projFrames[Projectile.type] = 15;
             Main.projPet[Projectile.type] = true;
+            ProjectileID.Sets.CharacterPreviewAnimations[Projectile.type] = ProjectileID.Sets.SimpleLoop(1, 8, 5)
+                .WithOffset(2, 0).WithSpriteDirection(-1);
         }
 
         public override void SetDefaults()

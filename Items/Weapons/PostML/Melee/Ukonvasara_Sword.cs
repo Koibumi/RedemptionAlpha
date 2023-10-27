@@ -7,12 +7,8 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Redemption.Globals;
 using Redemption.Projectiles.Melee;
-using Redemption.Buffs.NPCBuffs;
 using Redemption.BaseExtension;
-using System.Reflection;
-using Redemption.Projectiles.Magic;
 using Redemption.Base;
-using Redemption.Items.Weapons.HM.Melee;
 
 namespace Redemption.Items.Weapons.PostML.Melee
 {
@@ -21,9 +17,11 @@ namespace Redemption.Items.Weapons.PostML.Melee
         public float[] oldrot = new float[6];
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Ukonvasara");
+            // DisplayName.SetDefault("Ukonvasara");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 6;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjEarth[Type] = true;
+            ElementID.ProjThunder[Type] = true;
         }
         public override bool ShouldUpdatePosition() => false;
         public override void SetSafeDefaults()
@@ -38,8 +36,10 @@ namespace Redemption.Items.Weapons.PostML.Melee
             Projectile.usesLocalNPCImmunity = true;
             Projectile.extraUpdates = 1;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            RedeProjectile.Decapitation(target, ref damageDone, ref hit.Crit);
+
             Projectile.localNPCImmunity[target.whoAmI] = 8;
             target.immune[Projectile.owner] = 0;
         }
@@ -50,12 +50,9 @@ namespace Redemption.Items.Weapons.PostML.Melee
         public float Timer;
         private float speed;
         private float SwingSpeed;
+        private Vector2 mouseOrig;
         public override void AI()
         {
-            for (int k = Projectile.oldPos.Length - 1; k > 0; k--)
-                oldrot[k] = oldrot[k - 1];
-            oldrot[0] = Projectile.rotation;
-
             Player player = Main.player[Projectile.owner];
             if (player.noItems || player.CCed || player.dead || !player.active)
                 Projectile.Kill();
@@ -77,10 +74,17 @@ namespace Redemption.Items.Weapons.PostML.Melee
                         player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, (player.Center - Projectile.Center).ToRotation() + MathHelper.PiOver2);
                         if (Timer++ == 0)
                         {
+                            mouseOrig = Main.MouseWorld;
                             SoundEngine.PlaySound(SoundID.Item71, player.position);
                             SoundEngine.PlaySound(CustomSounds.ElectricSlash, player.position);
                             startVector = RedeHelper.PolarVector(1, Projectile.velocity.ToRotation() - (MathHelper.PiOver2 * Projectile.spriteDirection));
                             speed = MathHelper.ToRadians(Main.rand.Next(2, 4));
+                        }
+                        if (Timer == (int)(4 * SwingSpeed))
+                        {
+                            Projectile.NewProjectile(Projectile.GetSource_FromAI(), player.Center,
+                                RedeHelper.PolarVector(17, (mouseOrig - player.Center).ToRotation()),
+                                ModContent.ProjectileType<UkonvasaraSword_Wave>(), 0, 0, Projectile.owner);
                         }
                         if (Timer < 5 * SwingSpeed)
                         {
@@ -110,6 +114,7 @@ namespace Redemption.Items.Weapons.PostML.Melee
                             Projectile.alpha = 255;
                             SoundEngine.PlaySound(SoundID.Item71, Projectile.position);
                             SoundEngine.PlaySound(CustomSounds.ElectricSlash, player.position);
+                            mouseOrig = Main.MouseWorld;
                             Projectile.ai[0]++;
                             Timer = 0;
                             Projectile.netUpdate = true;
@@ -117,6 +122,12 @@ namespace Redemption.Items.Weapons.PostML.Melee
                         break;
                     case 1:
                         player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, (player.Center - Projectile.Center).ToRotation() + MathHelper.PiOver2);
+                        if (Timer == (int)(4 * SwingSpeed))
+                        {
+                            Projectile.NewProjectile(Projectile.GetSource_FromAI(), player.Center,
+                                RedeHelper.PolarVector(17, (mouseOrig - player.Center).ToRotation()),
+                                ModContent.ProjectileType<UkonvasaraSword_Wave>(), 0, 0, Projectile.owner, 1);
+                        }
                         if (Timer++ < 5 * SwingSpeed)
                         {
                             Rot -= speed / SwingSpeed * Projectile.spriteDirection;
@@ -145,6 +156,7 @@ namespace Redemption.Items.Weapons.PostML.Melee
                             Projectile.alpha = 255;
                             SoundEngine.PlaySound(SoundID.Item71, Projectile.position);
                             SoundEngine.PlaySound(CustomSounds.ElectricSlash, player.position);
+                            mouseOrig = Main.MouseWorld;
                             Projectile.ai[0]++;
                             Timer = 0;
                             Projectile.netUpdate = true;
@@ -152,6 +164,12 @@ namespace Redemption.Items.Weapons.PostML.Melee
                         break;
                     case 2:
                         player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, (player.Center - Projectile.Center).ToRotation() + MathHelper.PiOver2);
+                        if (Timer == (int)(3 * SwingSpeed))
+                        {
+                            Projectile.NewProjectile(Projectile.GetSource_FromAI(), player.Center,
+                                RedeHelper.PolarVector(17, (mouseOrig - player.Center).ToRotation()),
+                                ModContent.ProjectileType<UkonvasaraSword_Wave>(), 0, 0, Projectile.owner);
+                        }
                         if (Timer++ < 4 * SwingSpeed)
                         {
                             Rot += speed / SwingSpeed * Projectile.spriteDirection;
@@ -183,15 +201,14 @@ namespace Redemption.Items.Weapons.PostML.Melee
             }
             if (Timer > 1)
                 Projectile.alpha = 0;
+            for (int k = Projectile.oldPos.Length - 1; k > 0; k--)
+                oldrot[k] = oldrot[k - 1];
+            oldrot[0] = Projectile.rotation;
         }
 
         public override bool? CanHitNPC(NPC target)
         {
             return Timer <= 8 || (Timer <= 14 && Projectile.ai[0] == 2) ? null : false;
-        }
-        public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
-        {
-            RedeProjectile.Decapitation(target, ref damage, ref crit);
         }
         private float drawTimer;
         public override bool PreDraw(ref Color lightColor)
@@ -220,9 +237,11 @@ namespace Redemption.Items.Weapons.PostML.Melee
         public override string Texture => "Redemption/Items/Weapons/PostML/Melee/Ukonvasara_Sword";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Ukonvasara");
+            // DisplayName.SetDefault("Ukonvasara");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 8;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjEarth[Type] = true;
+            ElementID.ProjThunder[Type] = true;
         }
         public float[] oldrot = new float[8];
         public override void SetDefaults()
@@ -237,9 +256,10 @@ namespace Redemption.Items.Weapons.PostML.Melee
             Projectile.extraUpdates = 1;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.tileCollide = false;
+            Projectile.Redemption().TechnicallyMelee = true;
         }
         private bool boomed;
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Projectile.localNPCImmunity[target.whoAmI] = 7;
             target.immune[Projectile.owner] = 0;
@@ -266,7 +286,7 @@ namespace Redemption.Items.Weapons.PostML.Melee
         {
             Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
             if (boomed)
-                texture = ModContent.Request<Texture2D>("Redemption/Items/Weapons/PostML/Melee/Ukonvasara_Proj").Value;
+                texture = ModContent.Request<Texture2D>("Redemption/Items/Weapons/PostML/Melee/Ukonvasara").Value;
             Vector2 drawOrigin = new(texture.Width / 2, texture.Height / 2);
             SpriteEffects effects = Projectile.spriteDirection == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
@@ -295,13 +315,17 @@ namespace Redemption.Items.Weapons.PostML.Melee
                     Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center, RedeHelper.SpreadUp(13), ModContent.ProjectileType<Ukonvasara_Fragments>(), Projectile.damage, 1, Main.myPlayer);
                 }
             }
-            SoundEngine.PlaySound(CustomSounds.EarthBoom, Projectile.position);
+            SoundEngine.PlaySound(CustomSounds.EarthBoom with { Volume = .4f }, Projectile.position);
             SoundEngine.PlaySound(SoundID.DD2_MonkStaffGroundImpact, Projectile.position);
             for (int i = 0; i < 20; i++)
                 Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.Stone,
                     -Projectile.velocity.X * 0.3f, -Projectile.velocity.Y * 0.3f);
 
             boomed = true;
+        }
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+        {
+            modifiers.FinalDamage *= 1.15f;
         }
         public override bool OnTileCollide(Vector2 velocityChange)
         {

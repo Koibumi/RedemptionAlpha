@@ -3,11 +3,12 @@ using Microsoft.Xna.Framework.Graphics;
 using Redemption.Biomes;
 using Redemption.Buffs.Debuffs;
 using Redemption.Globals;
+using Redemption.Globals.NPC;
 using System.Collections.Generic;
 using Terraria;
-using Terraria.DataStructures;
 using Terraria.GameContent.Bestiary;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.NPCs.Lab.Blisterface
@@ -20,16 +21,7 @@ namespace Redemption.NPCs.Lab.Blisterface
             Main.npcFrameCount[NPC.type] = 6;
             NPCID.Sets.DontDoHardmodeScaling[Type] = true;
             NPCID.Sets.CantTakeLunchMoney[Type] = true;
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Poisoned,
-                    ModContent.BuffType<BileDebuff>(),
-                    ModContent.BuffType<GreenRashesDebuff>(),
-                    ModContent.BuffType<GlowingPustulesDebuff>(),
-                    ModContent.BuffType<FleshCrystalsDebuff>()
-                }
-            });
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Infected);
             if (NPC.type == ModContent.NPCType<BlisteredFish>())
             {
                 NPCID.Sets.BossBestiaryPriority.Add(Type);
@@ -57,7 +49,7 @@ namespace Redemption.NPCs.Lab.Blisterface
             AIType = NPCID.Piranha;
             SpawnModBiomes = new int[1] { ModContent.GetInstance<LabBiome>().Type };
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -75,7 +67,7 @@ namespace Redemption.NPCs.Lab.Blisterface
             bestiaryEntry.UIInfoProvider = new CommonEnemyUICollectionInfoProvider(ContentSamples.NpcBestiaryCreditIdsByNpcNetIds[associatedNPCType], quickUnlock: true);
 
             bestiaryEntry.Info.AddRange(new List<IBestiaryInfoElement> {
-                new FlavorTextBestiaryInfoElement("An unfortunate fish, disfigured and mutilated beyond recognition by the Xenomite Infection. This strain's teeth are crystallized.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.BlisteredFish"))
             });
         }
         public override void FindFrame(int frameHeight)
@@ -89,7 +81,7 @@ namespace Redemption.NPCs.Lab.Blisterface
                     NPC.frame.Y = 0;
             }
         }
-        public override void ModifyHitPlayer(Player target, ref int damage, ref bool crit)
+        public override void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers)
         {
             if (Main.rand.NextBool(2) || Main.expertMode)
                 target.AddBuff(ModContent.BuffType<GreenRashesDebuff>(), Main.rand.Next(200, 600));
@@ -101,7 +93,7 @@ namespace Redemption.NPCs.Lab.Blisterface
         public override void SetStaticDefaults()
         {
             base.SetStaticDefaults();
-            DisplayName.SetDefault("Blistered Fish");
+            // DisplayName.SetDefault("Blistered Fish");
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0) { Hide = true };
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
         }
@@ -143,7 +135,7 @@ namespace Redemption.NPCs.Lab.Blisterface
         }
         public override void PostDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
-            Texture2D glow = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Glow").Value;
+            Texture2D glow = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
             var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             Color colour = Color.Lerp(Color.White, Color.White, 1f / GlowTimer * 10f) * (1f / GlowTimer * 10f);
             if (GlowActive)

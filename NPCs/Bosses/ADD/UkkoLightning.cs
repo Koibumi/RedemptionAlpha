@@ -7,6 +7,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.Utilities;
 using Terraria.GameContent;
+using Redemption.Globals;
 
 namespace Redemption.NPCs.Bosses.ADD
 {
@@ -15,9 +16,10 @@ namespace Redemption.NPCs.Bosses.ADD
         public override string Texture => "Terraria/Images/Projectile_466";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Lightning Arc");
+            // DisplayName.SetDefault("Lightning Arc");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 10;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 1;
+            ElementID.ProjThunder[Type] = true;
         }
 
         float colorlerp;
@@ -153,7 +155,7 @@ namespace Redemption.NPCs.Bosses.ADD
             return false;
         }
 
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             float num2 = (float)(Projectile.rotation + MathHelper.PiOver2 + (Main.rand.NextBool(2) ? -1.0 : 1.0) * MathHelper.PiOver2);
             float num3 = (float)(Main.rand.NextDouble() * 2.0 + 2.0);
@@ -166,7 +168,7 @@ namespace Redemption.NPCs.Bosses.ADD
             }
         }
 
-        public override void OnHitPlayer(Player target, int damage, bool crit)
+        public override void OnHitPlayer(Player target, Player.HurtInfo info)
         {
             if (Main.rand.NextBool(2))
                 target.AddBuff(BuffID.Electrified, target.HasBuff(BuffID.Wet) ? 320 : 160);

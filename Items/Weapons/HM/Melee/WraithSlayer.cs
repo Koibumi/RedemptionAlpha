@@ -3,6 +3,7 @@ using Redemption.Items.Materials.PreHM;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.Items.Weapons.HM.Melee
@@ -11,12 +12,12 @@ namespace Redemption.Items.Weapons.HM.Melee
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Slaying enemies has a chance to summon Cursed Samurai in their place\n" +
+            /* Tooltip.SetDefault("Slaying enemies has a chance to summon Cursed Samurai in their place\n" +
                 "Cursed Samurai will act as temporary minions to aid you\n" +
-                "Deals more damage to ghostly enemies");
+                "Deals more damage to ghostly enemies"); */
 
             ItemID.Sets.SkipsInitialUseSound[Item.type] = true;
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -61,10 +62,7 @@ namespace Redemption.Items.Weapons.HM.Melee
         {
             if (Main.keyState.PressingShift())
             {
-                TooltipLine line = new(Mod, "Lore",
-                    "'An old sword found in a mansion of Northern Ithon. Said to be possessed by its creator's spirit.\n" +
-                    "It is told that a man had once bought the blade, driving him to madness while in his possession,\n" +
-                    "and ending with him slaughtering his family.'")
+                TooltipLine line = new(Mod, "Lore", Language.GetTextValue("Mods.Redemption.Items.WraithSlayer.Lore"))
                 {
                     OverrideColor = Color.LightGray
                 };
@@ -72,15 +70,15 @@ namespace Redemption.Items.Weapons.HM.Melee
             }
             else
             {
-                TooltipLine line = new(Mod, "HoldShift", "Hold [Shift] to view lore")
+                TooltipLine line = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.SpecialTooltips.Viewer"))
                 {
                     OverrideColor = Color.Gray,
                 };
                 tooltips.Add(line);
             }
 
-            TooltipLine axeLine = new(Mod, "SharpBonus", "Slash Bonus: Small chance to decapitate skeletons, killing them instantly") { OverrideColor = Colors.RarityOrange };
-            tooltips.Add(axeLine);
+            TooltipLine slashLine = new(Mod, "SharpBonus", Language.GetTextValue("Mods.Redemption.GenericTooltips.Bonuses.SlashBonus")) { OverrideColor = Colors.RarityOrange };
+            tooltips.Add(slashLine);
         }
     }
 }

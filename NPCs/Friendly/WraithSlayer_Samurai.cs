@@ -7,7 +7,6 @@ using ReLogic.Content;
 using System;
 using Terraria;
 using Terraria.Audio;
-using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -37,17 +36,13 @@ namespace Redemption.NPCs.Friendly
         public ref float TimerRand => ref NPC.ai[2];
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Cursed Samurai");
+            // DisplayName.SetDefault("Cursed Samurai");
             Main.npcFrameCount[NPC.type] = 15;
             NPCID.Sets.TrailCacheLength[NPC.type] = 4;
             NPCID.Sets.TrailingMode[NPC.type] = 1;
             NPCID.Sets.CantTakeLunchMoney[NPC.type] = true;
             NPCID.Sets.DontDoHardmodeScaling[NPC.type] = true;
-
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                ImmuneToAllBuffsThatAreNotWhips = true
-            });
+            NPCID.Sets.ImmuneToRegularBuffs[Type] = true;
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0) { Hide = true };
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
@@ -70,7 +65,7 @@ namespace Redemption.NPCs.Friendly
             NPC.alpha = 255;
             NPC.RedemptionGuard().GuardPoints = 300;
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -94,24 +89,20 @@ namespace Redemption.NPCs.Friendly
             }
         }
 
-        public override bool StrikeNPC(ref double damage, int defense, ref float knockback, int hitDirection, ref bool crit)
+        public override void ModifyIncomingHit(ref NPC.HitModifiers modifiers)
         {
-            bool vDmg = false;
             if (NPC.RedemptionGuard().GuardPoints >= 0)
             {
-                NPC.RedemptionGuard().GuardHit(NPC, ref vDmg, ref damage, ref knockback, SoundID.NPCHit4);
-                if (Main.netMode == NetmodeID.MultiplayerClient)
-                    NetMessage.SendData(MessageID.DamageNPC, -1, -1, null, NPC.whoAmI, (float)damage, knockback, hitDirection, 0, 0, 0);
-                if (NPC.RedemptionGuard().GuardPoints >= 0)
-                    return vDmg;
+                modifiers.DisableCrit();
+                modifiers.ModifyHitInfo += (ref NPC.HitInfo n) => NPC.RedemptionGuard().GuardHit(ref n, NPC, SoundID.NPCHit4, .25f, false, DustID.Wraith, default, 10, 1, 150);
             }
-            NPC.RedemptionGuard().GuardBreakCheck(NPC, DustID.Wraith, CustomSounds.GuardBreak, 10, 1, 150);
-            return true;
         }
         private Vector2 moveTo;
         private int runCooldown;
         public override void AI()
         {
+            CustomFrames(86);
+
             Player player = Main.player[(int)NPC.ai[3]];
             RedeNPC globalNPC = NPC.Redemption();
             NPC.TargetClosest();
@@ -159,7 +150,7 @@ namespace Redemption.NPCs.Friendly
                     break;
 
                 case ActionState.Alert:
-                    if (NPC.ThreatenedCheck(ref runCooldown, 180))
+                    if (NPC.ThreatenedCheck(ref runCooldown, 180, 4))
                     {
                         runCooldown = 0;
                         AIState = ActionState.Idle;
@@ -169,7 +160,7 @@ namespace Redemption.NPCs.Friendly
                         runCooldown++;
                     else if (runCooldown > 0)
                         runCooldown--;
-                    moveTo = globalNPC.attacker.Center + new Vector2(NPC.Center.X > globalNPC.attacker.Center.X ? 80 : -80, -20);
+                    moveTo = globalNPC.attacker.Center + new Vector2(NPC.RightOfDir(globalNPC.attacker) * 80, -20);
                     NPC.Move(moveTo, 16, 10);
                     if (NPC.DistanceSQ(moveTo) < 20 * 20)
                     {
@@ -187,10 +178,7 @@ namespace Redemption.NPCs.Friendly
                     break;
             }
         }
-        private bool Flare;
-        private float FlareTimer;
-        private Vector2 floatOffset;
-        public override void FindFrame(int frameHeight)
+        private void CustomFrames(int frameHeight)
         {
             for (int k = NPC.oldPos.Length - 1; k > 0; k--)
                 oldrot[k] = oldrot[k - 1];
@@ -230,12 +218,12 @@ namespace Redemption.NPCs.Friendly
                         Main.LocalPlayer.RedemptionScreen().ScreenShakeOrigin = NPC.Center;
                         Main.LocalPlayer.RedemptionScreen().ScreenShakeIntensity += 5;
 
-                        NPC.Shoot(new Vector2(NPC.Center.X, NPC.Center.Y + 15), ModContent.ProjectileType<WraithSlayer_Slash>(), 0, new Vector2(20 * NPC.spriteDirection, 0), true, SoundID.Item71);
+                        NPC.Shoot(new Vector2(NPC.Center.X, NPC.Center.Y + 15), ModContent.ProjectileType<WraithSlayer_Slash>(), 0, new Vector2(20 * NPC.spriteDirection, 0), SoundID.Item71);
                         Rectangle SlashHitbox = new((int)(NPC.spriteDirection == -1 ? NPC.Center.X - 280 : NPC.Center.X - 18), (int)NPC.Center.Y, 280, 60);
                         for (int i = 0; i < Main.maxNPCs; i++)
                         {
                             NPC target = Main.npc[i];
-                            if (!target.active || !target.CanBeChasedBy() || target.whoAmI == NPC.whoAmI)
+                            if (!target.active || target.friendly || target.lifeMax <= 5 || target.type == Type || target.whoAmI == NPC.whoAmI)
                                 continue;
 
                             if (!target.Hitbox.Intersects(SlashHitbox))
@@ -260,6 +248,14 @@ namespace Redemption.NPCs.Friendly
                 floatOffset.Y += 0.05f;
             else
                 floatOffset.Y -= 0.05f;
+        }
+        private bool Flare;
+        private float FlareTimer;
+        private Vector2 floatOffset;
+        public override void FindFrame(int frameHeight)
+        {
+            if (AIState is ActionState.Slash)
+                return;
 
             NPC.rotation = NPC.velocity.X * 0.05f;
             if (NPC.frameCounter++ >= 5)
@@ -273,8 +269,8 @@ namespace Redemption.NPCs.Friendly
         public void SightCheck()
         {
             RedeNPC globalNPC = NPC.Redemption();
-            int gotNPC = RedeHelper.GetNearestNPC(NPC.Center);
-            if (gotNPC != -1 && NPC.Sight(Main.npc[gotNPC], 600, false, false) && !Main.npc[gotNPC].dontTakeDamage && !Main.npc[gotNPC].immortal)
+            int gotNPC = RedeHelper.GetNearestNPC(NPC.Center, canBeChasedBy: true);
+            if (gotNPC != -1 && NPC.Sight(Main.npc[gotNPC], 600, false, false))
             {
                 SoundEngine.PlaySound(SoundID.Zombie81, NPC.position);
                 globalNPC.attacker = Main.npc[gotNPC];
@@ -286,7 +282,7 @@ namespace Redemption.NPCs.Friendly
         {
             var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            spriteBatch.BeginAdditive();
 
             for (int i = 0; i < NPCID.Sets.TrailCacheLength[NPC.type]; i++)
             {
@@ -295,7 +291,7 @@ namespace Redemption.NPCs.Friendly
             }
 
             spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
 
             spriteBatch.Draw(TextureAssets.Npc[NPC.type].Value, NPC.Center + new Vector2(21 * NPC.spriteDirection, 0) + floatOffset - screenPos, NPC.frame, NPC.GetAlpha(drawColor), NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
             return false;
@@ -317,7 +313,7 @@ namespace Redemption.NPCs.Friendly
             }
         }
 
-        public override bool? CanHitNPC(NPC target) => false;
+        public override bool CanHitNPC(NPC target) => false;
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => false;
     }
     public class WraithSlayer_Slash : ModProjectile, ITrailProjectile
@@ -325,7 +321,7 @@ namespace Redemption.NPCs.Friendly
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Slash");
+            // DisplayName.SetDefault("Slash");
         }
         public override void SetDefaults()
         {

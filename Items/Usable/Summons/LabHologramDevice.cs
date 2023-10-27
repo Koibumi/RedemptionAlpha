@@ -17,8 +17,8 @@ namespace Redemption.Items.Usable.Summons
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Hologram Remote");
-            Tooltip.SetDefault("Use in an Abandoned Laboratory boss's arena to resummon it");
+            // DisplayName.SetDefault("Hologram Remote");
+            // Tooltip.SetDefault("Use in an Abandoned Laboratory boss's arena to resummon it");
             Main.RegisterItemAnimation(Item.type, new DrawAnimationVertical(5, 2));
         }
         public override void SetDefaults()
@@ -40,11 +40,6 @@ namespace Redemption.Items.Usable.Summons
         {
             return !NPC.AnyNPCs(ModContent.NPCType<JanitorBot>()) && !NPC.AnyNPCs(ModContent.NPCType<JanitorBot_Holo>()) && !NPC.AnyNPCs(ModContent.NPCType<JanitorBot_Defeated>()) && !NPC.AnyNPCs(ModContent.NPCType<IrradiatedBehemoth>()) && !NPC.AnyNPCs(ModContent.NPCType<IrradiatedBehemoth_Holo>()) && !NPC.AnyNPCs(ModContent.NPCType<Blisterface>()) && !NPC.AnyNPCs(ModContent.NPCType<Blisterface_Holo>()) && !NPC.AnyNPCs(ModContent.NPCType<MACEProject>()) && !NPC.AnyNPCs(ModContent.NPCType<MACEProject_Holo>()) && !NPC.AnyNPCs(ModContent.NPCType<PZ>()) && !NPC.AnyNPCs(ModContent.NPCType<PZ_Body_Holo>());
         }
-        private readonly Rectangle janitorRect = new((int)(RedeGen.LabVector.X + 145) * 16, (int)(RedeGen.LabVector.Y + 11) * 16, 47 * 16, 11 * 16);
-        private readonly Rectangle behemothRect = new((int)(RedeGen.LabVector.X + 201) * 16, (int)(RedeGen.LabVector.Y + 45) * 16, 25 * 16, 76 * 16);
-        private readonly Rectangle blisterfaceRect = new((int)(RedeGen.LabVector.X + 193) * 16, (int)(RedeGen.LabVector.Y + 163) * 16, 30 * 16, 20 * 16);
-        private readonly Rectangle maceRect = new((int)(RedeGen.LabVector.X + 43) * 16, (int)(RedeGen.LabVector.Y + 153) * 16, 61 * 16, 29 * 16);
-        private readonly Rectangle pzRect = new((int)(RedeGen.LabVector.X + 109) * 16, (int)(RedeGen.LabVector.Y + 170) * 16, 70 * 16, 42 * 16);
         public override bool? UseItem(Player player)
         {
             Rectangle janitorRect = new((int)(RedeGen.LabVector.X + 145) * 16, (int)(RedeGen.LabVector.Y + 11) * 16, 47 * 16, 11 * 16);
@@ -74,7 +69,7 @@ namespace Redemption.Items.Usable.Summons
             if (Main.netMode != NetmodeID.MultiplayerClient)
                 NPC.SpawnOnPlayer(player.whoAmI, type);
             else
-                NetMessage.SendData(MessageID.SpawnBoss, number: player.whoAmI, number2: type);
+                NetMessage.SendData(MessageID.SpawnBossUseLicenseStartEvent, number: player.whoAmI, number2: type);
             return true;
         }
     }

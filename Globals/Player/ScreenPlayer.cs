@@ -1,6 +1,14 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Redemption.BaseExtension;
 using Redemption.Globals;
 using Redemption.NPCs.Bosses.ADD;
+using Redemption.NPCs.Bosses.Neb;
+using Redemption.NPCs.Bosses.Neb.Clone;
+using Redemption.NPCs.Bosses.Neb.Phase2;
+using Redemption.WorldGeneration.Misc;
+using ReLogic.Content;
+using SubworldLibrary;
 using System;
 using Terraria;
 using Terraria.DataStructures;
@@ -29,6 +37,8 @@ namespace Redemption
         public float yeet2;
         public override void PostUpdate()
         {
+            if (RedeConfigClient.Instance.CameraLockDisable)
+                cutscene = false;
             if (cutscene)
             {
                 cutsceneEnd = true;
@@ -42,11 +52,11 @@ namespace Redemption
             }
             if (lockScreen)
             {
-                if (interpolantTimer < 100) interpolantTimer += 2;
+                if (interpolantTimer < 100) interpolantTimer += 1;
             }
             else
             {
-                if (interpolantTimer > 0) interpolantTimer -= 2;
+                if (interpolantTimer > 0) interpolantTimer -= 1;
             }
             ScreenFocusInterpolant = Utils.GetLerpValue(15f, 80f, interpolantTimer, true);
             lockScreen = false;
@@ -58,23 +68,40 @@ namespace Redemption
             }
             cutscene = false;
             customZoom = 0;
+            if (SubworldSystem.IsActive<CSub>())
+                customZoom = 2f;
         }
         public override void UpdateEquips()
         {
-            if (cutscene)
+            if (cutscene && !RedeConfigClient.Instance.CameraLockDisable)
+            {
+                for (int p = 0; p < Main.maxNPCs; p++)
+                {
+                    NPC target = Main.npc[p];
+                    if (!target.active || target.boss || target.friendly || target.knockBackResist <= 0)
+                        continue;
+
+                    if (Player.DistanceSQ(target.Center) >= 500 * 500)
+                        continue;
+
+                    target.velocity -= RedeHelper.PolarVector(0.3f, (Player.Center - target.Center).ToRotation());
+                }
                 Player.wingTime = Player.wingTimeMax;
+            }
         }
-        public override bool PreHurt(bool pvp, bool quiet, ref int damage, ref int hitDirection, ref bool crit, ref bool customDamage, ref bool playSound, ref bool genGore, ref PlayerDeathReason damageSource, ref int cooldownCounter)
+        public override bool ImmuneTo(PlayerDeathReason damageSource, int cooldownCounter, bool dodgeable)
         {
-            return !cutsceneEnd;
+            return cutsceneEnd;
         }
         public override bool CanUseItem(Item item)
         {
-            return !cutscene;
+            if (cutscene && item.damage > 0 && !RedeConfigClient.Instance.CameraLockDisable)
+                return false;
+            return base.CanUseItem(item);
         }
         public override bool PreKill(double damage, int hitDirection, bool pvp, ref bool playSound, ref bool genGore, ref PlayerDeathReason damageSource)
         {
-            if (cutscene)
+            if (cutscene && !RedeConfigClient.Instance.CameraLockDisable)
             {
                 Player.statLife = 1;
                 return false;
@@ -85,6 +112,8 @@ namespace Redemption
         {
             lockScreen = false;
             rumbleDuration = 0;
+            NebCutsceneflag = false;
+            NebCutscene = false;
         }
         /// <summary>
         /// Shakes the screen.
@@ -143,13 +172,55 @@ namespace Redemption
                 }
             }
         }
+        public enum CutscenePriority : byte
+        {
+            None,
+            Low,
+            Medium,
+            High,
+            Max
+        }
+        public static CutscenePriority CurrentCutscenePriority;
+        public static void CutsceneLock(Player player, Entity focus, CutscenePriority priority, int cutsceneRange = 600, int focusRange = 1200, int vignetteRange = 600)
+        {
+            CutsceneLock(player, focus.Center, priority, cutsceneRange, focusRange, vignetteRange);
+        }
+        public static void CutsceneLock(Player player, Vector2 focus, CutscenePriority priority, int cutsceneRange = 600, int focusRange = 1200, int vignetteRange = 600, bool reverse = false, bool noLockMoveRadius = false)
+        {
+            if (RedeConfigClient.Instance.CameraLockDisable)
+                return;
+            CurrentCutscenePriority = priority;
+            if (cutsceneRange == 0 || focus.DistanceSQ(player.Center) <= cutsceneRange * cutsceneRange)
+            {
+                if (priority >= CutscenePriority.High)
+                {
+                    player.RedemptionScreen().ScreenFocusPosition = focus;
+                    if (!noLockMoveRadius)
+                        NPCHelper.LockMoveRadius(focus, player);
+                }
+                else
+                {
+                    if (reverse)
+                        player.RedemptionScreen().ScreenFocusPosition = Vector2.Lerp(player.Center, focus, player.DistanceSQ(focus) / (focusRange * focusRange));
+                    else
+                        player.RedemptionScreen().ScreenFocusPosition = Vector2.Lerp(focus, player.Center, player.DistanceSQ(focus) / (focusRange * focusRange));
+                }
+                player.RedemptionScreen().lockScreen = true;
+                if (priority >= CutscenePriority.Low)
+                    player.RedemptionScreen().cutscene = true;
+                if (vignetteRange is 0 || player.RedemptionAbility().SpiritwalkerActive)
+                    return;
+                Terraria.Graphics.Effects.Filters.Scene["MoR:FogOverlay"]?.GetShader().UseOpacity(MathHelper.Lerp(1, 0, player.DistanceSQ(focus) / (vignetteRange * vignetteRange))).UseIntensity(1f).UseColor(Color.Black).UseImage(ModContent.Request<Texture2D>("Redemption/Effects/Vignette", AssetRequestMode.ImmediateLoad).Value);
+                player.ManageSpecialBiomeVisuals("MoR:FogOverlay", true);
+            }
+        }
         public override void ModifyScreenPosition()
         {
             ADDScreenLock();
             if (ScreenFocusInterpolant > 0f && !RedeConfigClient.Instance.CameraLockDisable)
             {
                 Vector2 idealScreenPosition = ScreenFocusPosition - new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f;
-                Main.screenPosition = Vector2.Lerp(Main.screenPosition, idealScreenPosition, ScreenFocusInterpolant);
+                Main.screenPosition = Vector2.Lerp(Main.screenPosition, idealScreenPosition, lockScreen ? EaseFunction.EaseCubicOut.Ease(ScreenFocusInterpolant) : EaseFunction.EaseCubicIn.Ease(ScreenFocusInterpolant));
             }
             Redemption.Instance.cameraOffset *= 0.9f;
             Main.screenPosition += Redemption.Instance.cameraOffset;
@@ -175,6 +246,14 @@ namespace Redemption
             }
             ScreenShakeIntensity = MathHelper.Clamp(ScreenShakeIntensity, 0, 200);
 
+            if (Player.dead || !Player.active || (!NPC.AnyNPCs(ModContent.NPCType<Nebuleus>()) && !NPC.AnyNPCs(ModContent.NPCType<Nebuleus2>()) && !NPC.AnyNPCs(ModContent.NPCType<Nebuleus_Clone>()) && !NPC.AnyNPCs(ModContent.NPCType<Nebuleus2_Clone>())))
+            {
+                NebCutscene = false;
+                NebCutsceneflag = false;
+                yeet2 = 0;
+                yeet = 0;
+                return;
+            }
             if (NebCutscene)
             {
                 if (!NebCutsceneflag)

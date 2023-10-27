@@ -1,5 +1,5 @@
 using Microsoft.Xna.Framework;
-using Redemption.Globals;
+using SubworldLibrary;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -14,14 +14,12 @@ namespace Redemption.Biomes
         public override SceneEffectPriority Priority => SceneEffectPriority.Environment;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Blazing Bastion");
-        }
-        public override void OnInBiome(Player player)
-        {
-            BastionArea.Active = true;
+            // DisplayName.SetDefault("Blazing Bastion");
         }
         public override bool IsBiomeActive(Player player)
         {
+            if (SubworldSystem.Current != null)
+                return false;
             return player.ZoneUnderworldHeight && player.Center.X > (Main.maxTilesX - 350) * 16;
         }
     }

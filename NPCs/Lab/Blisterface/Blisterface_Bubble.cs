@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Redemption.Buffs.Debuffs;
 using Redemption.Globals;
 using Terraria;
 using Terraria.Audio;
@@ -13,7 +14,9 @@ namespace Redemption.NPCs.Lab.Blisterface
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Toxic Bubble");
+            // DisplayName.SetDefault("Toxic Bubble");
+            ElementID.ProjWater[Type] = true;
+            ElementID.ProjPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -28,7 +31,7 @@ namespace Redemption.NPCs.Lab.Blisterface
             Projectile.ignoreWater = true;
             Projectile.timeLeft = 180;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(SoundID.Item54, Projectile.position);
             for (int i = 0; i < 10; i++)
@@ -73,8 +76,9 @@ namespace Redemption.NPCs.Lab.Blisterface
                     Projectile.tileCollide = true;
             }
         }
-        public override void OnHitPlayer(Player target, int damage, bool crit)
+        public override void OnHitPlayer(Player target, Player.HurtInfo info)
         {
+            target.AddBuff(ModContent.BuffType<BileDebuff>(), 180);
             Projectile.Kill();
         }
         public override bool PreDraw(ref Color lightColor)

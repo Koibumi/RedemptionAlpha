@@ -1,6 +1,5 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System.IO;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.GameContent;
@@ -12,7 +11,8 @@ namespace Redemption.Projectiles.Magic
     {
         public override void SetSafeStaticDefaults()
         {
-            DisplayName.SetDefault("Xenium Ray");
+            // DisplayName.SetDefault("Xenium Ray");
+            ElementID.ProjPoison[Type] = true;
         }
         public override void SetSafeDefaults()
         {

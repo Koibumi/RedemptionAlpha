@@ -17,7 +17,11 @@ namespace Redemption.Items.Weapons.PostML.Ranged
         public override string Texture => "Redemption/Items/Weapons/PostML/Ranged/Electronade";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Electonade");
+            // DisplayName.SetDefault("Electonade");
+            Main.projFrames[Projectile.type] = 11;
+            ElementID.ProjThunder[Type] = true;
+            ElementID.ProjExplosive[Type] = true;
+
         }
         public override void SetDefaults()
         {
@@ -32,11 +36,17 @@ namespace Redemption.Items.Weapons.PostML.Ranged
         }
         public override void AI()
         {
+            if (++Projectile.frameCounter >= 3)
+            {
+                Projectile.frameCounter = 0;
+                if (++Projectile.frame >= 11)
+                    Projectile.frame = 0;
+            }
             Projectile.LookByVelocity();
             Projectile.rotation += Projectile.velocity.X / 20;
             Projectile.velocity.Y += 0.2f;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             if (!Main.dedServ)
                 SoundEngine.PlaySound(CustomSounds.ElectricNoise, Projectile.position);
@@ -71,14 +81,28 @@ namespace Redemption.Items.Weapons.PostML.Ranged
             Projectile.velocity.X *= 0.7f;
             return false;
         }
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
+            Texture2D glow = ModContent.Request<Texture2D>(Projectile.ModProjectile.Texture + "_Glow").Value;
+            int height = texture.Height / 11;
+            int y = height * Projectile.frame;
+            Rectangle rect = new(0, y, texture.Width, height);
+            Vector2 drawOrigin = new(texture.Width / 2, Projectile.height / 2);
+
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, new Rectangle?(rect), lightColor * Projectile.Opacity, Projectile.rotation, drawOrigin, Projectile.scale, 0, 0);
+            Main.EntitySpriteDraw(glow, Projectile.Center - Main.screenPosition, new Rectangle?(rect), Color.White * Projectile.Opacity, Projectile.rotation, drawOrigin, Projectile.scale, 0, 0);
+            return false;
+        }
     }
     public class Electronade_TeslaField : ModProjectile
     {
         public override string Texture => "Redemption/Textures/StaticBall";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Tesla Field");
+            // DisplayName.SetDefault("Tesla Field");
             Main.projFrames[Projectile.type] = 3;
+            ElementID.ProjThunder[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -104,14 +128,14 @@ namespace Redemption.Items.Weapons.PostML.Ranged
 
             if (Projectile.timeLeft > 30 && Main.rand.NextBool(10))
             {
-                DustHelper.DrawParticleElectricity(Projectile.Center, Projectile.Center + RedeHelper.PolarVector(90, Main.rand.NextFloat(0, MathHelper.TwoPi)), new LightningParticle(), 1, 20, 0.1f);
-                DustHelper.DrawParticleElectricity(Projectile.Center, Projectile.Center + RedeHelper.PolarVector(90, Main.rand.NextFloat(0, MathHelper.TwoPi)), new LightningParticle(), 1, 20, 0.1f);
+                DustHelper.DrawParticleElectricity<LightningParticle>(Projectile.Center, Projectile.Center + RedeHelper.PolarVector(90, RedeHelper.RandomRotation()), 1, 20, 0.1f);
+                DustHelper.DrawParticleElectricity<LightningParticle>(Projectile.Center, Projectile.Center + RedeHelper.PolarVector(90, RedeHelper.RandomRotation()), 1, 20, 0.1f);
             }
 
             if (Projectile.timeLeft <= 60)
                 Projectile.alpha += 5;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(ModContent.BuffType<ElectrifiedDebuff>(), 360);
         }

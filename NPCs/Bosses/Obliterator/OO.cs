@@ -7,14 +7,12 @@ using Redemption.Buffs.Debuffs;
 using System.Collections.Generic;
 using System.IO;
 using Terraria.DataStructures;
-using Redemption.Buffs.NPCBuffs;
 using Redemption.Biomes;
 using Terraria.GameContent.Bestiary;
 using Redemption.Globals;
 using Terraria.Audio;
 using Terraria.GameContent;
 using Redemption.BaseExtension;
-using Redemption.UI;
 using System;
 using Redemption.Dusts;
 using Redemption.NPCs.Bosses.Cleaver;
@@ -29,12 +27,51 @@ using Redemption.Items.Armor.Vanity;
 using Redemption.Items.Materials.PostML;
 using Redemption.Items.Weapons.PostML.Melee;
 using Redemption.Items.Accessories.PostML;
+using Redemption.UI.ChatUI;
+using Terraria.Localization;
+using Redemption.Globals.NPC;
+using Redemption.Textures;
 
 namespace Redemption.NPCs.Bosses.Obliterator
 {
     [AutoloadBossHead]
     public class OO : ModNPC
     {
+        private static Asset<Texture2D> glow;
+        private static Asset<Texture2D> armB;
+        private static Asset<Texture2D> armF;
+        private static Asset<Texture2D> armR;
+        private static Asset<Texture2D> hands;
+        private static Asset<Texture2D> head;
+        private static Asset<Texture2D> headGlow;
+        private static Asset<Texture2D> legs;
+        private static Asset<Texture2D> thruster;
+        public override void Load()
+        {
+            if (Main.dedServ)
+                return;
+            glow = ModContent.Request<Texture2D>(Texture + "_Glow");
+            armB = ModContent.Request<Texture2D>(Texture + "_Arm_Back");
+            armF = ModContent.Request<Texture2D>(Texture + "_Arm_Front");
+            armR = ModContent.Request<Texture2D>(Texture + "_Arm_Rockets");
+            hands = ModContent.Request<Texture2D>(Texture + "_Hands");
+            head = ModContent.Request<Texture2D>(Texture + "_Head");
+            headGlow = ModContent.Request<Texture2D>(Texture + "_Head_Glow");
+            legs = ModContent.Request<Texture2D>(Texture + "_Legs");
+            thruster = ModContent.Request<Texture2D>("Redemption/NPCs/Bosses/Gigapora/Gigapora_ThrusterBlue");
+        }
+        public override void Unload()
+        {
+            glow = null;
+            armB = null;
+            armF = null;
+            armR = null;
+            hands = null;
+            head = null;
+            headGlow = null;
+            legs = null;
+            thruster = null;
+        }
         public float[] oldrot = new float[5];
 
         public enum ActionState
@@ -58,7 +95,7 @@ namespace Redemption.NPCs.Bosses.Obliterator
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Omega Obliterator");
+            // DisplayName.SetDefault("Omega Obliterator");
             Main.npcFrameCount[NPC.type] = 6;
             NPCID.Sets.TrailCacheLength[NPC.type] = 5;
             NPCID.Sets.TrailingMode[NPC.type] = 1;
@@ -66,19 +103,8 @@ namespace Redemption.NPCs.Bosses.Obliterator
             NPCID.Sets.MPAllowedEnemies[Type] = true;
             NPCID.Sets.BossBestiaryPriority.Add(Type);
 
-            NPCDebuffImmunityData debuffData = new()
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Confused,
-                    BuffID.Poisoned,
-                    BuffID.Venom,
-                    ModContent.BuffType<InfestedDebuff>(),
-                    ModContent.BuffType<NecroticGougeDebuff>(),
-                    ModContent.BuffType<ViralityDebuff>(),
-                    ModContent.BuffType<DirtyWoundDebuff>()
-                }
-            };
-            NPCID.Sets.DebuffImmunitySets.Add(Type, debuffData);
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Inorganic);
+            NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Confused] = true;
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0)
             {
@@ -111,14 +137,18 @@ namespace Redemption.NPCs.Bosses.Obliterator
             if (!Main.dedServ)
                 Music = MusicLoader.GetMusicSlot(Mod, "Sounds/Music/BossOmega2");
             SpawnModBiomes = new int[2] { ModContent.GetInstance<LidenBiomeOmega>().Type, ModContent.GetInstance<LidenBiome>().Type };
+            NPC.GetGlobalNPC<ElementalNPC>().OverrideMultiplier[ElementID.Fire] *= 1.15f;
         }
+        private static Texture2D Bubble => CommonTextures.TextBubble_Omega.Value;
+        private static SoundStyle Voice => RedeBossDowned.downedOmega3 ? CustomSounds.Voice5 with { Pitch = -0.5f } : CustomSounds.Voice5;
+
         public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
         {
             bestiaryEntry.Info.AddRange(new List<IBestiaryInfoElement> {
-                new FlavorTextBestiaryInfoElement("An autonomous war machine mostly of Girus' own design with many integrated weapon systems, such as literal finger guns and an advanced heat dispersion system in the form of a giant beam, capable of obliterating anyone it engulfs - Also where Obliterator got its name from.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.OO"))
             });
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -159,7 +189,7 @@ namespace Redemption.NPCs.Bosses.Obliterator
         public override void ModifyNPCLoot(NPCLoot npcLoot)
         {
             npcLoot.Add(ItemDropRule.BossBag(ModContent.ItemType<OmegaOblitBag>()));
-            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<OmegaTrophy>(), 10));
+            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<OmegaObliteratorTrophy>(), 10));
 
             npcLoot.Add(ItemDropRule.MasterModeCommonDrop(ModContent.ItemType<OORelic>()));
 
@@ -167,51 +197,37 @@ namespace Redemption.NPCs.Bosses.Obliterator
 
             LeadingConditionRule notExpertRule = new(new Conditions.NotExpert());
 
-            notExpertRule.OnSuccess(ItemDropRule.Common(ModContent.ItemType<OOMask>(), 7));
+            notExpertRule.OnSuccess(ItemDropRule.NotScalingWithLuck(ModContent.ItemType<OOMask>(), 7));
 
             notExpertRule.OnSuccess(ItemDropRule.OneFromOptions(1, ModContent.ItemType<BlastBattery>(), ModContent.ItemType<OOFingergun>(), ModContent.ItemType<SunInThePalm>()));
             notExpertRule.OnSuccess(ItemDropRule.Common(ModContent.ItemType<CorruptedXenomite>(), 1, 16, 28));
             notExpertRule.OnSuccess(ItemDropRule.Common(ModContent.ItemType<OmegaPowerCell>(), 1, 4, 8));
             notExpertRule.OnSuccess(ItemDropRule.Common(ModContent.ItemType<RoboBrain>(), 1, 1, 2));
+            npcLoot.Add(notExpertRule);
         }
-        public override bool StrikeNPC(ref double damage, int defense, ref float knockback, int hitDirection, ref bool crit)
+        public override void ModifyIncomingHit(ref NPC.HitModifiers modifiers)
         {
-            damage *= 0.8;
-            return true;
+            modifiers.FinalDamage *= 0.8f;
         }
         public override void BossLoot(ref string name, ref int potionType)
         {
             potionType = ItemID.GreaterHealingPotion;
         }
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => NPC.velocity.Length() > 12;
-        public override void ScaleExpertStats(int numPlayers, float bossLifeScale)
+        public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment)
         {
-            NPC.lifeMax = (int)(NPC.lifeMax * 0.6f * bossLifeScale);
-            NPC.damage = (int)(NPC.damage * 0.6f);
-        }
-
-        public override bool CheckActive()
-        {
-            Player player = Main.player[NPC.target];
-            return !player.active || player.dead || (Main.dayTime && AIState is not ActionState.Overheat);
+            NPC.lifeMax = (int)(NPC.lifeMax * 0.6f * balance * bossAdjustment);
+            NPC.damage = (int)(NPC.damage * 0.75f);
         }
 
         public override void SendExtraAI(BinaryWriter writer)
         {
-            base.SendExtraAI(writer);
-            if (Main.netMode == NetmodeID.Server || Main.dedServ)
-            {
-                writer.Write(BeamAnimation);
-            }
+            writer.Write(BeamAnimation);
         }
 
         public override void ReceiveExtraAI(BinaryReader reader)
         {
-            base.ReceiveExtraAI(reader);
-            if (Main.netMode == NetmodeID.MultiplayerClient)
-            {
-                BeamAnimation = reader.ReadBoolean();
-            }
+            BeamAnimation = reader.ReadBoolean();
         }
         public override void OnSpawn(IEntitySource source)
         {
@@ -226,6 +242,8 @@ namespace Redemption.NPCs.Bosses.Obliterator
         public readonly Vector2 modifier = new(-19, -300);
 
         public bool BeamAnimation;
+        public bool OverheatOverlay;
+        public bool OverheatArmRaise;
 
         public List<int> AttackList = new() { 0, 1, 2, 3, 4, 5, 6, 7 };
         public List<int> CopyList = null;
@@ -253,12 +271,11 @@ namespace Redemption.NPCs.Bosses.Obliterator
             Player player = Main.player[NPC.target];
             if (NPC.target < 0 || NPC.target == 255 || player.dead || !player.active)
                 NPC.TargetClosest();
+
+            if (player.active && !player.dead && (!Main.dayTime || AIState is ActionState.Overheat))
+                NPC.DiscourageDespawn(120);
             DespawnHandler();
             Lighting.AddLight(NPC.Center, 0.7f, 0.4f, 0.4f);
-
-            SoundStyle voice = CustomSounds.Voice5;
-            if (RedeBossDowned.downedOmega3)
-                voice = CustomSounds.Voice5 with { Pitch = -0.5f };
 
             float RotFlip = NPC.spriteDirection == -1 ? 0 : MathHelper.Pi;
             int SpeedBoost = NPC.DistanceSQ(player.Center) >= 900 * 900 ? 10 : 0;
@@ -280,7 +297,7 @@ namespace Redemption.NPCs.Bosses.Obliterator
                         case 0:
                             if (!Main.dedServ)
                                 Music = MusicLoader.GetMusicSlot(Mod, "Sounds/Music/silence");
-
+                            Redemption.grooveTimer = 0;
                             ArmRot[0] = MathHelper.PiOver2 + (NPC.spriteDirection == -1 ? 0 : MathHelper.Pi);
                             NPC.LookAtEntity(player);
                             AITimer++;
@@ -304,8 +321,7 @@ namespace Redemption.NPCs.Bosses.Obliterator
                             if (AITimer++ >= 30)
                             {
                                 NPC.velocity *= 0f;
-                                player.RedemptionScreen().ScreenFocusPosition = NPC.Center;
-                                player.RedemptionScreen().lockScreen = true;
+                                ScreenPlayer.CutsceneLock(player, NPC, ScreenPlayer.CutscenePriority.None, 2400, 4800, 0);
                             }
                             if (AITimer == 120)
                             {
@@ -313,11 +329,15 @@ namespace Redemption.NPCs.Bosses.Obliterator
                                 ArmFrameY[0] = 1;
                                 HeadFrameY = 1;
 
-                                SoundEngine.PlaySound(CustomSounds.ObliteratorYo, NPC.position);
-                                Dialogue d1 = new(NPC, "Yo.", Colors.RarityRed, Color.DarkRed, CustomSounds.Voice1 with { Volume = 0 }, 3, 60, 0, false, modifier: modifier); // 69
+                                if (!Main.dedServ)
+                                    SoundEngine.PlaySound(CustomSounds.ObliteratorYo, NPC.position);
+                                if (!Main.dedServ)
+                                {
+                                    Dialogue d1 = new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.OO.Intro.1"), Colors.RarityRed, Color.DarkRed, CustomSounds.Voice1 with { Volume = 0 }, .03f, 1, 0, false, null, Bubble, modifier: modifier);
 
-                                TextBubbleUI.Visible = true;
-                                TextBubbleUI.Add(d1);
+                                    ChatUI.Visible = true;
+                                    ChatUI.Add(d1);
+                                }
                             }
                             if (AITimer >= 120 && AITimer < 188)
                                 ArmRot[0].SlowRotation(MathHelper.PiOver2 + (-1 * NPC.spriteDirection) + RotFlip, MathHelper.Pi / 50);
@@ -350,40 +370,33 @@ namespace Redemption.NPCs.Bosses.Obliterator
                             }
                             if (AITimer == 190 && player.active && !player.dead)
                             {
-                                NPC.Shoot(LaserPos, ModContent.ProjectileType<OmegaMegaBeam>(), 1000, new Vector2(10 * NPC.spriteDirection, 0), true, CustomSounds.MegaLaser, NPC.whoAmI);
+                                NPC.Shoot(LaserPos, ModContent.ProjectileType<OmegaMegaBeam>(), 1000, new Vector2(10 * NPC.spriteDirection, 0), CustomSounds.MegaLaser, NPC.whoAmI);
                             }
                             if (AITimer == 350)
                             {
                                 ArmFrameY[0] = 2;
                                 BeamAnimation = false;
                             }
-                            if (AITimer == 400)
+                            if (AITimer == 400 && !Main.dedServ)
                             {
-                                Dialogue d1 = new(NPC, "I guess I can't fool you twice,[10] huh.", Colors.RarityRed, Color.DarkRed, voice, 2, 100, 0, false, modifier: modifier); // 182
-                                Dialogue d2 = new(NPC, "So much for a surprise attack...", Colors.RarityRed, Color.DarkRed, voice, 2, 118, 0, false, modifier: modifier); // 182
-
-                                TextBubbleUI.Visible = true;
+                                Dialogue d1 = new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.OO.Intro.2"), Colors.RarityRed, Color.DarkRed, Voice, .03f, 2f, 0, false, null, Bubble, modifier: modifier);
                                 if (RedeBossDowned.oblitDeath == 1)
-                                    TextBubbleUI.Add(d1);
-                                else
-                                    TextBubbleUI.Add(d2);
-                            }
-                            if (AITimer == 582)
-                            {
+                                    d1 = new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.OO.Intro.2Alt"), Colors.RarityRed, Color.DarkRed, Voice, .03f, 2f, 0, false, null, Bubble, modifier: modifier);
+
                                 DialogueChain chain = new();
-                                chain.Add(new(NPC, "Hang on,[10] I got a call from Girus.", Colors.RarityRed, Color.DarkRed, voice, 2, 100, 0, false, modifier: modifier)) // 166
-                                     .Add(new(NPC, "'I wasted too much energy too quickly?'", Colors.RarityRed, Color.DarkRed, voice, 2, 100, 0, false, modifier: modifier)) // 178
-                                     .Add(new(NPC, "'I'm an idiot?'", Colors.RarityRed, Color.DarkRed, voice, 2, 100, 0, false, modifier: modifier)) // 130
-                                     .Add(new(NPC, "You're scrapping my personality drive after this fight?", Colors.RarityRed, Color.DarkRed, voice, 2, 100, 0, false, modifier: modifier)) // 210
-                                     .Add(new(NPC, "Ah well,[10] request accepted...", Colors.RarityRed, Color.DarkRed, voice, 2, 100, 0, false, modifier: modifier)) // 156
-                                     .Add(new(NPC, "Anyway...", Colors.RarityRed, Color.DarkRed, voice, 2, 100, 30, true, modifier: modifier)); // 148
-                                HeadFrameY = 2;
-                                TextBubbleUI.Visible = true;
-                                TextBubbleUI.Add(chain);
+                                chain.Add(d1)
+                                     .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.OO.Intro.3"), Colors.RarityRed, Color.DarkRed, Voice, .03f, 2f, 0, false, null, Bubble, modifier: modifier))
+                                     .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.OO.Intro.4"), Colors.RarityRed, Color.DarkRed, Voice, .03f, 2f, 0, false, null, Bubble, modifier: modifier))
+                                     .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.OO.Intro.5"), Colors.RarityRed, Color.DarkRed, Voice, .03f, 2f, 0, false, null, Bubble, modifier: modifier))
+                                     .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.OO.Intro.6"), Colors.RarityRed, Color.DarkRed, Voice, .03f, 2f, 0, false, null, Bubble, modifier: modifier))
+                                     .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.OO.Intro.7"), Colors.RarityRed, Color.DarkRed, Voice, .03f, 2f, 0, false, null, Bubble, modifier: modifier))
+                                     .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.OO.Intro.8"), Colors.RarityRed, Color.DarkRed, Voice, .03f, 2f, .5f, true, null, Bubble, modifier: modifier, endID: 1));
+                                chain.OnSymbolTrigger += Chain_OnSymbolTrigger;
+                                chain.OnEndTrigger += Chain_OnEndTrigger;
+                                ChatUI.Visible = true;
+                                ChatUI.Add(chain);
                             }
-                            if (AITimer == 1266)
-                                HeadFrameY = 0;
-                            if (AITimer > 1560)
+                            if (AITimer > 3000)
                             {
                                 if (!Main.dedServ)
                                     SoundEngine.PlaySound(CustomSounds.LabSafeS, NPC.position);
@@ -392,52 +405,61 @@ namespace Redemption.NPCs.Bosses.Obliterator
                                     int dustIndex = Dust.NewDust(NPC.position, NPC.width, NPC.height, DustID.LifeDrain, Scale: 1.5f);
                                     Main.dust[dustIndex].velocity *= 1.9f;
                                 }
-                                RedeBossDowned.oblitDeath = 2;
+                                if (Main.netMode != NetmodeID.MultiplayerClient)
+                                {
+                                    RedeBossDowned.oblitDeath = 2;
+                                    if (Main.netMode == NetmodeID.Server)
+                                        NetMessage.SendData(MessageID.WorldData);
+                                }
                                 AIState = ActionState.Begin;
                                 AITimer = 0;
                                 NPC.netUpdate = true;
-                                if (Main.netMode == NetmodeID.Server)
-                                    NetMessage.SendData(MessageID.WorldData);
                             }
                             break;
                     }
                     break;
                 case ActionState.Begin:
                     #region Fight Startup
-                    NPC.LookAtEntity(player);
                     if (!Main.dedServ)
                         Music = MusicLoader.GetMusicSlot(Mod, "Sounds/Music/BossOmega2");
+
+                    NPC.LookAtEntity(player);
                     ArmRot[0] = MathHelper.PiOver2 + (NPC.spriteDirection == -1 ? 0 : MathHelper.Pi);
                     if (AITimer++ == 0 && Main.dedServ)
-                        RedeSystem.Instance.TitleCardUIElement.DisplayTitle("Omega Obliterator", 60, 90, 0.8f, 0, Color.Red, "3rd Omega Prototype");
+                        RedeSystem.Instance.TitleCardUIElement.DisplayTitle(Language.GetTextValue("Mods.Redemption.TitleCard.OO.Name"), 60, 90, 0.8f, 0, Color.Red, Language.GetTextValue("Mods.Redemption.TitleCard.OO.Modifier"));
                     if (AITimer < 60)
                         NPC.Move(DefaultPos2, 9, 10);
                     else
                         NPC.velocity *= 0.96f;
                     if (AITimer == 60)
                     {
-                        NPC.Shoot(new Vector2(NPC.Center.X - (120 * 16) - 10, NPC.Center.Y + 8), ModContent.ProjectileType<OOBarrier>(), 0, Vector2.Zero, false, SoundID.Item1, 0, 1);
-                        NPC.Shoot(new Vector2(NPC.Center.X + (120 * 16) + 26, NPC.Center.Y + 8), ModContent.ProjectileType<OOBarrier>(), 0, Vector2.Zero, false, SoundID.Item1, 0, -1);
-                        NPC.Shoot(new Vector2(NPC.Center.X + 8, NPC.Center.Y - (120 * 16) - 10), ModContent.ProjectileType<OOBarrierH>(), 0, Vector2.Zero, false, SoundID.Item1, 0, 1);
-                        NPC.Shoot(new Vector2(NPC.Center.X + 8, NPC.Center.Y + (120 * 16) + 26), ModContent.ProjectileType<OOBarrierH>(), 0, Vector2.Zero, false, SoundID.Item1, 0, -1);
+                        NPC.Shoot(new Vector2(NPC.Center.X - (120 * 16) - 10, NPC.Center.Y + 8), ModContent.ProjectileType<OOBarrier>(), 0, Vector2.Zero, 0, 1);
+                        NPC.Shoot(new Vector2(NPC.Center.X + (120 * 16) + 26, NPC.Center.Y + 8), ModContent.ProjectileType<OOBarrier>(), 0, Vector2.Zero, 0, -1);
+                        NPC.Shoot(new Vector2(NPC.Center.X + 8, NPC.Center.Y - (120 * 16) - 10), ModContent.ProjectileType<OOBarrierH>(), 0, Vector2.Zero, 0, 1);
+                        NPC.Shoot(new Vector2(NPC.Center.X + 8, NPC.Center.Y + (120 * 16) + 26), ModContent.ProjectileType<OOBarrierH>(), 0, Vector2.Zero, 0, -1);
 
                         ArenaWorld.arenaBoss = "OO";
                         ArenaWorld.arenaTopLeft = new Vector2(NPC.Center.X - (120 * 16) + 8, NPC.Center.Y - (120 * 16) + 8);
                         ArenaWorld.arenaSize = new Vector2(240 * 16, 240 * 16);
                         ArenaWorld.arenaMiddle = NPC.Center;
                         ArenaWorld.arenaActive = true;
+                        if (Main.netMode == NetmodeID.Server)
+                            NetMessage.SendData(MessageID.WorldData);
 
                         ArmFrameY[0] = 1;
                         HandsFrameY[0] = 1;
 
-                        string s = "Ready for obliteration?";
-                        if (RedeBossDowned.downedOmega3)
-                            s = "PREPARE FOR OBLITERATION.";
+                        if (!Main.dedServ)
+                        {
+                            string s = Language.GetTextValue("Mods.Redemption.Cutscene.OO.Ready");
+                            if (RedeBossDowned.downedOmega3)
+                                s = Language.GetTextValue("Mods.Redemption.Cutscene.OO.DownedReady");
 
-                        Dialogue d1 = new(NPC, s, Colors.RarityRed, Color.DarkRed, voice, 2, 100, 30, true, modifier: modifier); // 176
+                            Dialogue d1 = new(NPC, s, Colors.RarityRed, Color.DarkRed, Voice, .03f, 2f, .5f, true, null, Bubble, modifier: modifier); // 176
 
-                        TextBubbleUI.Visible = true;
-                        TextBubbleUI.Add(d1);
+                            ChatUI.Visible = true;
+                            ChatUI.Add(d1);
+                        }
                     }
                     if (AITimer >= 236)
                     {
@@ -503,7 +525,8 @@ namespace Redemption.NPCs.Bosses.Obliterator
                                 NPC.velocity *= 0.96f;
                                 if (AITimer++ == 2 || AITimer == 100)
                                 {
-                                    SoundEngine.PlaySound(CustomSounds.OODashReady, NPC.position);
+                                    if (!Main.dedServ)
+                                        SoundEngine.PlaySound(CustomSounds.OODashReady, NPC.position);
                                     NPC.velocity = -NPC.DirectionTo(player.Center) * 7f;
                                 }
                                 if (AITimer == 40 || AITimer == 140)
@@ -558,8 +581,9 @@ namespace Redemption.NPCs.Bosses.Obliterator
                                 NPC.velocity *= 0.96f;
                                 if (AITimer == 205)
                                 {
-                                    SoundEngine.PlaySound(CustomSounds.OODashReady, NPC.position);
-                                    NPC.velocity.X = player.Center.X > NPC.Center.X ? -8 : 8;
+                                    if (!Main.dedServ)
+                                        SoundEngine.PlaySound(CustomSounds.OODashReady, NPC.position);
+                                    NPC.velocity.X = 8 * NPC.RightOfDir(player);
                                 }
 
                                 if (AITimer == 235)
@@ -567,8 +591,8 @@ namespace Redemption.NPCs.Bosses.Obliterator
 
                                 if (AITimer > 235 && AITimer % 3 == 0 && NPC.velocity.Length() > 12)
                                 {
-                                    NPC.Shoot(NPC.Center, ModContent.ProjectileType<OmegaBlast>(), 140, new Vector2(-4f * NPC.spriteDirection, 12f), true, SoundID.Item91);
-                                    NPC.Shoot(NPC.Center, ModContent.ProjectileType<OmegaBlast>(), 140, new Vector2(-4f * NPC.spriteDirection, -12f), true, SoundID.Item91);
+                                    NPC.Shoot(NPC.Center, ModContent.ProjectileType<OmegaBlast>(), 140, new Vector2(-4f * NPC.spriteDirection, 12f), SoundID.Item91);
+                                    NPC.Shoot(NPC.Center, ModContent.ProjectileType<OmegaBlast>(), 140, new Vector2(-4f * NPC.spriteDirection, -12f), SoundID.Item91);
                                 }
                                 if (AITimer > 310)
                                 {
@@ -610,11 +634,11 @@ namespace Redemption.NPCs.Bosses.Obliterator
                                         for (int i = 0; i < 3; i++)
                                         {
                                             int rot = 25 * i;
-                                            NPC.Shoot(LaserPos, ModContent.ProjectileType<OmegaPlasmaBall>(), 130, RedeHelper.PolarVector((i == 1 ? 25 : 20) + SpeedBoost, (NPC.spriteDirection == -1 ? MathHelper.Pi : 0) + MathHelper.ToRadians(rot - 25)), true, CustomSounds.BallCreate);
+                                            NPC.Shoot(LaserPos, ModContent.ProjectileType<OmegaPlasmaBall>(), 130, RedeHelper.PolarVector((i == 1 ? 25 : 20) + SpeedBoost, (NPC.spriteDirection == -1 ? MathHelper.Pi : 0) + MathHelper.ToRadians(rot - 25)), CustomSounds.BallCreate);
                                         }
                                     }
                                     else
-                                        NPC.Shoot(LaserPos, ModContent.ProjectileType<OmegaPlasmaBall>(), 130, new Vector2((16 + SpeedBoost) * NPC.spriteDirection, 0), true, CustomSounds.BallCreate);
+                                        NPC.Shoot(LaserPos, ModContent.ProjectileType<OmegaPlasmaBall>(), 130, new Vector2((16 + SpeedBoost) * NPC.spriteDirection, 0), CustomSounds.BallCreate);
                                 }
 
                                 if (AITimer > 230)
@@ -667,7 +691,7 @@ namespace Redemption.NPCs.Bosses.Obliterator
                                 NPC.velocity.Y *= 0.98f;
                                 NPC.velocity.X *= 0.8f;
                                 if (AITimer > 200 && AITimer % 7 == 0)
-                                    NPC.Shoot(LaserPos, ModContent.ProjectileType<OmegaPlasmaBall>(), 130, new Vector2((12 + SpeedBoost) * NPC.spriteDirection, 0), true, CustomSounds.BallCreate);
+                                    NPC.Shoot(LaserPos, ModContent.ProjectileType<OmegaPlasmaBall>(), 130, new Vector2((12 + SpeedBoost) * NPC.spriteDirection, 0), CustomSounds.BallCreate);
 
                                 if (AITimer > 270)
                                 {
@@ -715,12 +739,12 @@ namespace Redemption.NPCs.Bosses.Obliterator
                                 if (NPC.life < (int)(NPC.lifeMax * 0.4f))
                                 {
                                     if (AITimer > 200 && AITimer % (NPC.DistanceSQ(player.Center) >= 900 * 900 ? 2 : 4) == 0 && AITimer < 320)
-                                        NPC.Shoot(new Vector2(player.Center.X + Main.rand.Next(-600, 600), player.Center.Y + Main.rand.Next(-600, 600)) + (player.velocity * 20), ModContent.ProjectileType<OO_Crosshair>(), 160, Vector2.Zero, true, CustomSounds.Alarm2, NPC.whoAmI);
+                                        NPC.Shoot(new Vector2(player.Center.X + Main.rand.Next(-600, 600), player.Center.Y + Main.rand.Next(-600, 600)) + (player.velocity * 20), ModContent.ProjectileType<OO_Crosshair>(), 160, Vector2.Zero, CustomSounds.Alarm2, NPC.whoAmI);
                                 }
                                 else
                                 {
                                     if (AITimer > 200 && AITimer % (NPC.DistanceSQ(player.Center) >= 900 * 900 ? 4 : 6) == 0 && AITimer < 320)
-                                        NPC.Shoot(new Vector2(player.Center.X + Main.rand.Next(-600, 600), player.Center.Y + Main.rand.Next(-600, 600)) + (player.velocity * 20), ModContent.ProjectileType<OO_Crosshair>(), 160, Vector2.Zero, true, CustomSounds.Alarm2, NPC.whoAmI);
+                                        NPC.Shoot(new Vector2(player.Center.X + Main.rand.Next(-600, 600), player.Center.Y + Main.rand.Next(-600, 600)) + (player.velocity * 20), ModContent.ProjectileType<OO_Crosshair>(), 160, Vector2.Zero, CustomSounds.Alarm2, NPC.whoAmI);
                                 }
                                 if (AITimer > 380)
                                 {
@@ -748,12 +772,12 @@ namespace Redemption.NPCs.Bosses.Obliterator
                             if (NPC.life < (int)(NPC.lifeMax * 0.4f))
                             {
                                 if ((NPC.life < (int)(NPC.lifeMax * 0.2f) ? AITimer % 8 == 0 : AITimer % 10 == 0) && AITimer < 300)
-                                    NPC.Shoot(HandPos, ModContent.ProjectileType<OO_Fingerflash>(), 150, Vector2.Zero, false, CustomSounds.Laser1, NPC.whoAmI);
+                                    NPC.Shoot(HandPos, ModContent.ProjectileType<OO_Fingerflash>(), 150, Vector2.Zero, NPC.whoAmI);
                             }
                             else
                             {
                                 if (AITimer % 15 == 0 && AITimer < 300)
-                                    NPC.Shoot(HandPos, ModContent.ProjectileType<OO_Fingerflash>(), 150, Vector2.Zero, false, CustomSounds.Laser1, NPC.whoAmI);
+                                    NPC.Shoot(HandPos, ModContent.ProjectileType<OO_Fingerflash>(), 150, Vector2.Zero, NPC.whoAmI);
                             }
                             if (AITimer < 200)
                             {
@@ -791,15 +815,15 @@ namespace Redemption.NPCs.Bosses.Obliterator
                                 NPC.MoveToVector2(ShootPos + new Vector2(0, 40), 8 + SpeedBoost);
                                 if (AITimer == 305)
                                 {
-                                    if (!RedeBossDowned.downedOmega3)
+                                    if (!RedeBossDowned.downedOmega3 && !Main.dedServ)
                                     {
-                                        Dialogue d1 = new(NPC, "Eye beam!", Colors.RarityRed, Color.DarkRed, voice, 2, 70, 30, true, modifier: modifier);
-                                        TextBubbleUI.Visible = true;
-                                        TextBubbleUI.Add(d1);
+                                        Dialogue d1 = new(NPC, "Eye beam!", Colors.RarityRed, Color.DarkRed, Voice, .03f, 1.16f, .5f, true, null, Bubble, modifier: modifier);
+                                        ChatUI.Visible = true;
+                                        ChatUI.Add(d1);
                                     }
 
                                     for (int i = 0; i < 3; i++)
-                                        NPC.Shoot(EyePos, ModContent.ProjectileType<OO_NormalBeam>(), 180, new Vector2(1 * NPC.spriteDirection, 0), true, CustomSounds.Laser1, NPC.whoAmI, i);
+                                        NPC.Shoot(EyePos, ModContent.ProjectileType<OO_NormalBeam>(), 180, new Vector2(1 * NPC.spriteDirection, 0), CustomSounds.Laser1, NPC.whoAmI, i);
                                 }
                                 if (AITimer > 420)
                                 {
@@ -833,7 +857,7 @@ namespace Redemption.NPCs.Bosses.Obliterator
                             {
                                 if (AITimer >= 80)
                                 {
-                                    NPC.Shoot(EyePos, ModContent.ProjectileType<OO_StunBeam>(), 100, new Vector2(10 * NPC.spriteDirection, 0), true, CustomSounds.BallFire, NPC.whoAmI);
+                                    NPC.Shoot(EyePos, ModContent.ProjectileType<OO_StunBeam>(), 100, new Vector2(10 * NPC.spriteDirection, 0), CustomSounds.BallFire, NPC.whoAmI);
                                     NPC.velocity *= 0f;
                                     AITimer = 200;
                                     NPC.netUpdate = true;
@@ -850,7 +874,7 @@ namespace Redemption.NPCs.Bosses.Obliterator
                                     NPC.velocity.Y -= 2f;
 
                                 if (AITimer > 200 && AITimer % 6 == 0 && AITimer < 360 && player.active && !player.dead && player.HasBuff(ModContent.BuffType<StaticStunDebuff>()))
-                                    NPC.Shoot(new Vector2(player.Center.X + Main.rand.Next(-80, 80), player.Center.Y + Main.rand.Next(-80, 80)), ModContent.ProjectileType<OO_Crosshair>(), 160, Vector2.Zero, true, CustomSounds.Alarm2, NPC.whoAmI);
+                                    NPC.Shoot(new Vector2(player.Center.X + Main.rand.Next(-80, 80), player.Center.Y + Main.rand.Next(-80, 80)), ModContent.ProjectileType<OO_Crosshair>(), 160, Vector2.Zero, CustomSounds.Alarm2, NPC.whoAmI);
 
                                 if (AITimer > 300)
                                     NPC.velocity *= 0.98f;
@@ -874,7 +898,7 @@ namespace Redemption.NPCs.Bosses.Obliterator
                                 if (NPC.DistanceSQ(ChargePos) < 200 * 200 || AITimer >= 80)
                                 {
                                     for (int i = 0; i < 2; i++)
-                                        NPC.Shoot(LaserPos, ModContent.ProjectileType<OO_NormalBeam>(), 180, new Vector2(10 * NPC.spriteDirection, 0), true, CustomSounds.Laser1, NPC.whoAmI, i + 3);
+                                        NPC.Shoot(LaserPos, ModContent.ProjectileType<OO_NormalBeam>(), 180, new Vector2(10 * NPC.spriteDirection, 0), CustomSounds.Laser1, NPC.whoAmI, i + 3);
 
                                     NPC.velocity *= 0f;
                                     AITimer = 200;
@@ -906,7 +930,7 @@ namespace Redemption.NPCs.Bosses.Obliterator
                 case ActionState.Overheat:
                     if (TimerRand == 1)
                     {
-                        if (AITimer >= 878 && AITimer <= 1206 && !RedeBossDowned.downedOmega3)
+                        if (OverheatArmRaise && !RedeBossDowned.downedOmega3)
                         {
                             ArmRot[0].SlowRotation(MathHelper.PiOver2 + ((1f + Main.rand.NextFloat(-0.05f, 0.05f)) * -NPC.spriteDirection) + RotFlip, MathHelper.Pi / 30);
                             ArmRot[1].SlowRotation(MathHelper.PiOver2 + ((1f + Main.rand.NextFloat(-0.05f, 0.05f)) * -NPC.spriteDirection) + RotFlip, MathHelper.Pi / 30);
@@ -929,11 +953,16 @@ namespace Redemption.NPCs.Bosses.Obliterator
                     Main.dust[dust].noGravity = true;
                     Main.dust[dust].velocity.X = 0;
                     Main.dust[dust].velocity.Y = -5;
-                    if ((TimerRand == 1 && AITimer >= (RedeBossDowned.downedOmega3 ? 196 : 878)) || TimerRand > 1)
+                    if ((TimerRand == 1 && OverheatOverlay) || TimerRand > 1)
                     {
                         player.RedemptionScreen().ScreenShakeIntensity = MathHelper.Max(3, player.RedemptionScreen().ScreenShakeIntensity);
                         Terraria.Graphics.Effects.Filters.Scene["MoR:FogOverlay"]?.GetShader().UseOpacity(0.5f).UseIntensity(0.6f).UseColor(Color.DarkRed).UseImage(ModContent.Request<Texture2D>("Redemption/Effects/Vignette", AssetRequestMode.ImmediateLoad).Value);
                         player.ManageSpecialBiomeVisuals("MoR:FogOverlay", true);
+                    }
+                    if (TimerRand > 1 || (TimerRand == 7 && AITimer < 3000))
+                    {
+                        NPC.life -= NPC.lifeMax / 1200;
+                        NPC.life = (int)MathHelper.Max(NPC.life, 1);
                     }
                     switch (TimerRand)
                     {
@@ -969,50 +998,49 @@ namespace Redemption.NPCs.Bosses.Obliterator
                             {
                                 if (AITimer < 1208)
                                 {
-                                    player.RedemptionScreen().ScreenFocusPosition = NPC.Center;
-                                    player.GetModPlayer<ScreenPlayer>().cutscene = true;
-                                    player.GetModPlayer<ScreenPlayer>().lockScreen = true;
+                                    ScreenPlayer.CutsceneLock(player, NPC, ScreenPlayer.CutscenePriority.Medium, 2000, 5000, 0);
                                 }
-                                if (AITimer == 60)
+                                if (AITimer == 60 && !Main.dedServ)
                                 {
+                                    Music = MusicLoader.GetMusicSlot(Mod, "Sounds/Music/OmegaOverheat");
+
                                     if (!RedeBossDowned.downedOmega3)
                                     {
                                         DialogueChain chain = new();
-                                        chain.Add(new(NPC, "SYSTEM OVERLOAD...", Colors.RarityRed, Color.DarkRed, voice with { Pitch = -0.5f }, 2, 100, 0, false, modifier: modifier)) // 136
-                                             .Add(new(NPC, "Overload?[30] Damn right I'm overloading!", Colors.RarityRed, Color.DarkRed, voice, 2, 100, 0, false, modifier: modifier)) // 204
-                                             .Add(new(NPC, "My circuits are burning with energy![10] This is truly exhilarating!", Colors.RarityRed, Color.DarkRed, voice, 2, 100, 0, false, modifier: modifier)) // 238
-                                             .Add(new(NPC, "OVERHEATING...[10] OVERHEATING...[10] OVERHEATING...[10]", Colors.RarityRed, Color.DarkRed, voice with { Pitch = -0.5f }, 2, 100, 0, false, modifier: modifier)) // 218
-                                             .Add(new(NPC, "Hahaha.[30] HAHAHAHAHAHAHA!", Colors.RarityRed, Color.DarkRed, voice with { Pitch = 0.1f, PitchVariance = 0.1f }, 2, 100, 0, false, modifier: modifier)) // 156
-                                             .Add(new(NPC, "THE POWER OF THE SUN IN MY VERY CORE!", Colors.RarityRed, Color.DarkRed, voice with { Pitch = 0.3f, PitchVariance = 0.3f }, 2, 100, 30, true, modifier: modifier)); // 204
-                                        TextBubbleUI.Visible = true;
-                                        TextBubbleUI.Add(chain);
+                                        chain.Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.OO.Desperation.1"), Colors.RarityRed, Color.DarkRed, Voice with { Pitch = -0.5f }, .03f, 2f, 0, false, null, Bubble, modifier: modifier)) // 136
+                                             .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.OO.Desperation.2"), Colors.RarityRed, Color.DarkRed, Voice, .03f, 2f, 0, false, null, Bubble, modifier: modifier)) // 204
+                                             .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.OO.Desperation.3"), Colors.RarityRed, Color.DarkRed, Voice, .03f, 2f, 0, false, null, Bubble, modifier: modifier)) // 238
+                                             .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.OO.Desperation.4"), Colors.RarityRed, Color.DarkRed, Voice with { Pitch = -0.5f }, .03f, 2f, 0, false, null, Bubble, modifier: modifier)) // 218
+                                             .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.OO.Desperation.5"), Colors.RarityRed, Color.DarkRed, Voice with { Pitch = 0.1f, PitchVariance = 0.1f }, .03f, 2f, 0, false, null, Bubble, modifier: modifier)) // 156
+                                             .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.OO.Desperation.6"), Colors.RarityRed, Color.DarkRed, Voice with { Pitch = 0.3f, PitchVariance = 0.3f }, .03f, 2f, .5f, true, null, Bubble, modifier: modifier, endID: 1)); // 204
+                                        chain.OnSymbolTrigger += Chain_OnSymbolTrigger;
+                                        chain.OnEndTrigger += Chain_OnEndTrigger;
+                                        ChatUI.Visible = true;
+                                        ChatUI.Add(chain);
                                     }
                                     else
                                     {
                                         DialogueChain chain = new();
-                                        chain.Add(new(NPC, "SYSTEM OVERLOAD...", Colors.RarityRed, Color.DarkRed, voice, 2, 100, 0, false, modifier: modifier)) // 136
-                                             .Add(new(NPC, "OVERHEATING...[10] OVERHEATING...[10] OVERHEATING...[10]", Colors.RarityRed, Color.DarkRed, voice, 2, 100, 0, false, modifier: modifier)); // 218
-                                        TextBubbleUI.Visible = true;
-                                        TextBubbleUI.Add(chain);
+                                        chain.Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.OO.Desperation.D1"), Colors.RarityRed, Color.DarkRed, Voice, .03f, 2f, 0, false, null, Bubble, modifier: modifier)) // 136
+                                             .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.OO.Desperation.D2"), Colors.RarityRed, Color.DarkRed, Voice, .03f, 2f, 0, false, null, Bubble, modifier: modifier, endID: 1)); // 218
+                                        chain.OnSymbolTrigger += Chain_OnSymbolTrigger;
+                                        chain.OnEndTrigger += Chain_OnEndTrigger;
+                                        ChatUI.Visible = true;
+                                        ChatUI.Add(chain);
                                     }
                                 }
-                                if (AITimer == (RedeBossDowned.downedOmega3 ? 196 : 638))
-                                {
-                                    SoundEngine.PlaySound(SoundID.Item14, NPC.position);
-                                    RedeDraw.SpawnExplosion(NPC.Center, Color.IndianRed, DustID.LifeDrain, tex: ModContent.Request<Texture2D>("Redemption/Empty").Value);
-                                }
-                                if (AITimer == 878 && !RedeBossDowned.downedOmega3)
-                                {
-                                    player.RedemptionScreen().TimedZoom(new Vector2(1.2f, 1.2f), 80, 280);
-                                    HeadFrameY = 2;
-                                }
-
-                                if (AITimer > (RedeBossDowned.downedOmega3 ? 414 : 1238))
+                                if (AITimer > 3000)
                                 {
                                     HeadFrameY = 0;
                                     AITimer = 0;
                                     TimerRand = 2;
                                     NPC.netUpdate = true;
+                                }
+                                if (OverheatOverlay)
+                                {
+                                    NPC.life += (int)(NPC.lifeMax / 120f);
+                                    if (NPC.life > NPC.lifeMax)
+                                        NPC.life = NPC.lifeMax;
                                 }
                             }
                             break;
@@ -1053,8 +1081,9 @@ namespace Redemption.NPCs.Bosses.Obliterator
                                 NPC.velocity *= 0.96f;
                                 if (AITimer == 205)
                                 {
-                                    SoundEngine.PlaySound(CustomSounds.OODashReady, NPC.position);
-                                    NPC.velocity.X = player.Center.X > NPC.Center.X ? -8 : 8;
+                                    if (!Main.dedServ)
+                                        SoundEngine.PlaySound(CustomSounds.OODashReady, NPC.position);
+                                    NPC.velocity.X = 8 * NPC.RightOfDir(player);
                                 }
 
                                 if (AITimer == 225)
@@ -1062,8 +1091,8 @@ namespace Redemption.NPCs.Bosses.Obliterator
 
                                 if (AITimer > 225 && AITimer % 3 == 0 && NPC.velocity.Length() > 12)
                                 {
-                                    NPC.Shoot(NPC.Center, ModContent.ProjectileType<OmegaBlast>(), 140, new Vector2(-4f * NPC.spriteDirection, 12f), true, SoundID.Item91);
-                                    NPC.Shoot(NPC.Center, ModContent.ProjectileType<OmegaBlast>(), 140, new Vector2(-4f * NPC.spriteDirection, -12f), true, SoundID.Item91);
+                                    NPC.Shoot(NPC.Center, ModContent.ProjectileType<OmegaBlast>(), 140, new Vector2(-4f * NPC.spriteDirection, 12f), SoundID.Item91);
+                                    NPC.Shoot(NPC.Center, ModContent.ProjectileType<OmegaBlast>(), 140, new Vector2(-4f * NPC.spriteDirection, -12f), SoundID.Item91);
                                 }
                                 if (AITimer > 260)
                                 {
@@ -1102,7 +1131,7 @@ namespace Redemption.NPCs.Bosses.Obliterator
 
                             AITimer++;
                             if (AITimer % 5 == 0 && AITimer < 300)
-                                NPC.Shoot(HandPos, ModContent.ProjectileType<OO_Fingerflash>(), 150, Vector2.Zero, false, CustomSounds.Laser1, NPC.whoAmI);
+                                NPC.Shoot(HandPos, ModContent.ProjectileType<OO_Fingerflash>(), 150, Vector2.Zero, NPC.whoAmI);
 
                             if (AITimer < 200)
                             {
@@ -1140,14 +1169,14 @@ namespace Redemption.NPCs.Bosses.Obliterator
                             else
                             {
                                 NPC.MoveToVector2(ShootPos + new Vector2(0, 40), 8 + SpeedBoost);
-                                if (AITimer == 305 && !RedeBossDowned.downedOmega3)
+                                if (AITimer == 305 && !RedeBossDowned.downedOmega3 && !Main.dedServ)
                                 {
-                                    Dialogue d1 = new(NPC, "EYE BEAM! EYE BEAM! EYE BEAM! EYE BEAM!", Colors.RarityRed, Color.DarkRed, voice with { Pitch = 0.3f, PitchVariance = 0.3f }, 1, 70, 30, true, modifier: modifier);
-                                    TextBubbleUI.Visible = true;
-                                    TextBubbleUI.Add(d1);
+                                    Dialogue d1 = new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.OO.Desperation.7"), Colors.RarityRed, Color.DarkRed, Voice with { Pitch = 0.3f, PitchVariance = 0.3f }, .01f, 1.16f, .5f, true, null, Bubble, modifier: modifier);
+                                    ChatUI.Visible = true;
+                                    ChatUI.Add(d1);
                                 }
                                 if (AITimer >= 305 && AITimer % 4 == 0 && AITimer <= 355)
-                                    NPC.Shoot(EyePos, ModContent.ProjectileType<OO_NormalBeam>(), 180, new Vector2(1 * NPC.spriteDirection, Main.rand.NextFloat(-0.25f, 0.25f)), true, CustomSounds.Laser1, NPC.whoAmI, -1);
+                                    NPC.Shoot(EyePos, ModContent.ProjectileType<OO_NormalBeam>(), 180, new Vector2(1 * NPC.spriteDirection, Main.rand.NextFloat(-0.25f, 0.25f)), CustomSounds.Laser1, NPC.whoAmI, -1);
 
                                 if (AITimer > 420)
                                 {
@@ -1190,7 +1219,7 @@ namespace Redemption.NPCs.Bosses.Obliterator
                             {
                                 NPC.velocity *= 0.96f;
                                 if (AITimer > 200 && AITimer % 2 == 0 && AITimer < 320)
-                                    NPC.Shoot(new Vector2(player.Center.X + Main.rand.Next(-900, 900), player.Center.Y + Main.rand.Next(-900, 900)), ModContent.ProjectileType<OO_Crosshair>(), 160, Vector2.Zero, true, CustomSounds.Alarm2, NPC.whoAmI);
+                                    NPC.Shoot(new Vector2(player.Center.X + Main.rand.Next(-900, 900), player.Center.Y + Main.rand.Next(-900, 900)), ModContent.ProjectileType<OO_Crosshair>(), 160, Vector2.Zero, CustomSounds.Alarm2, NPC.whoAmI);
 
                                 if (AITimer > 380)
                                 {
@@ -1233,7 +1262,7 @@ namespace Redemption.NPCs.Bosses.Obliterator
                                 NPC.velocity.Y *= 0.98f;
                                 NPC.velocity.X *= 0.5f;
                                 if (AITimer > 200 && AITimer % 5 == 0)
-                                    NPC.Shoot(LaserPos, ModContent.ProjectileType<OmegaPlasmaBall>(), 130, new Vector2((12 + SpeedBoost) * NPC.spriteDirection, 0), true, CustomSounds.BallCreate);
+                                    NPC.Shoot(LaserPos, ModContent.ProjectileType<OmegaPlasmaBall>(), 130, new Vector2((12 + SpeedBoost) * NPC.spriteDirection, 0), CustomSounds.BallCreate);
 
                                 if (AITimer > 240)
                                 {
@@ -1280,7 +1309,8 @@ namespace Redemption.NPCs.Bosses.Obliterator
                                 AITimer++;
                                 if (AITimer == 2 || AITimer == 80)
                                 {
-                                    SoundEngine.PlaySound(CustomSounds.OODashReady, NPC.position);
+                                    if (!Main.dedServ)
+                                        SoundEngine.PlaySound(CustomSounds.OODashReady, NPC.position);
                                     NPC.velocity = -NPC.DirectionTo(player.Center) * 7f;
                                 }
 
@@ -1351,39 +1381,42 @@ namespace Redemption.NPCs.Bosses.Obliterator
                                 }
                                 if (AITimer == 210 && player.active && !player.dead)
                                 {
-                                    NPC.Shoot(LaserPos, ModContent.ProjectileType<OmegaMegaBeam>(), 1000, new Vector2(10 * NPC.spriteDirection, 0), true, CustomSounds.MegaLaser, NPC.whoAmI);
+                                    NPC.Shoot(LaserPos, ModContent.ProjectileType<OmegaMegaBeam>(), 1000, new Vector2(10 * NPC.spriteDirection, 0), CustomSounds.MegaLaser, NPC.whoAmI);
                                 }
                                 if (AITimer == 370)
                                     BeamAnimation = false;
 
                                 if (AITimer >= 420)
                                 {
-                                    player.RedemptionScreen().ScreenFocusPosition = NPC.Center;
-                                    player.GetModPlayer<ScreenPlayer>().cutscene = true;
-                                    player.GetModPlayer<ScreenPlayer>().lockScreen = true;
+                                    ScreenPlayer.CutsceneLock(player, NPC, ScreenPlayer.CutscenePriority.High, 0, 0, 0);
                                 }
                                 if (AITimer == 450)
                                 {
                                     SoundEngine.PlaySound(SoundID.Item14, NPC.position);
                                     RedeDraw.SpawnExplosion(NPC.Center, Color.IndianRed, DustID.LifeDrain, tex: ModContent.Request<Texture2D>("Redemption/Empty").Value);
-
-                                    if (!RedeBossDowned.downedOmega3)
+                                    if (!Main.dedServ)
                                     {
-                                        DialogueChain chain = new();
-                                        chain.Add(new(NPC, "CRITICAL CONDITION REACHED...[30] SELF DESTRUCTING...", Colors.RarityRed, Color.DarkRed, voice with { Pitch = -0.5f }, 2, 100, 0, false, modifier: modifier)) // 228
-                                             .Add(new(NPC, "Is it getting hot in here[10] or is it just m-", Colors.RarityRed, Color.DarkRed, voice with { Pitch = 0.3f, PitchVariance = 0.3f }, 3, 3, 0, false, modifier: modifier)); // 124
-                                        TextBubbleUI.Visible = true;
-                                        TextBubbleUI.Add(chain);
-                                    }
-                                    else
-                                    {
-                                        DialogueChain chain = new();
-                                        chain.Add(new(NPC, "CRITICAL CONDITION REACHED...[30] SELF DESTRUCTING...", Colors.RarityRed, Color.DarkRed, voice, 2, 100, 0, false, modifier: modifier)); // 228
-                                        TextBubbleUI.Visible = true;
-                                        TextBubbleUI.Add(chain);
+                                        if (!RedeBossDowned.downedOmega3)
+                                        {
+                                            DialogueChain chain = new();
+                                            chain.Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.OO.Desperation.8"), Colors.RarityRed, Color.DarkRed, Voice with { Pitch = -0.5f }, .03f, 2f, 0, false, null, Bubble, modifier: modifier)) // 228
+                                                 .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.OO.Desperation.9"), Colors.RarityRed, Color.DarkRed, Voice with { Pitch = 0.3f, PitchVariance = 0.3f }, .05f, .05f, 0, false, null, Bubble, modifier: modifier)); // 124
+                                            chain.OnSymbolTrigger += Chain_OnSymbolTrigger;
+                                            ChatUI.Visible = true;
+                                            ChatUI.Add(chain);
+                                        }
+                                        else
+                                        {
+                                            DialogueChain chain = new();
+                                            chain.Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.OO.Desperation.8"), Colors.RarityRed, Color.DarkRed, Voice, .03f, 2f, 0, false, null, Bubble, modifier: modifier, endID: 1)); // 228
+                                            chain.OnSymbolTrigger += Chain_OnSymbolTrigger;
+                                            chain.OnEndTrigger += Chain_OnEndTrigger;
+                                            ChatUI.Visible = true;
+                                            ChatUI.Add(chain);
+                                        }
                                     }
                                 }
-                                if (AITimer > (RedeBossDowned.downedOmega3 ? 678 : 804))
+                                if (AITimer > 3000)
                                 {
                                     NPC.velocity *= 0f;
                                     AITimer = 0;
@@ -1402,13 +1435,47 @@ namespace Redemption.NPCs.Bosses.Obliterator
                         NetMessage.SendData(MessageID.SyncNPC, number: NPC.whoAmI);
                     break;
             }
-        }
-        public override void FindFrame(int frameHeight)
-        {
             for (int k = NPC.oldPos.Length - 1; k > 0; k--)
                 oldrot[k] = oldrot[k - 1];
             oldrot[0] = NPC.rotation;
-
+            NPC.rotation = NPC.velocity.X * 0.01f;
+        }
+        private void Chain_OnSymbolTrigger(Dialogue dialogue, string signature)
+        {
+            Player player = Main.player[NPC.target];
+            switch (signature)
+            {
+                case "a":
+                    HeadFrameY = 2;
+                    break;
+                case "b":
+                    HeadFrameY = 0;
+                    break;
+                case "c":
+                    AITimer = 3000;
+                    break;
+                case "d":
+                    SoundEngine.PlaySound(SoundID.Item14, NPC.position);
+                    RedeDraw.SpawnExplosion(NPC.Center, Color.IndianRed, DustID.LifeDrain, tex: ModContent.Request<Texture2D>("Redemption/Empty").Value);
+                    break;
+                case "e":
+                    OverheatOverlay = true;
+                    OverheatArmRaise = true;
+                    if (!RedeBossDowned.downedOmega3)
+                    {
+                        player.RedemptionScreen().TimedZoom(new Vector2(1.2f, 1.2f), 80, 280);
+                        HeadFrameY = 2;
+                    }
+                    break;
+            }
+        }
+        private void Chain_OnEndTrigger(Dialogue dialogue, int ID)
+        {
+            AITimer = 3000;
+            OverheatArmRaise = false;
+        }
+        public override void FindFrame(int frameHeight)
+        {
             if (BeamAnimation)
             {
                 if (++NPC.frameCounter >= 5)
@@ -1440,7 +1507,6 @@ namespace Redemption.NPCs.Bosses.Obliterator
             }
             LegFrameY = 2 + (int)(-NPC.velocity.Y / 6);
             LegFrameY = (int)MathHelper.Clamp(LegFrameY, 0, 4);
-            NPC.rotation = NPC.velocity.X * 0.01f;
         }
         public override bool CheckDead()
         {
@@ -1462,14 +1528,11 @@ namespace Redemption.NPCs.Bosses.Obliterator
             if (directional)
                 NPC.velocity = NPC.DirectionTo(player.Center) * speed;
             else
-                NPC.velocity.X = player.Center.X > NPC.Center.X ? speed : -speed;
+                NPC.velocity.X = speed * player.RightOfDir(NPC);
         }
         private void DespawnHandler()
         {
             Player player = Main.player[NPC.target];
-            SoundStyle voice = CustomSounds.Voice5;
-            if (RedeBossDowned.downedOmega3)
-                voice = CustomSounds.Voice5 with { Pitch = -0.5f };
             if (!player.active || player.dead)
             {
                 NPC.velocity *= 0.96f;
@@ -1480,23 +1543,26 @@ namespace Redemption.NPCs.Bosses.Obliterator
                 ArmRot[1].SlowRotation(0, MathHelper.Pi / 40);
                 if (AIState is ActionState.Intro && AITimer > 190 && RedeBossDowned.oblitDeath == 0)
                 {
-                    RedeBossDowned.oblitDeath = 1;
+                    if (Main.netMode != NetmodeID.MultiplayerClient)
+                    {
+                        RedeBossDowned.oblitDeath = 1;
+                        if (Main.netMode == NetmodeID.Server)
+                            NetMessage.SendData(MessageID.WorldData);
+                    }
                     AITimer = 0;
                     TimerRand = 0;
                     NPC.ai[0] = -1;
-                    if (Main.netMode == NetmodeID.Server)
-                        NetMessage.SendData(MessageID.WorldData);
                 }
                 else if (NPC.ai[0] == -1)
                 {
-                    if (AITimer++ == 100)
+                    if (AITimer++ == 100 && !Main.dedServ)
                     {
                         DialogueChain chain = new();
-                        chain.Add(new(NPC, "Alright,[10] target eliminated.", Colors.RarityRed, Color.DarkRed, voice, 2, 100, 0, false, modifier: modifier)) // 154
-                             .Add(new(NPC, "Returning to base...", Colors.RarityRed, Color.DarkRed, voice, 2, 100, 30, true, modifier: modifier)); // 170
+                        chain.Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.OO.Success.1"), Colors.RarityRed, Color.DarkRed, Voice, .03f, 2f, 0, false, null, Bubble, modifier: modifier)) // 154
+                             .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.OO.Success.2"), Colors.RarityRed, Color.DarkRed, Voice, .03f, 2f, .5f, true, null, Bubble, modifier: modifier)); // 170
 
-                        TextBubbleUI.Visible = true;
-                        TextBubbleUI.Add(chain);
+                        ChatUI.Visible = true;
+                        ChatUI.Add(chain);
                     }
                     if (!RedeHelper.AnyProjectiles(ModContent.ProjectileType<OmegaMegaBeam>()))
                         BeamAnimation = false;
@@ -1511,10 +1577,13 @@ namespace Redemption.NPCs.Bosses.Obliterator
                 {
                     if (NPC.ai[0] != -2)
                     {
-                        Dialogue d1 = new(NPC, "Target eliminated...", Colors.RarityRed, Color.DarkRed, voice, 2, 100, 30, true, modifier: modifier); // 150
+                        if (!Main.dedServ)
+                        {
+                            Dialogue d1 = new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.OO.Success.D1"), Colors.RarityRed, Color.DarkRed, Voice, .03f, 2f, .5f, true, null, Bubble, modifier: modifier); // 150
 
-                        TextBubbleUI.Visible = true;
-                        TextBubbleUI.Add(d1);
+                            ChatUI.Visible = true;
+                            ChatUI.Add(d1);
+                        }
                         AITimer = 0;
                         NPC.ai[0] = -2;
                     }
@@ -1525,6 +1594,10 @@ namespace Redemption.NPCs.Bosses.Obliterator
                 }
                 return;
             }
+            if (Music == MusicLoader.GetMusicSlot(Mod, "Sounds/Music/BossOmega2"))
+                Redemption.grooveTimer++;
+            else
+                Redemption.grooveTimer = 0;
         }
         public override bool? DrawHealthBar(byte hbPosition, ref float scale, ref Vector2 position)
         {
@@ -1535,29 +1608,20 @@ namespace Redemption.NPCs.Bosses.Obliterator
         public int[] ArmFrameY = new int[2];
         public float[] ArmRot = new float[2];
         public int[] ArmRFrameY = new int[2];
-        private int[] HandsFrameY = new int[2];
+        private readonly int[] HandsFrameY = new int[2];
         private int HeadFrameY;
         private readonly int[] HandArmX = new int[] { -18, 0, 6 };
         private readonly int[] HandArmY = new int[] { 8, 0, -14 };
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
             Texture2D texture = TextureAssets.Npc[NPC.type].Value;
-            Texture2D glow = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Glow").Value;
-            Texture2D armB = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Arm_Back").Value;
-            Texture2D armF = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Arm_Front").Value;
-            Texture2D armR = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Arm_Rockets").Value;
-            Texture2D hands = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Hands").Value;
-            Texture2D head = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Head").Value;
-            Texture2D headGlow = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Head_Glow").Value;
-            Texture2D legs = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Legs").Value;
-            Texture2D thruster = ModContent.Request<Texture2D>("Redemption/NPCs/Bosses/Gigapora/Gigapora_ThrusterBlue").Value;
             if (NPC.ai[0] >= 4)
             {
-                texture = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Overheat").Value;
-                armB = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Arm_Back_Overheat").Value;
-                armF = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Arm_Front_Overheat").Value;
-                head = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Head_Overheat").Value;
-                legs = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Legs_Overheat").Value;
+                texture = ModContent.Request<Texture2D>(Texture + "_Overheat").Value;
+                armB = ModContent.Request<Texture2D>(Texture + "_Arm_Back_Overheat");
+                armF = ModContent.Request<Texture2D>(Texture + "_Arm_Front_Overheat");
+                head = ModContent.Request<Texture2D>(Texture + "_Head_Overheat");
+                legs = ModContent.Request<Texture2D>(Texture + "_Legs_Overheat");
             }
             float thrusterScaleX = MathHelper.Lerp(1.5f, 0.5f, -NPC.velocity.Y / 20);
             thrusterScaleX = MathHelper.Clamp(thrusterScaleX, 0.5f, 1.5f);
@@ -1565,94 +1629,94 @@ namespace Redemption.NPCs.Bosses.Obliterator
             Vector2 p = NPC.Center - screenPos;
             var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
-            int armsHeight = armF.Height / 3;
-            Rectangle rectArmF = new(0, armsHeight * ArmFrameY[1], armF.Width, armsHeight);
-            Rectangle rectArmB = new(0, armsHeight * ArmFrameY[0], armB.Width, armsHeight);
-            Vector2 originArms = new(armF.Width / 2f + (-6 * NPC.spriteDirection), armsHeight / 2f - 14);
+            int armsHeight = armF.Value.Height / 3;
+            Rectangle rectArmF = new(0, armsHeight * ArmFrameY[1], armF.Value.Width, armsHeight);
+            Rectangle rectArmB = new(0, armsHeight * ArmFrameY[0], armB.Value.Width, armsHeight);
+            Vector2 originArms = new(armF.Value.Width / 2f + (-6 * NPC.spriteDirection), armsHeight / 2f - 14);
 
-            int handsHeight = hands.Height / 3;
-            Rectangle rectHandF = new(0, handsHeight * HandsFrameY[1], hands.Width / 2, handsHeight);
-            Rectangle rectHandB = new(hands.Width / 2, handsHeight * HandsFrameY[0], hands.Width / 2, handsHeight);
+            int handsHeight = hands.Value.Height / 3;
+            Rectangle rectHandF = new(0, handsHeight * HandsFrameY[1], hands.Value.Width / 2, handsHeight);
+            Rectangle rectHandB = new(hands.Value.Width / 2, handsHeight * HandsFrameY[0], hands.Value.Width / 2, handsHeight);
 
-            int armRHeight = armR.Height / 5;
-            int armRWidth = armR.Width / 3;
+            int armRHeight = armR.Value.Height / 5;
+            int armRWidth = armR.Value.Width / 3;
             Rectangle rectArmRB = new(armRWidth * ArmFrameY[0], armRHeight * ArmRFrameY[0], armRWidth, armRHeight);
             Rectangle rectArmRF = new(armRWidth * ArmFrameY[1], armRHeight * ArmRFrameY[1], armRWidth, armRHeight);
 
-            int headHeight = head.Height / 3;
-            Rectangle rectHead = new(0, headHeight * HeadFrameY, head.Width, headHeight);
+            int headHeight = head.Value.Height / 3;
+            Rectangle rectHead = new(0, headHeight * HeadFrameY, head.Value.Width, headHeight);
 
-            int legsHeight = legs.Height / 5;
-            Rectangle rectLegs = new(0, legsHeight * LegFrameY, legs.Width, legsHeight);
+            int legsHeight = legs.Value.Height / 5;
+            Rectangle rectLegs = new(0, legsHeight * LegFrameY, legs.Value.Width, legsHeight);
 
             if (!NPC.IsABestiaryIconDummy)
             {
                 spriteBatch.End();
-                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+                spriteBatch.BeginAdditive();
 
                 for (int i = 0; i < NPCID.Sets.TrailCacheLength[NPC.type]; i++)
                 {
                     Color glowColor = RedeColor.VlitchGlowColour * 0.7f;
                     if (NPC.frame.Y <= 0)
                     {
-                        spriteBatch.Draw(armB, NPC.oldPos[i] + NPC.Size / 2f - screenPos + new Vector2(NPC.spriteDirection == -1 ? -34 : -10, -13), new Rectangle?(rectArmB), glowColor, ArmRot[0], originArms, NPC.scale, effects, 0);
-                        spriteBatch.Draw(hands, NPC.oldPos[i] + NPC.Size / 2f - screenPos + new Vector2(NPC.spriteDirection == -1 ? -34 : -10, -13), new Rectangle?(rectHandB), glowColor, ArmRot[0], originArms - new Vector2((NPC.spriteDirection == -1 ? 29 : 12) + (HandArmX[ArmFrameY[0]] * -NPC.spriteDirection), 78 + HandArmY[ArmFrameY[0]]), NPC.scale, effects, 0);
+                        spriteBatch.Draw(armB.Value, NPC.oldPos[i] + NPC.Size / 2f - screenPos + new Vector2(NPC.spriteDirection == -1 ? -34 : -10, -13), new Rectangle?(rectArmB), glowColor, ArmRot[0], originArms, NPC.scale, effects, 0);
+                        spriteBatch.Draw(hands.Value, NPC.oldPos[i] + NPC.Size / 2f - screenPos + new Vector2(NPC.spriteDirection == -1 ? -34 : -10, -13), new Rectangle?(rectHandB), glowColor, ArmRot[0], originArms - new Vector2((NPC.spriteDirection == -1 ? 29 : 12) + (HandArmX[ArmFrameY[0]] * -NPC.spriteDirection), 78 + HandArmY[ArmFrameY[0]]), NPC.scale, effects, 0);
                     }
                     spriteBatch.Draw(texture, NPC.oldPos[i] + NPC.Size / 2f - screenPos + new Vector2(NPC.spriteDirection == 1 ? -44 : 0, 0), NPC.frame, glowColor, oldrot[i], NPC.frame.Size() / 2f, NPC.scale, effects, 0);
                     if (NPC.frame.Y <= 0)
-                        spriteBatch.Draw(head, NPC.oldPos[i] + NPC.Size / 2f - screenPos + new Vector2(NPC.spriteDirection == 1 ? -44 : 0, 0), new Rectangle?(rectHead), glowColor, oldrot[i], NPC.frame.Size() / 2 + new Vector2(NPC.spriteDirection == 1 ? -48 : 4, -2), NPC.scale, effects, 0);
-                    spriteBatch.Draw(legs, NPC.oldPos[i] + NPC.Size / 2f - screenPos, new Rectangle?(rectLegs), glowColor, NPC.rotation, NPC.frame.Size() / 2 + new Vector2(22, -78), NPC.scale, effects, 0);
+                        spriteBatch.Draw(head.Value, NPC.oldPos[i] + NPC.Size / 2f - screenPos + new Vector2(NPC.spriteDirection == 1 ? -44 : 0, 0), new Rectangle?(rectHead), glowColor, oldrot[i], NPC.frame.Size() / 2 + new Vector2(NPC.spriteDirection == 1 ? -48 : 4, -2), NPC.scale, effects, 0);
+                    spriteBatch.Draw(legs.Value, NPC.oldPos[i] + NPC.Size / 2f - screenPos, new Rectangle?(rectLegs), glowColor, NPC.rotation, NPC.frame.Size() / 2 + new Vector2(22, -78), NPC.scale, effects, 0);
                     if (NPC.frame.Y <= 0)
                     {
-                        spriteBatch.Draw(armF, NPC.oldPos[i] + NPC.Size / 2f - screenPos + new Vector2(NPC.spriteDirection == -1 ? 15 : -59, -22), new Rectangle?(rectArmF), glowColor, ArmRot[1], originArms, NPC.scale, effects, 0);
-                        spriteBatch.Draw(hands, NPC.oldPos[i] + NPC.Size / 2f - screenPos + new Vector2(NPC.spriteDirection == -1 ? 15 : -59, -22), new Rectangle?(rectHandF), glowColor, ArmRot[1], originArms - new Vector2((NPC.spriteDirection == -1 ? 28 : 13) + (HandArmX[ArmFrameY[1]] * -NPC.spriteDirection), 78 + HandArmY[ArmFrameY[1]]), NPC.scale, effects, 0);
+                        spriteBatch.Draw(armF.Value, NPC.oldPos[i] + NPC.Size / 2f - screenPos + new Vector2(NPC.spriteDirection == -1 ? 15 : -59, -22), new Rectangle?(rectArmF), glowColor, ArmRot[1], originArms, NPC.scale, effects, 0);
+                        spriteBatch.Draw(hands.Value, NPC.oldPos[i] + NPC.Size / 2f - screenPos + new Vector2(NPC.spriteDirection == -1 ? 15 : -59, -22), new Rectangle?(rectHandF), glowColor, ArmRot[1], originArms - new Vector2((NPC.spriteDirection == -1 ? 28 : 13) + (HandArmX[ArmFrameY[1]] * -NPC.spriteDirection), 78 + HandArmY[ArmFrameY[1]]), NPC.scale, effects, 0);
                     }
                 }
                 spriteBatch.End();
-                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+                spriteBatch.BeginDefault();
             }
 
             if (NPC.frame.Y <= 0)
             {
                 // Back Arm
-                spriteBatch.Draw(armB, p + new Vector2(NPC.spriteDirection == -1 ? -34 : -10, -13), new Rectangle?(rectArmB), NPC.GetAlpha(drawColor), ArmRot[0], originArms, NPC.scale, effects, 0);
+                spriteBatch.Draw(armB.Value, p + new Vector2(NPC.spriteDirection == -1 ? -34 : -10, -13), new Rectangle?(rectArmB), NPC.GetAlpha(drawColor), ArmRot[0], originArms, NPC.scale, effects, 0);
                 // Back Hand
-                spriteBatch.Draw(hands, p + new Vector2(NPC.spriteDirection == -1 ? -34 : -10, -13), new Rectangle?(rectHandB), NPC.GetAlpha(drawColor), ArmRot[0], originArms - new Vector2((NPC.spriteDirection == -1 ? 29 : 12) + (HandArmX[ArmFrameY[0]] * -NPC.spriteDirection), 78 + HandArmY[ArmFrameY[0]]), NPC.scale, effects, 0);
+                spriteBatch.Draw(hands.Value, p + new Vector2(NPC.spriteDirection == -1 ? -34 : -10, -13), new Rectangle?(rectHandB), NPC.GetAlpha(drawColor), ArmRot[0], originArms - new Vector2((NPC.spriteDirection == -1 ? 29 : 12) + (HandArmX[ArmFrameY[0]] * -NPC.spriteDirection), 78 + HandArmY[ArmFrameY[0]]), NPC.scale, effects, 0);
                 // Rockets Back
-                spriteBatch.Draw(armR, p + new Vector2(NPC.spriteDirection == -1 ? -34 : -10, -13), new Rectangle?(rectArmRB), NPC.GetAlpha(drawColor), ArmRot[0], originArms - new Vector2(NPC.spriteDirection == -1 ? -3 : 14, 0), NPC.scale, effects, 0);
+                spriteBatch.Draw(armR.Value, p + new Vector2(NPC.spriteDirection == -1 ? -34 : -10, -13), new Rectangle?(rectArmRB), NPC.GetAlpha(drawColor), ArmRot[0], originArms - new Vector2(NPC.spriteDirection == -1 ? -3 : 14, 0), NPC.scale, effects, 0);
             }
             // Body
 
             spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            spriteBatch.BeginAdditive();
 
-            Vector2 thrusterOrigin = new(thruster.Width / 2f, thruster.Height / 2f - 20);
+            Vector2 thrusterOrigin = new(thruster.Value.Width / 2f, thruster.Value.Height / 2f - 20);
             for (int i = 0; i < NPCID.Sets.TrailCacheLength[NPC.type]; i++)
             {
                 Vector2 oldPos = NPC.oldPos[i];
-                spriteBatch.Draw(thruster, oldPos + NPC.Size / 2f + RedeHelper.PolarVector(NPC.spriteDirection == 1 ? -44 : 0, NPC.rotation) + RedeHelper.PolarVector(4, NPC.rotation + MathHelper.PiOver2) - screenPos, null, Color.White * MathHelper.Clamp(-NPC.velocity.Y / 20, 0, 1), oldrot[i], thrusterOrigin, new Vector2(thrusterScaleX, thrusterScaleY), effects, 0);
+                spriteBatch.Draw(thruster.Value, oldPos + NPC.Size / 2f + RedeHelper.PolarVector(NPC.spriteDirection == 1 ? -44 : 0, NPC.rotation) + RedeHelper.PolarVector(4, NPC.rotation + MathHelper.PiOver2) - screenPos, null, Color.White * MathHelper.Clamp(-NPC.velocity.Y / 20, 0, 1), oldrot[i], thrusterOrigin, new Vector2(thrusterScaleX, thrusterScaleY), effects, 0);
             }
-            spriteBatch.Draw(thruster, p + RedeHelper.PolarVector(30, NPC.rotation) + RedeHelper.PolarVector(NPC.spriteDirection == 1 ? -44 : 0, NPC.rotation) + RedeHelper.PolarVector(4, NPC.rotation + MathHelper.PiOver2) - screenPos, null, Color.White * MathHelper.Clamp(-NPC.velocity.Y / 20, 0, 1), NPC.rotation - MathHelper.PiOver2, thrusterOrigin, new Vector2(thrusterScaleX, thrusterScaleY), effects, 0);
+            spriteBatch.Draw(thruster.Value, p + RedeHelper.PolarVector(30, NPC.rotation) + RedeHelper.PolarVector(NPC.spriteDirection == 1 ? -44 : 0, NPC.rotation) + RedeHelper.PolarVector(4, NPC.rotation + MathHelper.PiOver2) - screenPos, null, Color.White * MathHelper.Clamp(-NPC.velocity.Y / 20, 0, 1), NPC.rotation - MathHelper.PiOver2, thrusterOrigin, new Vector2(thrusterScaleX, thrusterScaleY), effects, 0);
 
             spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            spriteBatch.BeginDefault();
 
             spriteBatch.Draw(texture, p + new Vector2(NPC.spriteDirection == 1 ? -44 : 0, 0), NPC.frame, drawColor, NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0f);
-            spriteBatch.Draw(glow, p + new Vector2(NPC.spriteDirection == 1 ? -44 : 0, 0), NPC.frame, RedeColor.RedPulse, NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
+            spriteBatch.Draw(glow.Value, p + new Vector2(NPC.spriteDirection == 1 ? -44 : 0, 0), NPC.frame, RedeColor.RedPulse, NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
             if (NPC.frame.Y <= 0)
             {
                 // Head
-                spriteBatch.Draw(head, p + new Vector2(NPC.spriteDirection == 1 ? -44 : 0, 0), new Rectangle?(rectHead), NPC.GetAlpha(drawColor), NPC.rotation, NPC.frame.Size() / 2 + new Vector2(NPC.spriteDirection == 1 ? -48 : 4, -2), NPC.scale, effects, 0);
-                spriteBatch.Draw(headGlow, p + new Vector2(NPC.spriteDirection == 1 ? -44 : 0, 0), new Rectangle?(rectHead), RedeColor.RedPulse, NPC.rotation, NPC.frame.Size() / 2 + new Vector2(NPC.spriteDirection == 1 ? -48 : 4, -2), NPC.scale, effects, 0);
+                spriteBatch.Draw(head.Value, p + new Vector2(NPC.spriteDirection == 1 ? -44 : 0, 0), new Rectangle?(rectHead), NPC.GetAlpha(drawColor), NPC.rotation, NPC.frame.Size() / 2 + new Vector2(NPC.spriteDirection == 1 ? -48 : 4, -2), NPC.scale, effects, 0);
+                spriteBatch.Draw(headGlow.Value, p + new Vector2(NPC.spriteDirection == 1 ? -44 : 0, 0), new Rectangle?(rectHead), RedeColor.RedPulse, NPC.rotation, NPC.frame.Size() / 2 + new Vector2(NPC.spriteDirection == 1 ? -48 : 4, -2), NPC.scale, effects, 0);
             }
             // Legs
-            spriteBatch.Draw(legs, p, new Rectangle?(rectLegs), NPC.GetAlpha(drawColor), NPC.rotation, NPC.frame.Size() / 2 + new Vector2(22, -78), NPC.scale, effects, 0);
+            spriteBatch.Draw(legs.Value, p, new Rectangle?(rectLegs), NPC.GetAlpha(drawColor), NPC.rotation, NPC.frame.Size() / 2 + new Vector2(22, -78), NPC.scale, effects, 0);
             if (NPC.frame.Y <= 0)
             {
                 // Front Arm
-                spriteBatch.Draw(armF, p + new Vector2(NPC.spriteDirection == -1 ? 15 : -59, -22), new Rectangle?(rectArmF), NPC.GetAlpha(drawColor), ArmRot[1], originArms, NPC.scale, effects, 0);
-                spriteBatch.Draw(hands, p + new Vector2(NPC.spriteDirection == -1 ? 15 : -59, -22), new Rectangle?(rectHandF), NPC.GetAlpha(drawColor), ArmRot[1], originArms - new Vector2((NPC.spriteDirection == -1 ? 28 : 13) + (HandArmX[ArmFrameY[1]] * -NPC.spriteDirection), 78 + HandArmY[ArmFrameY[1]]), NPC.scale, effects, 0);
-                spriteBatch.Draw(armR, p + new Vector2(NPC.spriteDirection == -1 ? 15 : -59, -22), new Rectangle?(rectArmRF), NPC.GetAlpha(drawColor), ArmRot[1], originArms - new Vector2(NPC.spriteDirection == -1 ? -3 : 14, 0), NPC.scale, effects, 0);
+                spriteBatch.Draw(armF.Value, p + new Vector2(NPC.spriteDirection == -1 ? 15 : -59, -22), new Rectangle?(rectArmF), NPC.GetAlpha(drawColor), ArmRot[1], originArms, NPC.scale, effects, 0);
+                spriteBatch.Draw(hands.Value, p + new Vector2(NPC.spriteDirection == -1 ? 15 : -59, -22), new Rectangle?(rectHandF), NPC.GetAlpha(drawColor), ArmRot[1], originArms - new Vector2((NPC.spriteDirection == -1 ? 28 : 13) + (HandArmX[ArmFrameY[1]] * -NPC.spriteDirection), 78 + HandArmY[ArmFrameY[1]]), NPC.scale, effects, 0);
+                spriteBatch.Draw(armR.Value, p + new Vector2(NPC.spriteDirection == -1 ? 15 : -59, -22), new Rectangle?(rectArmRF), NPC.GetAlpha(drawColor), ArmRot[1], originArms - new Vector2(NPC.spriteDirection == -1 ? -3 : 14, 0), NPC.scale, effects, 0);
             }
             return false;
         }

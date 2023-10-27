@@ -22,6 +22,7 @@ namespace Redemption.Tiles.Furniture.SlayerShip
             TileObjectData.newTile.UsesCustomCanPlace = true;
             TileObjectData.newTile.Direction = TileObjectDirection.PlaceLeft;
             TileObjectData.newTile.StyleHorizontal = true;
+            TileObjectData.newTile.Origin = new Point16(0, 1);
             TileObjectData.newAlternate.CopyFrom(TileObjectData.newTile);
             TileObjectData.newAlternate.Direction = TileObjectDirection.PlaceRight;
             TileObjectData.addAlternate(1);
@@ -32,11 +33,8 @@ namespace Redemption.Tiles.Furniture.SlayerShip
             DustType = DustID.Electric;
             MinPick = 200;
             MineResist = 6f;
+            RegisterItemDrop(ModContent.ItemType<SlayerWiringKit>());
             AddMapEntry(new Color(189, 191, 200));
-        }
-        public override void KillMultiTile(int i, int j, int frameX, int frameY)
-        {
-            Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 32, 32, ModContent.ItemType<SlayerWiringKit>());
         }
     }
 }

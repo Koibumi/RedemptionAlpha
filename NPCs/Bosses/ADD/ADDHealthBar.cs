@@ -21,18 +21,19 @@ namespace Redemption.NPCs.Bosses.ADD
             }
             return null;
         }
-        public override bool? ModifyInfo(ref BigProgressBarInfo info, ref float lifePercent, ref float shieldPercent)
+        public override bool? ModifyInfo(ref BigProgressBarInfo info, ref float life, ref float lifeMax, ref float shield, ref float shieldMax)
         {
             NPC npc = Main.npc[info.npcIndexToAimAt];
             if (!npc.active || npc.type != ModContent.NPCType<Akka>())
                 return false;
 
             bossHeadIndex = npc.GetBossHeadTextureIndex();
-
-            lifePercent = Utils.Clamp(npc.life / (float)npc.lifeMax, 0f, 1f);
+            lifeMax = npc.lifeMax;
+            life = Utils.Clamp(npc.life, 0, lifeMax);
             if (npc.ModNPC is Akka akka)
             {
-                shieldPercent = Utils.Clamp((float)npc.RedemptionGuard().GuardPoints / akka.GuardPointMax, 0f, 1f);
+                shieldMax = akka.GuardPointMax;
+                shield = Utils.Clamp(npc.RedemptionGuard().GuardPoints, 0, shieldMax);
             }
             return true;
         }
@@ -49,18 +50,19 @@ namespace Redemption.NPCs.Bosses.ADD
             }
             return null;
         }
-        public override bool? ModifyInfo(ref BigProgressBarInfo info, ref float lifePercent, ref float shieldPercent)
+        public override bool? ModifyInfo(ref BigProgressBarInfo info, ref float life, ref float lifeMax, ref float shield, ref float shieldMax)
         {
             NPC npc = Main.npc[info.npcIndexToAimAt];
             if (!npc.active || npc.type != ModContent.NPCType<Ukko>())
                 return false;
 
             bossHeadIndex = npc.GetBossHeadTextureIndex();
-
-            lifePercent = Utils.Clamp(npc.life / (float)npc.lifeMax, 0f, 1f);
+            lifeMax = npc.lifeMax;
+            life = Utils.Clamp(npc.life, 0, lifeMax);
             if (npc.ModNPC is Ukko ukko)
             {
-                shieldPercent = Utils.Clamp((float)npc.RedemptionGuard().GuardPoints / ukko.GuardPointMax, 0f, 1f);
+                shieldMax = ukko.GuardPointMax;
+                shield = Utils.Clamp(npc.RedemptionGuard().GuardPoints, 0, shieldMax);
             }
             return true;
         }

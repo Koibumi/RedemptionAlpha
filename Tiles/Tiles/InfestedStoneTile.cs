@@ -15,8 +15,9 @@ namespace Redemption.Tiles.Tiles
             Main.tileStone[Type] = true;
             Main.tileMergeDirt[Type] = true;
             Main.tileBlockLight[Type] = true;
+            Main.tileBrick[Type] = true;
             Main.tileMerge[Type][TileID.Stone] = true;
-            ItemDrop = ItemID.StoneBlock;
+            RegisterItemDrop(ItemID.StoneBlock, 0);
             DustType = DustID.Stone;
             HitSound = SoundID.Tink;
             MinPick = 0;

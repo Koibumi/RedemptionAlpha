@@ -12,12 +12,14 @@ namespace Redemption.Items.Weapons.HM.Melee
 {
     public class WraithSlayer_Proj : TrueMeleeProjectile
     {
-        public float[] oldrot = new float[4];
+        public float[] oldrot = new float[8];
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Wraith Slayer");
-            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 4;
+            // DisplayName.SetDefault("Wraith Slayer");
+            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 8;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjArcane[Type] = true;
+            ElementID.ProjShadow[Type] = true;
         }
 
         public override bool ShouldUpdatePosition() => false;
@@ -42,10 +44,6 @@ namespace Redemption.Items.Weapons.HM.Melee
         private float SwingSpeed;
         public override void AI()
         {
-            for (int k = Projectile.oldPos.Length - 1; k > 0; k--)
-                oldrot[k] = oldrot[k - 1];
-            oldrot[0] = Projectile.rotation;
-
             Player player = Main.player[Projectile.owner];
             if (player.noItems || player.CCed || player.dead || !player.active)
                 Projectile.Kill();
@@ -117,18 +115,21 @@ namespace Redemption.Items.Weapons.HM.Melee
             }
             if (Timer > 1)
                 Projectile.alpha = 0;
+            for (int k = Projectile.oldPos.Length - 1; k > 0; k--)
+                oldrot[k] = oldrot[k - 1];
+            oldrot[0] = Projectile.rotation;
         }
 
-        public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
             if (NPCLists.Spirit.Contains(target.type))
-                damage *= 2;
-
-            RedeProjectile.Decapitation(target, ref damage, ref crit);
+                modifiers.FinalDamage *= 2;
         }
 
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            RedeProjectile.Decapitation(target, ref damageDone, ref hit.Crit);
+
             if (target.life <= 0 && target.lifeMax >= 50 && (Main.rand.NextBool(6) || NPCLists.Spirit.Contains(target.type)) && NPC.CountNPCS(ModContent.NPCType<WraithSlayer_Samurai>()) < 4)
             {
                 for (int i = 0; i < 20; i++)

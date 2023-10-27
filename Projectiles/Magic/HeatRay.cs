@@ -1,9 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System.IO;
 using Terraria;
 using Terraria.ModLoader;
-using Terraria.Enums;
 using Terraria.GameContent;
 using Terraria.ID;
 using Redemption.Globals;
@@ -19,7 +17,8 @@ namespace Redemption.Projectiles.Magic
     {
         public override void SetSafeStaticDefaults()
         {
-            DisplayName.SetDefault("Heat Ray");
+            // DisplayName.SetDefault("Heat Ray");
+            ElementID.ProjFire[Type] = true;
         }
 
         public override void SetSafeDefaults()
@@ -33,7 +32,7 @@ namespace Redemption.Projectiles.Magic
             Projectile.idStaticNPCHitCooldown = 10;
         }
 
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Player player = Main.player[Projectile.owner];
 

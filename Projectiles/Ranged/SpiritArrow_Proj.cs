@@ -12,9 +12,10 @@ namespace Redemption.Projectiles.Ranged
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Spirit Arrow");
+            // DisplayName.SetDefault("Spirit Arrow");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 6;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjArcane[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -26,15 +27,16 @@ namespace Redemption.Projectiles.Ranged
             Projectile.penetrate = 1;
             Projectile.timeLeft = 600;
             Projectile.alpha = 255;
+            Projectile.arrow = true;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             Player player = Main.player[Projectile.owner];
             if (Main.myPlayer == player.whoAmI)
             {
                 for (int i = 0; i < 4; i++)
                 {
-                    Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center, RedeHelper.PolarVector(8, Main.rand.NextFloat(0, MathHelper.TwoPi)), ModContent.ProjectileType<SpiritArrow_Shard>(), (int)(Projectile.damage * 0.75f), Projectile.knockBack, Main.myPlayer);
+                    Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center, RedeHelper.PolarVector(8, RedeHelper.RandomRotation()), ModContent.ProjectileType<SpiritArrow_Shard>(), (int)(Projectile.damage * 0.75f), Projectile.knockBack, Main.myPlayer);
                 }
             }
         }

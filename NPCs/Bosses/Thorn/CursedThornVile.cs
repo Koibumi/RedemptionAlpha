@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.Base;
+using Redemption.Globals;
 using ReLogic.Content;
 using Terraria;
 using Terraria.GameContent;
@@ -13,6 +14,8 @@ namespace Redemption.NPCs.Bosses.Thorn
         private static Asset<Texture2D> endTex;
         public override void Load()
         {
+            if (Main.dedServ)
+                return;
             endTex = ModContent.Request<Texture2D>("Redemption/NPCs/Bosses/Thorn/CursedThornVile_End");
         }
 
@@ -26,7 +29,8 @@ namespace Redemption.NPCs.Bosses.Thorn
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Cursed Thorns");
+            // DisplayName.SetDefault("Cursed Thorns");
+            ElementID.ProjNature[Type] = true;
         }
 
         public override void SetDefaults()

@@ -1,17 +1,11 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.Buffs;
-using Redemption.Buffs.Minions;
-using Redemption.Buffs.NPCBuffs;
 using Redemption.Globals;
-using Redemption.Textures;
-using System;
 using Terraria;
-using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Terraria.Utilities;
 
 namespace Redemption.Projectiles.Minions
 {
@@ -19,13 +13,11 @@ namespace Redemption.Projectiles.Minions
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Granite Guardian");
+            // DisplayName.SetDefault("Granite Guardian");
             Main.projFrames[Projectile.type] = 6;
-            Main.projPet[Projectile.type] = true;
 
             ProjectileID.Sets.MinionSacrificable[Projectile.type] = true;
             ProjectileID.Sets.CultistIsResistantTo[Projectile.type] = true;
-            ProjectileID.Sets.MinionTargettingFeature[Projectile.type] = true;
         }
 
         public override void SetDefaults()

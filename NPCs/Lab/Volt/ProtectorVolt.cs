@@ -5,7 +5,6 @@ using Microsoft.Xna.Framework;
 using Terraria.ModLoader;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.Items.Usable;
-using Terraria.DataStructures;
 using Redemption.Biomes;
 using Terraria.GameContent.Bestiary;
 using System.Collections.Generic;
@@ -13,10 +12,10 @@ using Redemption.Globals;
 using Terraria.GameContent;
 using Terraria.Utilities;
 using Redemption.WorldGeneration;
-using Redemption.Buffs.Debuffs;
-using Redemption.Buffs.NPCBuffs;
 using Terraria.Audio;
-using Redemption.UI;
+using Redemption.UI.ChatUI;
+using Terraria.Localization;
+using Redemption.Globals.NPC;
 
 namespace Redemption.NPCs.Lab.Volt
 {
@@ -48,7 +47,7 @@ namespace Redemption.NPCs.Lab.Volt
         private readonly float[] oldrot = new float[3];
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Protector Volt");
+            // DisplayName.SetDefault("Protector Volt");
             Main.npcFrameCount[NPC.type] = 5;
             NPCID.Sets.TrailCacheLength[NPC.type] = 3;
             NPCID.Sets.TrailingMode[NPC.type] = 1;
@@ -56,18 +55,8 @@ namespace Redemption.NPCs.Lab.Volt
             NPCID.Sets.MPAllowedEnemies[Type] = true;
             NPCID.Sets.BossBestiaryPriority.Add(Type);
 
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Confused,
-                    BuffID.Poisoned,
-                    BuffID.Venom,
-                    ModContent.BuffType<InfestedDebuff>(),
-                    ModContent.BuffType<NecroticGougeDebuff>(),
-                    ModContent.BuffType<ViralityDebuff>(),
-                    ModContent.BuffType<DirtyWoundDebuff>()
-                }
-            });
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Inorganic);
+            NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Confused] = true;
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0)
             {
                 Position = new Vector2(0, 16),
@@ -82,7 +71,7 @@ namespace Redemption.NPCs.Lab.Volt
             NPC.friendly = false;
             NPC.damage = 120;
             NPC.defense = 90;
-            NPC.lifeMax = 60000;
+            NPC.lifeMax = 90000;
             NPC.HitSound = SoundID.NPCHit4;
             NPC.DeathSound = SoundID.NPCDeath3;
             NPC.SpawnWithHigherTime(30);
@@ -100,11 +89,11 @@ namespace Redemption.NPCs.Lab.Volt
             SpawnModBiomes = new int[2] { ModContent.GetInstance<LidenBiomeOmega>().Type, ModContent.GetInstance<LabBiome>().Type };
         }
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => AIState == ActionState.SweepingBeam;
-        public override bool? CanHitNPC(NPC target) => false;
+        public override bool CanHitNPC(NPC target) => false;
         public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
         {
             bestiaryEntry.Info.AddRange(new List<IBestiaryInfoElement> {
-                new FlavorTextBestiaryInfoElement("A gentle giant who keeps his sentences short and acts as a Guard inside the Laboratory. Volt used to be part of the Bear Unit on the surface, but retired after a violent altercation.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.Volt"))
             });
         }
         public override void OnKill()
@@ -118,7 +107,7 @@ namespace Redemption.NPCs.Lab.Volt
         {
             potionType = ItemID.Heart;
         }
-
+        private static readonly SoundStyle voice = CustomSounds.Voice6 with { Pitch = -0.1f };
         private Vector2 Pos;
         private bool FloatPos;
         public float gunRot;
@@ -127,17 +116,23 @@ namespace Redemption.NPCs.Lab.Volt
         public override void AI()
         {
             Player player = Main.player[NPC.target];
-            DespawnHandler();
+            if (NPC.DespawnHandler(1, 5))
+                return;
             if (NPC.target < 0 || NPC.target == 255 || player.dead || !player.active)
                 NPC.TargetClosest();
 
-            SoundStyle voice = CustomSounds.Voice6 with { Pitch = -0.1f };
+            if (!player.active || player.dead)
+                return;
+
+            Vector2 GunOrigin = NPC.Center + RedeHelper.PolarVector(60, gunRot) + RedeHelper.PolarVector(-4 * NPC.spriteDirection, gunRot - (float)Math.PI / 2);
+            bool flip = false;
             if (NPC.spriteDirection == 1)
             {
                 if (faceLeft)
                 {
                     gunRot -= MathHelper.Pi;
                     faceLeft = false;
+                    flip = true;
                 }
             }
             else
@@ -146,20 +141,14 @@ namespace Redemption.NPCs.Lab.Volt
                 {
                     gunRot += MathHelper.Pi;
                     faceLeft = true;
+                    flip = true;
                 }
             }
-
-            if (!player.active || player.dead)
-                return;
-
-            Vector2 GunOrigin = NPC.Center + RedeHelper.PolarVector(60, gunRot) + RedeHelper.PolarVector(-4 * NPC.spriteDirection, gunRot - (float)Math.PI / 2);
-
             switch (AIState)
             {
                 case ActionState.Begin:
                     if (!Main.dedServ)
-                        RedeSystem.Instance.TitleCardUIElement.DisplayTitle("Protector Volt", 60, 90, 0.8f, 0, Color.Yellow, "Omega Division Commander");
-
+                        RedeSystem.Instance.TitleCardUIElement.DisplayTitle(Language.GetTextValue("Mods.Redemption.TitleCard.Volt.Name"), 60, 90, 0.8f, 0, Color.Yellow, Language.GetTextValue("Mods.Redemption.TitleCard.Volt.Modifier"));
                     AIState = ActionState.Fly;
                     NPC.netUpdate = true;
                     break;
@@ -181,7 +170,7 @@ namespace Redemption.NPCs.Lab.Volt
                         return;
                     }
                     NPC.LookAtEntity(player);
-                    gunRot.SlowRotation(NPC.spriteDirection == 1 ? 0f : (float)Math.PI, (float)Math.PI / 60f);
+                    gunRot.SlowRotation(NPC.spriteDirection == 1 ? 0f : (float)Math.PI, flip ? (float)Math.PI : (float)Math.PI / 60f);
                     NPC.noGravity = true;
                     NPC.noTileCollide = true;
                     switch (TimerRand)
@@ -237,7 +226,7 @@ namespace Redemption.NPCs.Lab.Volt
                     break;
                 case ActionState.Bolts:
                     NPC.LookAtEntity(player);
-                    gunRot.SlowRotation(NPC.DirectionTo(player.Center).ToRotation(), (float)Math.PI / 60f);
+                    gunRot.SlowRotation(NPC.DirectionTo(player.Center).ToRotation(), flip ? (float)Math.PI : (float)Math.PI / 60f);
                     if (AITimer++ == 0)
                     {
                         for (int k = 0; k < 20; k++)
@@ -252,14 +241,14 @@ namespace Redemption.NPCs.Lab.Volt
                         }
                         TimerRand = Main.rand.NextBool() ? 1 : 0;
                     }
-                    
+
 
                     if (AITimer >= 40 && AITimer % (TimerRand == 0 ? 10 : 20) == 0 && Main.netMode != NetmodeID.MultiplayerClient)
                     {
-                        int proj = Projectile.NewProjectile(NPC.GetSource_FromAI(), GunOrigin, RedeHelper.PolarVector(TimerRand == 0 ? 14 : 15, gunRot), ProjectileID.MartianTurretBolt, NPC.damage / 4, 0, Main.myPlayer);
+                        int proj = Projectile.NewProjectile(NPC.GetSource_FromAI(), GunOrigin, RedeHelper.PolarVector(TimerRand == 0 ? 14 : 15, gunRot), ProjectileID.MartianTurretBolt, NPCHelper.HostileProjDamage(NPC.damage), 0, Main.myPlayer);
                         Main.projectile[proj].tileCollide = false;
                         Main.projectile[proj].timeLeft = 200;
-                        Main.projectile[proj].netUpdate2 = true;
+                        Main.projectile[proj].netUpdate = true;
                     }
                     if (AITimer >= (TimerRand == 0 ? 100 : 120))
                     {
@@ -271,14 +260,14 @@ namespace Redemption.NPCs.Lab.Volt
                 case ActionState.Orbs:
                     NPC.LookAtEntity(player);
                     if (NPC.spriteDirection == 1)
-                        gunRot.SlowRotation(5.76f, (float)Math.PI / 30f);
+                        gunRot.SlowRotation(5.76f, flip ? (float)Math.PI : (float)Math.PI / 30f);
                     else
-                        gunRot.SlowRotation(3.66f, (float)Math.PI / 30f);
+                        gunRot.SlowRotation(3.66f, flip ? (float)Math.PI : (float)Math.PI / 30f);
 
                     if (AITimer++ == 60)
                     {
                         for (int i = 0; i < 5; i++)
-                            NPC.Shoot(GunOrigin, ModContent.ProjectileType<Volt_OrbProj>(), NPC.damage, RedeHelper.PolarVector(5 + (i * 3), gunRot), true, SoundID.Item61);
+                            NPC.Shoot(GunOrigin, ModContent.ProjectileType<Volt_OrbProj>(), NPC.damage, RedeHelper.PolarVector(5 + (i * 3), gunRot), SoundID.Item61);
                     }
                     if (AITimer >= 170)
                     {
@@ -301,11 +290,11 @@ namespace Redemption.NPCs.Lab.Volt
                             dust2.noGravity = true;
                             dust2.velocity = dust2.position.DirectionTo(GunOrigin) * 4f;
                         }
-                        gunRot.SlowRotation(NPC.DirectionTo(player.Center).ToRotation() - 0.4f, (float)Math.PI / 40f);
+                        gunRot.SlowRotation(NPC.DirectionTo(player.Center).ToRotation() - 0.4f, flip ? (float)Math.PI : (float)Math.PI / 40f);
                     }
                     if (AITimer == 60)
                     {
-                        NPC.Shoot(GunOrigin, ModContent.ProjectileType<TeslaBeam>(), NPC.damage, RedeHelper.PolarVector(10, gunRot), true, SoundID.Item73, NPC.whoAmI);
+                        NPC.Shoot(GunOrigin, ModContent.ProjectileType<TeslaBeam>(), NPC.damage, RedeHelper.PolarVector(10, gunRot), SoundID.Item73, NPC.whoAmI);
                     }
                     if (AITimer > 60)
                         gunRot += 0.01f;
@@ -342,12 +331,12 @@ namespace Redemption.NPCs.Lab.Volt
                                 dust2.noGravity = true;
                             }
                         }
-                        gunRot.SlowRotation(NPC.DirectionTo(player.Center).ToRotation(), (float)Math.PI / 40f);
+                        gunRot.SlowRotation(NPC.DirectionTo(player.Center).ToRotation(), flip ? (float)Math.PI : (float)Math.PI / 40f);
                     }
                     if (AITimer == 60)
                     {
                         for (int i = 0; i < 2; i++)
-                            NPC.Shoot(GunOrigin, ModContent.ProjectileType<TeslaZapBeam>(), NPC.damage, RedeHelper.PolarVector(1, gunRot + (i == 0 ? -1f : 1f)), true, CustomSounds.BallFire, NPC.whoAmI, i);
+                            NPC.Shoot(GunOrigin, ModContent.ProjectileType<TeslaZapBeam>(), NPC.damage, RedeHelper.PolarVector(1, gunRot + (i == 0 ? -1f : 1f)), CustomSounds.BallFire, NPC.whoAmI, i);
                     }
                     if (AITimer >= 160)
                     {
@@ -372,9 +361,9 @@ namespace Redemption.NPCs.Lab.Volt
                         }
 
                         if (NPC.Center.Y > (RedeGen.LabVector.Y + 112) * 16)
-                            gunRot.SlowRotation(-MathHelper.PiOver2, (float)Math.PI / 30f);
+                            gunRot.SlowRotation(-MathHelper.PiOver2, flip ? (float)Math.PI : (float)Math.PI / 30f);
                         else
-                            gunRot.SlowRotation(MathHelper.PiOver2, (float)Math.PI / 30f);
+                            gunRot.SlowRotation(MathHelper.PiOver2, flip ? (float)Math.PI : (float)Math.PI / 30f);
                     }
                     if (AITimer == 40)
                     {
@@ -390,7 +379,7 @@ namespace Redemption.NPCs.Lab.Volt
                     }
                     if (AITimer == 60)
                     {
-                        NPC.Shoot(GunOrigin, ModContent.ProjectileType<TeslaBeam>(), NPC.damage, RedeHelper.PolarVector(10, gunRot), true, SoundID.Item73, NPC.whoAmI);
+                        NPC.Shoot(GunOrigin, ModContent.ProjectileType<TeslaBeam>(), NPC.damage, RedeHelper.PolarVector(10, gunRot), SoundID.Item73, NPC.whoAmI);
                         if (NPC.Center.X > (RedeGen.LabVector.X + 86) * 16)
                             TimerRand = 1;
                     }
@@ -417,6 +406,7 @@ namespace Redemption.NPCs.Lab.Volt
                     }
                     break;
                 case ActionState.Defeat:
+                    gunRot.SlowRotation(NPC.spriteDirection == 1 ? 0f : (float)Math.PI, flip ? (float)Math.PI : (float)Math.PI / 60f);
                     switch (TimerRand)
                     {
                         case 0:
@@ -436,12 +426,12 @@ namespace Redemption.NPCs.Lab.Volt
                             AITimer++;
                             if (RedeBossDowned.downedVolt)
                             {
-                                if (AITimer == 10)
+                                if (AITimer == 10 && !Main.dedServ)
                                 {
-                                    Dialogue d1 = new(NPC, "Enough.", Colors.RarityYellow, new Color(100, 86, 0), voice, 2, 100, 30, true, modifier: modifier); // 144
+                                    Dialogue d1 = new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.Volt.Defeat.Refight"), Colors.RarityYellow, new Color(100, 86, 0), voice, .03f, 2f, .5f, true, modifier: modifier); // 144
 
-                                    TextBubbleUI.Visible = true;
-                                    TextBubbleUI.Add(d1);
+                                    ChatUI.Visible = true;
+                                    ChatUI.Add(d1);
                                 }
                                 if (AITimer >= 30)
                                 {
@@ -452,17 +442,18 @@ namespace Redemption.NPCs.Lab.Volt
                             }
                             else
                             {
-                                if (AITimer == 10)
+                                if (AITimer == 10 && !Main.dedServ)
                                 {
                                     DialogueChain chain = new();
-                                    chain.Add(new(NPC, "... Are you allowed through?[30] Let me check.", Colors.RarityYellow, new Color(100, 86, 0), voice, 2, 100, 0, false, modifier: modifier)) // 214
-                                         .Add(new(NPC, "... Oh?", Colors.RarityYellow, new Color(100, 86, 0), voice, 2, 100, 0, false, modifier: modifier)) // 114
-                                         .Add(new(NPC, "... You're allowed through?", Colors.RarityYellow, new Color(100, 86, 0), voice, 2, 100, 0, false, modifier: modifier)) // 154
-                                         .Add(new(NPC, "This was mildly embarrassing.[30] Apologies.", Colors.RarityYellow, new Color(100, 86, 0), voice, 2, 100, 30, true, modifier: modifier)); // 240
-                                    TextBubbleUI.Visible = true;
-                                    TextBubbleUI.Add(chain);
+                                    chain.Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.Volt.Defeat.1"), Colors.RarityYellow, new Color(100, 86, 0), voice, .03f, 2f, 0, false, modifier: modifier))
+                                         .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.Volt.Defeat.2"), Colors.RarityYellow, new Color(100, 86, 0), voice, .03f, 2f, 0, false, modifier: modifier))
+                                         .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.Volt.Defeat.3"), Colors.RarityYellow, new Color(100, 86, 0), voice, .03f, 2f, 0, false, modifier: modifier))
+                                         .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.Volt.Defeat.4"), Colors.RarityYellow, new Color(100, 86, 0), voice, .03f, 2f, .5f, true, modifier: modifier, endID: 1));
+                                    chain.OnEndTrigger += Chain_OnEndTrigger;
+                                    ChatUI.Visible = true;
+                                    ChatUI.Add(chain);
                                 }
-                                if (AITimer >= 732)
+                                if (AITimer >= 2000)
                                 {
                                     AITimer = 0;
                                     TimerRand = 2;
@@ -493,16 +484,32 @@ namespace Redemption.NPCs.Lab.Volt
 
                             Main.BestiaryTracker.Kills.RegisterKill(NPC);
 
-                            NPC.SetEventFlagCleared(ref RedeBossDowned.downedVolt, -1);
-                            if (Main.netMode == NetmodeID.Server)
-                                NetMessage.SendData(MessageID.WorldData);
-
-                            NPC.position.Y -= 30;
+                            if (Main.netMode != NetmodeID.MultiplayerClient)
+                            {
+                                RedeBossDowned.downedVolt = true;
+                                if (Main.netMode == NetmodeID.Server)
+                                    NetMessage.SendData(MessageID.WorldData);
+                            }
+                            NPC.position.Y -= 10;
                             NPC.SetDefaults(ModContent.NPCType<ProtectorVolt_NPC>());
                             break;
                     }
                     break;
             }
+            if (NPC.velocity.Length() != 0 || FloatPos)
+            {
+                if (Main.rand.NextBool(3))
+                {
+                    int dust1 = Dust.NewDust(new Vector2(NPC.Center.X + 6 * NPC.spriteDirection, NPC.Center.Y + 33), 2, 2, DustID.Torch, 0f, 3f, 100, Color.White, NPC.velocity.Length() == 0 ? 1.2f : 2f);
+                    Main.dust[dust1].velocity.X = 0;
+                    int dust2 = Dust.NewDust(new Vector2(NPC.Center.X + -14 * NPC.spriteDirection, NPC.Center.Y + 33), 2, 2, DustID.Torch, 0f, 3f, 100, Color.White, NPC.velocity.Length() == 0 ? 1.2f : 2f);
+                    Main.dust[dust2].velocity.X = 0;
+                }
+            }
+        }
+        private void Chain_OnEndTrigger(Dialogue dialogue, int ID)
+        {
+            AITimer = 3000;
         }
         public Vector2 PickRandPos()
         {
@@ -524,7 +531,7 @@ namespace Redemption.NPCs.Lab.Volt
             else
                 FloatPos = false;
 
-            return (RedeGen.LabVector + selection) * 16;
+            return (RedeGen.LabVector + choice) * 16;
         }
         public Vector2 PickSidePos()
         {
@@ -563,19 +570,12 @@ namespace Redemption.NPCs.Lab.Volt
             {
                 NPC.rotation = NPC.velocity.X * 0.05f;
                 NPC.frame.Y = 4 * frameHeight;
-                if (Main.rand.NextBool(3))
-                {
-                    int dust1 = Dust.NewDust(new Vector2(NPC.Center.X + 6 * NPC.spriteDirection, NPC.Center.Y + 33), 2, 2, DustID.Torch, 0f, 3f, 100, Color.White, NPC.velocity.Length() == 0 ? 1.2f : 2f);
-                    Main.dust[dust1].velocity.X = 0;
-                    int dust2 = Dust.NewDust(new Vector2(NPC.Center.X + -14 * NPC.spriteDirection, NPC.Center.Y + 33), 2, 2, DustID.Torch, 0f, 3f, 100, Color.White, NPC.velocity.Length() == 0 ? 1.2f : 2f);
-                    Main.dust[dust2].velocity.X = 0;
-                }
             }
         }
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
             Texture2D texture = TextureAssets.Npc[NPC.type].Value;
-            Texture2D GunTex = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Gun").Value;
+            Texture2D GunTex = ModContent.Request<Texture2D>(Texture + "_Gun").Value;
             var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
             for (int i = 0; i < NPCID.Sets.TrailCacheLength[NPC.type]; i++)
@@ -594,25 +594,9 @@ namespace Redemption.NPCs.Lab.Volt
                 spriteBatch.Draw(GunTex, gunCenter - screenPos, new Rectangle?(new Rectangle(0, 0, GunTex.Width, height)), NPC.GetAlpha(drawColor), (AIState is ActionState.SweepingBeam ? 0 : NPC.rotation) + gunRot + (NPC.spriteDirection == -1 ? (float)Math.PI : 0), new Vector2(GunTex.Width / 2f, height / 2f), NPC.scale, effects, 0f);
             return false;
         }
-        private void DespawnHandler()
+        public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment)
         {
-            Player player = Main.player[NPC.target];
-            if (!player.active || player.dead)
-            {
-                NPC.TargetClosest(false);
-                player = Main.player[NPC.target];
-                if (!player.active || player.dead)
-                {
-                    NPC.alpha += 5;
-                    if (NPC.alpha >= 255)
-                        NPC.active = false;
-                }
-            }
-        }
-
-        public override void ScaleExpertStats(int numPlayers, float bossLifeScale)
-        {
-            NPC.lifeMax = (int)(NPC.lifeMax * 0.6f * bossLifeScale);
+            NPC.lifeMax = (int)(NPC.lifeMax * 0.6f * balance * bossAdjustment);
             NPC.damage = (int)(NPC.damage * 0.6f);
         }
     }

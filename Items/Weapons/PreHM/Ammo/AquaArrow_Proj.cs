@@ -1,6 +1,5 @@
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Redemption.Buffs.NPCBuffs;
+using Redemption.Globals;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -12,7 +11,8 @@ namespace Redemption.Items.Weapons.PreHM.Ammo
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Aqua Arrow");
+            // DisplayName.SetDefault("Aqua Arrow");
+            ElementID.ProjWater[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -36,7 +36,7 @@ namespace Redemption.Items.Weapons.PreHM.Ammo
             if (Main.rand.NextBool(4))
                 Dust.NewDust(Projectile.position + Projectile.velocity, Projectile.width, Projectile.height, DustID.Water, Projectile.velocity.X * 0.5f, Projectile.velocity.Y * 0.5f);
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             if (Main.rand.NextBool(2))
                 return;
@@ -49,7 +49,7 @@ namespace Redemption.Items.Weapons.PreHM.Ammo
             SoundEngine.PlaySound(SoundID.Dig, Projectile.position);
             return true;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             for (int i = 0; i < 18; i++)
                 Dust.NewDust(Projectile.position + Projectile.velocity, Projectile.width, Projectile.height, DustID.Water, Projectile.velocity.X * 0.5f, Projectile.velocity.Y * 0.5f);

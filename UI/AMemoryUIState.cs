@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.GameContent.UI.Elements;
+using Terraria.GameInput;
 using Terraria.ModLoader;
 using Terraria.UI;
 
@@ -30,7 +31,7 @@ namespace Redemption.UI
             closeButton.Left.Set(426 - 30, 0f);
             closeButton.Top.Set(8, 0f);
 
-            closeButton.OnClick += new MouseEvent(CloseMenu);
+            closeButton.OnLeftClick += new MouseEvent(CloseMenu);
             BgSprite.Append(closeButton);
 
             Append(BgSprite);
@@ -41,12 +42,15 @@ namespace Redemption.UI
         }
         public override void Update(GameTime gameTime)
         {
+            base.Update(gameTime);
+            if (ContainsPoint(Main.MouseScreen) && !PlayerInput.IgnoreMouseInterface)
+                Main.LocalPlayer.mouseInterface = true;
+
             if (!Main.LocalPlayer.releaseInventory)
                 Visible = false;
         }
         public override void MouseOver(UIMouseEvent evt)
         {
-            Main.isMouseLeftConsumedByUI = true;
         }
         public override void Draw(SpriteBatch spriteBatch)
         {

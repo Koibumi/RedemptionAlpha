@@ -9,16 +9,16 @@ namespace Redemption.Items.Weapons.PreHM.Magic
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Holy Magnifying Glass");
-            Tooltip.SetDefault("Hold left-click to charge a scorching ray" +
-                "\n'Super effective on insects'");
+            // DisplayName.SetDefault("Holy Magnifying Glass");
+            /* Tooltip.SetDefault("Hold left-click to charge a scorching ray" +
+                "\n'Super effective on insects'"); */
 
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
         {
-            Item.damage = 9;
+            Item.damage = 11;
             Item.DamageType = DamageClass.Magic;
             Item.mana = 10;
             Item.width = 38;

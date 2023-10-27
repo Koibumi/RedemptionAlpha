@@ -1,5 +1,9 @@
 using Microsoft.Xna.Framework;
+using Redemption.Globals;
+using System.Collections.Generic;
 using Terraria;
+using Terraria.DataStructures;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace Redemption.Projectiles.Ranged
@@ -8,13 +12,15 @@ namespace Redemption.Projectiles.Ranged
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Thorn Trap");
+            // DisplayName.SetDefault("Thorn Trap");
             Main.projFrames[Projectile.type] = 6;
+            ProjectileID.Sets.DontAttachHideToAlpha[Type] = true;
+            ElementID.ProjNature[Type] = true;
         }
         public override void SetDefaults()
         {
             Projectile.width = 36;
-            Projectile.height = 46;
+            Projectile.height = 40;
             Projectile.penetrate = -1;
             Projectile.hostile = false;
             Projectile.friendly = true;
@@ -22,6 +28,16 @@ namespace Redemption.Projectiles.Ranged
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.ignoreWater = true;
             Projectile.timeLeft = 180;
+            Projectile.hide = true;
+        }
+        public override void DrawBehind(int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI)
+        {
+            behindNPCsAndTiles.Add(index);
+        }
+        public override void OnSpawn(IEntitySource source)
+        {
+            if (Projectile.ai[0] == 1)
+                Projectile.DamageType = DamageClass.Melee;
         }
         public override void AI()
         {

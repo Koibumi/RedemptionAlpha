@@ -3,9 +3,12 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Microsoft.Xna.Framework;
 using Redemption.Dusts;
-using Terraria.DataStructures;
 using Redemption.Globals;
-using Redemption.Buffs.Debuffs;
+using System.IO;
+using Redemption.Projectiles.Magic;
+using Redemption.Globals.NPC;
+using System;
+using Terraria.Audio;
 
 namespace Redemption.NPCs.Bosses.PatientZero
 {
@@ -16,25 +19,17 @@ namespace Redemption.NPCs.Bosses.PatientZero
         public ref float TimerRand2 => ref NPC.ai[3];
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Kari Johansson");
+            // DisplayName.SetDefault("Kari Johansson");
             Main.npcFrameCount[NPC.type] = 4;
             NPCID.Sets.BossBestiaryPriority.Add(Type);
 
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Confused,
-                    BuffID.Poisoned,
-                    BuffID.Venom,
-                    ModContent.BuffType<BileDebuff>(),
-                    ModContent.BuffType<GreenRashesDebuff>(),
-                    ModContent.BuffType<GlowingPustulesDebuff>(),
-                    ModContent.BuffType<FleshCrystalsDebuff>()
-                }
-            });
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Infected);
+            NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Confused] = true;
+
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0) { Hide = true };
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
+            ElementID.NPCPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -59,7 +54,7 @@ namespace Redemption.NPCs.Bosses.PatientZero
             if (!Main.dedServ)
                 Music = MusicLoader.GetMusicSlot(Mod, "Sounds/Music/LabBossMusic2");
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -84,6 +79,15 @@ namespace Redemption.NPCs.Bosses.PatientZero
                 host.netUpdate = true;
             }
             return false;
+        }
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.Write(Exposed);
+        }
+
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            Exposed = reader.ReadBoolean();
         }
         private bool Exposed;
         public override void AI()
@@ -132,22 +136,35 @@ namespace Redemption.NPCs.Bosses.PatientZero
                 switch (TimerRand2)
                 {
                     case 0:
-                        AITimer++;
+                        if (++AITimer is 60)
+                        {
+                            SoundEngine.PlaySound(SoundID.NPCDeath13, NPC.position);
+                            for (int k = 0; k < 20; k++)
+                            {
+                                Vector2 vector;
+                                double angle = Main.rand.NextDouble() * 2d * Math.PI;
+                                vector.X = (float)(Math.Sin(angle) * 100);
+                                vector.Y = (float)(Math.Cos(angle) * 100);
+                                Dust dust2 = Main.dust[Dust.NewDust(NPC.Center + vector, 2, 2, DustID.GreenFairy, 0f, 0f, 100, default, 2f)];
+                                dust2.noGravity = true;
+                                dust2.velocity = -NPC.DirectionTo(dust2.position) * 10;
+                            }
+                        }
                         if (AITimer % 5 == 0 && AITimer >= 120)
                         {
                             switch (hostPhase)
                             {
                                 case 1:
-                                    NPC.Shoot(NPC.Center, ModContent.ProjectileType<TearOfInfectionBall>(), (int)(NPC.damage * 0.9f), RedeHelper.PolarVector(12, (player.Center - NPC.Center).ToRotation() + Main.rand.NextFloat(-0.06f, 0.06f)), true, SoundID.Item20);
+                                    NPC.Shoot(NPC.Center, ModContent.ProjectileType<TearOfInfectionBall>(), (int)(NPC.damage * 0.9f), RedeHelper.PolarVector(12, (player.Center - NPC.Center).ToRotation() + Main.rand.NextFloat(-0.06f, 0.06f)), SoundID.Item20);
                                     break;
                                 case 2:
-                                    NPC.Shoot(NPC.Center, ModContent.ProjectileType<CausticTearBall>(), (int)(NPC.damage * 0.95f), RedeHelper.PolarVector(11, (player.Center - NPC.Center).ToRotation() + Main.rand.NextFloat(-0.06f, 0.06f)), true, SoundID.Item20);
+                                    NPC.Shoot(NPC.Center, ModContent.ProjectileType<CausticTearBall>(), (int)(NPC.damage * 0.95f), RedeHelper.PolarVector(11, (player.Center - NPC.Center).ToRotation() + Main.rand.NextFloat(-0.06f, 0.06f)), SoundID.Item20);
                                     break;
                                 case 3:
-                                    NPC.Shoot(NPC.Center, ModContent.ProjectileType<TearOfPainBall>(), NPC.damage, RedeHelper.PolarVector(10, (player.Center - NPC.Center).ToRotation() + Main.rand.NextFloat(-0.06f, 0.06f)), true, SoundID.Item20);
+                                    NPC.Shoot(NPC.Center, ModContent.ProjectileType<TearOfPainBall>(), NPC.damage, RedeHelper.PolarVector(10, (player.Center - NPC.Center).ToRotation() + Main.rand.NextFloat(-0.06f, 0.06f)), SoundID.Item20);
                                     break;
                                 case 4:
-                                    NPC.Shoot(NPC.Center, ModContent.ProjectileType<TearOfPainBall>(), NPC.damage, RedeHelper.PolarVector(10, (player.Center - NPC.Center).ToRotation() + Main.rand.NextFloat(-0.06f, 0.06f)), true, SoundID.Item20);
+                                    NPC.Shoot(NPC.Center, ModContent.ProjectileType<TearOfPainBall>(), NPC.damage, RedeHelper.PolarVector(10, (player.Center - NPC.Center).ToRotation() + Main.rand.NextFloat(-0.06f, 0.06f)), SoundID.Item20);
                                     break;
                             }
                         }
@@ -166,34 +183,34 @@ namespace Redemption.NPCs.Bosses.PatientZero
                                 if (AITimer % 100 == 0)
                                 {
                                     for (int i = 0; i < 6; i++)
-                                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<PoisonBeat>(), (int)(NPC.damage * 0.9f), new Vector2(Main.rand.Next(-5, 6), Main.rand.Next(-16, -4)), true, SoundID.Item72);
+                                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<PoisonBeat>(), (int)(NPC.damage * 0.9f), new Vector2(Main.rand.Next(-5, 6), Main.rand.Next(-16, -4)), SoundID.Item72);
                                 }
                                 break;
                             case 2:
                                 if (AITimer % 90 == 0)
                                 {
                                     for (int i = 0; i < 6; i++)
-                                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<PoisonBeat>(), (int)(NPC.damage * 0.9f), new Vector2(Main.rand.Next(-5, 6), Main.rand.Next(-16, -4)), true, SoundID.Item72);
+                                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<PoisonBeat>(), (int)(NPC.damage * 0.9f), new Vector2(Main.rand.Next(-5, 6), Main.rand.Next(-16, -4)), SoundID.Item72);
                                     for (int i = 0; i < 4; i++)
-                                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<InfectiousBeat>(), (int)(NPC.damage * 0.9f), new Vector2(Main.rand.Next(-5, 6), Main.rand.Next(-16, -4)), true, SoundID.Item72);
+                                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<InfectiousBeat>(), (int)(NPC.damage * 0.9f), new Vector2(Main.rand.Next(-5, 6), Main.rand.Next(-16, -4)), SoundID.Item72);
                                 }
                                 break;
                             case 3:
                                 if (AITimer % 80 == 0)
                                 {
                                     for (int i = 0; i < 8; i++)
-                                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<PoisonBeat>(), (int)(NPC.damage * 0.9f), new Vector2(Main.rand.Next(-5, 6), Main.rand.Next(-16, -4)), true, SoundID.Item72);
+                                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<PoisonBeat>(), (int)(NPC.damage * 0.9f), new Vector2(Main.rand.Next(-5, 6), Main.rand.Next(-16, -4)), SoundID.Item72);
                                     for (int i = 0; i < 4; i++)
-                                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<InfectiousBeat>(), (int)(NPC.damage * 0.9f), new Vector2(Main.rand.Next(-5, 6), Main.rand.Next(-16, -4)), true, SoundID.Item72);
+                                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<InfectiousBeat>(), (int)(NPC.damage * 0.9f), new Vector2(Main.rand.Next(-5, 6), Main.rand.Next(-16, -4)), SoundID.Item72);
                                 }
                                 break;
                             case 4:
                                 if (AITimer % 70 == 0)
                                 {
                                     for (int i = 0; i < 8; i++)
-                                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<PoisonBeat>(), (int)(NPC.damage * 0.9f), new Vector2(Main.rand.Next(-5, 6), Main.rand.Next(-16, -4)), true, SoundID.Item72);
+                                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<PoisonBeat>(), (int)(NPC.damage * 0.9f), new Vector2(Main.rand.Next(-5, 6), Main.rand.Next(-16, -4)), SoundID.Item72);
                                     for (int i = 0; i < 4; i++)
-                                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<InfectiousBeat>(), (int)(NPC.damage * 0.9f), new Vector2(Main.rand.Next(-5, 6), Main.rand.Next(-16, -4)), true, SoundID.Item72);
+                                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<InfectiousBeat>(), (int)(NPC.damage * 0.9f), new Vector2(Main.rand.Next(-5, 6), Main.rand.Next(-16, -4)), SoundID.Item72);
                                 }
                                 break;
                         }
@@ -212,10 +229,21 @@ namespace Redemption.NPCs.Bosses.PatientZero
                         }
                         else
                         {
-                            AITimer++;
+                            if (++AITimer is 60)
+                                SoundEngine.PlaySound(SoundID.NPCDeath13 with { Pitch = -.4f }, NPC.position);
+                            if (AITimer >= 60 && AITimer < 120)
+                            {
+                                Vector2 vector;
+                                double angle = Main.rand.NextDouble() * 2d * Math.PI;
+                                vector.X = (float)(Math.Sin(angle) * 100);
+                                vector.Y = (float)(Math.Cos(angle) * 100);
+                                Dust dust = Main.dust[Dust.NewDust(NPC.Center + vector + new Vector2(0, 50), 2, 2, ModContent.DustType<DustSpark2>(), newColor: new Color(100, 255, 100, 0), Scale: 1f)];
+                                dust.noGravity = true;
+                                dust.velocity = dust.position.DirectionTo(NPC.Center + new Vector2(0, 50)) * 3f;
+                            }
                             if (AITimer % (hostPhase >= 3 ? 30 : 60) == 0 && AITimer >= 120)
                             {
-                                NPC.Shoot(NPC.Center, ModContent.ProjectileType<PZ_Kari_Laser>(), NPC.damage, RedeHelper.PolarVector(10, (player.Center - NPC.Center).ToRotation() + Main.rand.NextFloat(-0.06f, 0.06f)), true, SoundID.Item103, NPC.whoAmI);
+                                NPC.Shoot(NPC.Center, ModContent.ProjectileType<PZ_Kari_Laser>(), NPC.damage, RedeHelper.PolarVector(10, (player.Center - NPC.Center).ToRotation() + Main.rand.NextFloat(-0.06f, 0.06f)), SoundID.Item103, NPC.whoAmI);
                             }
                             if (AITimer >= 340)
                             {
@@ -240,16 +268,18 @@ namespace Redemption.NPCs.Bosses.PatientZero
                 }
             }
         }
-        public override void ModifyHitByProjectile(Projectile projectile, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
+        public override void ModifyHitByProjectile(Projectile projectile, ref NPC.HitModifiers modifiers)
         {
             if (projectile.type == ProjectileID.LastPrismLaser)
-                damage /= 3;
+                modifiers.FinalDamage /= 3;
+            if (projectile.type == ModContent.ProjectileType<LightOrb_Proj>())
+                modifiers.FinalDamage *= .6f;
         }
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => false;
-        public override void ScaleExpertStats(int numPlayers, float bossLifeScale)
+        public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment)
         {
-            NPC.lifeMax = (int)(NPC.lifeMax * 0.75f * bossLifeScale);
-            NPC.damage = (int)(NPC.damage * 0.6f);
+            NPC.lifeMax = (int)(NPC.lifeMax * 0.75f * balance * bossAdjustment);
+            NPC.damage = (int)(NPC.damage * 0.75f);
         }
     }
 }

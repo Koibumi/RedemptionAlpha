@@ -1,5 +1,4 @@
 using Microsoft.Xna.Framework;
-using Redemption.Items.Placeable.Tiles;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -13,7 +12,6 @@ namespace Redemption.Walls
 			Main.wallHouse[Type] = true;
             DustType = DustID.Ice;
             HitSound = SoundID.Item50;
-            ItemDrop = ModContent.ItemType<GathicFroststoneBrickWall>();
             AddMapEntry(new Color(24, 91, 144));
         }
     }
@@ -25,7 +23,6 @@ namespace Redemption.Walls
 			Main.wallHouse[Type] = false;
             DustType = DustID.Ice;
             HitSound = SoundID.Item50;
-            ItemDrop = ModContent.ItemType<GathicFroststoneBrickWall>();
             AddMapEntry(new Color(24, 91, 144));
         }
     }

@@ -10,8 +10,8 @@ namespace Redemption.Items.Weapons.PreHM.Ritualist
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Produces extra small spirits on hit");
-            SacrificeTotal = 1;
+            // Tooltip.SetDefault("Produces extra small spirits on hit");
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -46,6 +46,7 @@ namespace Redemption.Items.Weapons.PreHM.Ritualist
             Vector2 Offset = Vector2.Normalize(velocity) * 50f;
             position += Offset;
         }
+        /*
         public override void AddRecipes()
         {
             CreateRecipe()
@@ -53,6 +54,6 @@ namespace Redemption.Items.Weapons.PreHM.Ritualist
                 .AddIngredient(ItemID.ShadowScale, 5)
                 .AddTile(TileID.Anvils)
                 .Register();
-        }
+        }*/
     }
 }

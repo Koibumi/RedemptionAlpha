@@ -1,7 +1,7 @@
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ID;
-using Redemption.Items.Materials.HM;
+using Terraria.Localization;
 using Redemption.DamageClasses;
 using Redemption.BaseExtension;
 
@@ -12,13 +12,13 @@ namespace Redemption.Items.Armor.HM.Hardlight
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("13% increased ritual damage\n" +
+            /* Tooltip.SetDefault("13% increased ritual damage\n" +
             "5% increased ritual critical strike chance\n" +
-            "+2 max spirit level");
+            "+2 max spirit level"); */
 
             ArmorIDs.Head.Sets.DrawHead[EquipLoader.GetEquipSlot(Mod, Name, EquipType.Head)] = false;
 
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -26,7 +26,7 @@ namespace Redemption.Items.Armor.HM.Hardlight
             Item.width = 26;
             Item.height = 22;
             Item.sellPrice(silver: 75);
-            Item.rare = ItemRarityID.Cyan;
+            Item.rare = ItemRarityID.LightPurple;
             Item.defense = 16;
         }
 
@@ -41,21 +41,13 @@ namespace Redemption.Items.Armor.HM.Hardlight
             return body.type == ModContent.ItemType<HardlightPlate>() && legs.type == ModContent.ItemType<HardlightBoots>();
         }
 
-        public override void AddRecipes()
-        {
-            CreateRecipe()
-                .AddIngredient(ModContent.ItemType<CyberPlating>(), 8)
-                .AddTile(TileID.MythrilAnvil)
-                .Register();
-        }
-
         public override void UpdateArmorSet(Player player)
         {
-            player.setBonus = "Select a keybind for [Special Ability Key] in Controls"; // TODO: Hardlight ritualist bonus
+            player.setBonus = Language.GetTextValue("Mods.Redemption.GenericTooltips.ArmorSetBonus.Hardlight.Keybind"); // TODO: Hardlight ritualist bonus
             foreach (string key in Redemption.RedeSpecialAbility.GetAssignedKeys())
             {
-                player.setBonus = "Press " + key + " to get support from the Ship of the Slayer\n" +
-                    "Summons a hologram of King Slayer III to help, higher spirit levels give the hologram stronger weapons";
+                player.setBonus = Language.GetTextValue("Mods.Redemption.GenericTooltips.ArmorSetBonus.Hardlight.Press") + key + Language.GetTextValue("Mods.Redemption.GenericTooltips.ArmorSetBonus.Hardlight.Support") +
+                    Language.GetTextValue("Mods.Redemption.GenericTooltips.ArmorSetBonus.Hardlight.Casque");
             }
             player.RedemptionPlayerBuff().hardlightBonus = 1;
             player.RedemptionPlayerBuff().MetalSet = true;

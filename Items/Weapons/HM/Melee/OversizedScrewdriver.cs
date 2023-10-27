@@ -9,17 +9,17 @@ namespace Redemption.Items.Weapons.HM.Melee
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Holds out a spinning screwdriver\n" +
+            /* Tooltip.SetDefault("Holds out a spinning screwdriver\n" +
                 "Holding down left-click and hitting an enemy will cause you to bounce on it\n" +
                 "Each successful bounce increases damage up to 300%\n" +
                 "Deals extra damage to robotic enemies\n" +
-                "'May cause dizziness'");
-            SacrificeTotal = 1;
+                "'May cause dizziness'"); */
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
         {
-            Item.damage = 70;
+            Item.damage = 80;
             Item.DamageType = DamageClass.Melee;
             Item.width = 40;
             Item.height = 40;
@@ -31,7 +31,7 @@ namespace Redemption.Items.Weapons.HM.Melee
             Item.channel = true;
             Item.knockBack = 4;
             Item.value = Item.sellPrice(0, 8, 0, 0);
-            Item.rare = ItemRarityID.Red;
+            Item.rare = ItemRarityID.Yellow;
             Item.UseSound = SoundID.Item23;
             Item.autoReuse = true;
             Item.shoot = ModContent.ProjectileType<OversizedScrewdriver_Proj>();

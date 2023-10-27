@@ -1,5 +1,4 @@
 using Microsoft.Xna.Framework;
-using Redemption.Items.Placeable.Furniture.Misc;
 using Terraria;
 using Terraria.Enums;
 using Terraria.ModLoader;
@@ -7,6 +6,7 @@ using Terraria.ObjectData;
 using Terraria.DataStructures;
 using Redemption.Dusts.Tiles;
 using Terraria.ID;
+using Redemption.Items.Placeable.Furniture.Misc;
 
 namespace Redemption.Tiles.Furniture.Misc
 {
@@ -30,6 +30,8 @@ namespace Redemption.Tiles.Furniture.Misc
             TileObjectData.addTile(Type);
             MinPick = 50;
             MineResist = 7f;
+            HitSound = CustomSounds.StoneHit;
+            RegisterItemDrop(ModContent.ItemType<HKMiniStatue>());
             AddMapEntry(new Color(104, 91, 83));
             DustType = ModContent.DustType<SlateDust>();
         }
@@ -71,6 +73,5 @@ namespace Redemption.Tiles.Furniture.Misc
         }
         public override bool CanExplode(int i, int j) => false;
         public override void NumDust(int i, int j, bool fail, ref int num) => num = fail ? 1 : 3;
-        public override void KillMultiTile(int i, int j, int frameX, int frameY) => Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 32, 64, ModContent.ItemType<HKMiniStatue>());
     }
 }

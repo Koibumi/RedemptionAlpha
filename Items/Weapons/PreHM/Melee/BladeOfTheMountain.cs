@@ -1,25 +1,28 @@
 using Microsoft.Xna.Framework;
-using Redemption.Items.Materials.PreHM;
+using Redemption.Globals;
 using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.Items.Weapons.PreHM.Melee
 {
     public class BladeOfTheMountain : ModItem
     {
+        public override LocalizedText Tooltip => base.Tooltip.WithFormatArgs(ElementID.IceS);
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Blade of the Mountain");
-            Tooltip.SetDefault("Parries physical or ice projectiles" +
+            // DisplayName.SetDefault("Blade of the Mountain");
+            /* Tooltip.SetDefault("Parries physical or ice projectiles, including your own Icefall crystals" +
+                "\nDeals more damage at the tip of the blade" +
                 "\nHitting on the very tip of the blade can freeze enemies" +
                 "\nEnemies with knockback immunity cannot be frozen\n" +
-                "'Send them to their snowy grave'");
+                "'Send them to their snowy grave'"); */
 
             ItemID.Sets.SkipsInitialUseSound[Item.type] = true;
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -60,15 +63,6 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             Main.dust[sparkle].velocity *= 0;
             Main.dust[sparkle].noGravity = true;
         }
-
-        public override void AddRecipes()
-        {
-            CreateRecipe()
-                .AddIngredient(ModContent.ItemType<Zweihander>())
-                .AddIngredient(ModContent.ItemType<GathicCryoCrystal>(), 12)
-                .AddTile(TileID.Anvils)
-                .Register();
-        }
         private static readonly int[] unwantedPrefixes = new int[] { PrefixID.Terrible, PrefixID.Dull, PrefixID.Shameful, PrefixID.Annoying, PrefixID.Broken, PrefixID.Damaged, PrefixID.Shoddy, PrefixID.Weak };
         public override bool AllowPrefix(int pre)
         {
@@ -80,11 +74,7 @@ namespace Redemption.Items.Weapons.PreHM.Melee
         {
             if (Main.keyState.PressingShift())
             {
-                TooltipLine line = new(Mod, "Lore",
-                    "'Once a normal greatsword wielded by a well-known warrior of the Iron Realm, her final battle being against\n" +
-                    "a great bear in the mountains. The bear was slain, but the warrior's injuries sealed her death shortly after.\n" +
-                    "The icy blood of the bear fused with the blade, chilling it with an enchanting glow.\n" +
-                    "The blade laid to rest besides it's owner, until another warrior discovered it many years later.'")
+                TooltipLine line = new(Mod, "Lore", Language.GetTextValue("Mods.Redemption.Items.BladeOfTheMountain.Lore"))
                 {
                     OverrideColor = Color.LightGray
                 };
@@ -92,15 +82,15 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             }
             else
             {
-                TooltipLine line = new(Mod, "HoldShift", "Hold [Shift] to view lore")
+                TooltipLine line = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.SpecialTooltips.Viewer"))
                 {
                     OverrideColor = Color.Gray,
                 };
                 tooltips.Add(line);
             }
 
-            TooltipLine axeLine = new(Mod, "SharpBonus", "Slash Bonus: Small chance to decapitate skeletons, killing them instantly") { OverrideColor = Colors.RarityOrange };
-            tooltips.Add(axeLine);
+            TooltipLine slashLine = new(Mod, "SharpBonus", Language.GetTextValue("Mods.Redemption.GenericTooltips.Bonuses.SlashBonus")) { OverrideColor = Colors.RarityOrange };
+            tooltips.Add(slashLine);
         }
     }
 }

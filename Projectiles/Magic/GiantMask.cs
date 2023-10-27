@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.Base;
+using Redemption.Globals;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.ID;
@@ -12,8 +13,12 @@ namespace Redemption.Projectiles.Magic
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Giant Mask");
+            // DisplayName.SetDefault("Giant Mask");
             Main.projFrames[Projectile.type] = 2;
+            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 5;
+            ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjArcane[Type] = true;
+            ElementID.ProjShadow[Type] = true;
         }
 
         public override void SetDefaults()
@@ -28,8 +33,6 @@ namespace Redemption.Projectiles.Magic
             Projectile.ignoreWater = true;
             Projectile.alpha = 255;
             Projectile.timeLeft = 720;
-            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 5;
-            ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
         }
 
         public Vector2[] maskPos = new Vector2[5];

@@ -8,9 +8,7 @@ using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.GameContent.Bestiary;
 using System.Collections.Generic;
-using Terraria.DataStructures;
-using Redemption.Buffs.NPCBuffs;
-using Redemption.Buffs.Debuffs;
+using Redemption.Globals.NPC;
 
 namespace Redemption.NPCs.Bosses.KSIII
 {
@@ -18,21 +16,10 @@ namespace Redemption.NPCs.Bosses.KSIII
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Scanner Drone Mk.I");
+            // DisplayName.SetDefault("Scanner Drone Mk.I");
             Main.npcFrameCount[NPC.type] = 8;
-            NPCDebuffImmunityData debuffData = new()
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Confused,
-                    BuffID.Poisoned,
-                    BuffID.Venom,
-                    ModContent.BuffType<InfestedDebuff>(),
-                    ModContent.BuffType<NecroticGougeDebuff>(),
-                    ModContent.BuffType<ViralityDebuff>(),
-                    ModContent.BuffType<DirtyWoundDebuff>()
-                }
-            };
-            NPCID.Sets.DebuffImmunitySets.Add(Type, debuffData);
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Inorganic);
+            NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Confused] = true;
 
             NPCID.Sets.DontDoHardmodeScaling[Type] = true;
             NPCID.Sets.CantTakeLunchMoney[Type] = true;
@@ -67,7 +54,7 @@ namespace Redemption.NPCs.Bosses.KSIII
             });
         }
 
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -102,7 +89,7 @@ namespace Redemption.NPCs.Bosses.KSIII
                 NPC.soundDelay = 10;
             }
             if (NPC.ai[1]++ % 50 == 0)
-                DefaultPos = new Vector2(player.Center.X > NPC.Center.X ? Main.rand.Next(-280, -180) : Main.rand.Next(180, 280), Main.rand.Next(-60, -40));
+                DefaultPos = new Vector2(Main.rand.Next(180, 280) * NPC.RightOfDir(player), Main.rand.Next(-60, -40));
 
             switch (NPC.ai[0])
             {
@@ -119,7 +106,7 @@ namespace Redemption.NPCs.Bosses.KSIII
                 case 1: // Stop and Scan
                     NPC.velocity *= 0.96f;
                     if (NPC.ai[2]++ == 30)
-                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<Scan_Proj>(), 0, Vector2.Zero, true, CustomSounds.BallFire, NPC.whoAmI);
+                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<Scan_Proj>(), 0, Vector2.Zero, CustomSounds.BallFire, NPC.whoAmI);
 
                     if (NPC.ai[2] > 240)
                     {
@@ -180,7 +167,7 @@ namespace Redemption.NPCs.Bosses.KSIII
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
             Texture2D texture = TextureAssets.Npc[NPC.type].Value;
-            Texture2D glowMask = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Glow").Value;
+            Texture2D glowMask = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
             var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             spriteBatch.Draw(texture, NPC.Center - screenPos, NPC.frame, drawColor, NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
             spriteBatch.Draw(glowMask, NPC.Center - screenPos, NPC.frame, NPC.GetAlpha(Color.White), NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);

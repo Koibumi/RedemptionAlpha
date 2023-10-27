@@ -1,3 +1,5 @@
+using Redemption.Buffs.Debuffs;
+using Redemption.Globals;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -8,8 +10,9 @@ namespace Redemption.NPCs.Lab.Behemoth
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Gloop");
+            // DisplayName.SetDefault("Gloop");
             Main.projFrames[Projectile.type] = 3;
+            ElementID.ProjPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -23,6 +26,7 @@ namespace Redemption.NPCs.Lab.Behemoth
             Projectile.alpha = 160;
             Projectile.timeLeft = 200;
         }
+        public override void OnHitPlayer(Player target, Player.HurtInfo info) => target.AddBuff(ModContent.BuffType<BileDebuff>(), 180);
         public override void AI()
         {
             if (++Projectile.frameCounter >= 5)
@@ -36,7 +40,7 @@ namespace Redemption.NPCs.Lab.Behemoth
             if (Main.rand.NextBool(4))
                 Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.ToxicBubble, Alpha: 100, Scale: 1);
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             for (int i = 0; i < 10; i++)
                 Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.ToxicBubble);

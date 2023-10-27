@@ -9,18 +9,22 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Redemption.BaseExtension;
 using Terraria.Audio;
+using Redemption.Globals;
+using Terraria.Localization;
 
 namespace Redemption.Items.Weapons.PreHM.Melee
 {
     public class SkullDiggerFlail : ModItem
     {
+        public override LocalizedText Tooltip => base.Tooltip.WithFormatArgs(ElementID.ArcaneS);
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Skull Digger's Skull Digger");
-            Tooltip.SetDefault("'Yes, he did name his weapon after himself...'");
+            // DisplayName.SetDefault("Skull Digger's Skull Digger");
+            /* Tooltip.SetDefault("Spinning the weapon around you will conjure " + ElementID.ArcaneS + " mirages\n" +
+                "'Yes, he did name his weapon after himself...'"); */
 
             ItemID.Sets.ToolTipDamageMultiplier[Type] = 2f;
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -42,6 +46,7 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             Item.autoReuse = false;
             Item.channel = true;
             Item.shoot = ModContent.ProjectileType<SkullDiggerFlail_Proj>();
+            Item.ExtraItemShoot(ModContent.ProjectileType<SkullDigger_FlailBlade_ProjF>());
             Item.shootSpeed = 32f;
         }
     }
@@ -51,7 +56,7 @@ namespace Redemption.Items.Weapons.PreHM.Melee
         public override string Texture => "Redemption/NPCs/Minibosses/SkullDigger/SkullDigger_FlailBlade";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Skull Digger's Skull Digger");
+            // DisplayName.SetDefault("Skull Digger's Skull Digger");
         }
 
         public override void SetDefaults()
@@ -69,7 +74,7 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             throwTime = 13;
             throwSpeed = 18f;
             recoverDistance = 22f;
-            recoverDistance2 = 26f;
+            recoverDistance2 = 48f;
             attackCooldown = 15;
         }
 
@@ -92,7 +97,7 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             {
                 if (++timer % 30 == 0 && Main.myPlayer == player.whoAmI)
                     Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center, Vector2.Zero,
-                        ModContent.ProjectileType<SkullDigger_FlailBlade_ProjF>(), Projectile.damage, Projectile.knockBack, Projectile.owner, Projectile.whoAmI);
+                        ModContent.ProjectileType<SkullDigger_FlailBlade_ProjF>(), Projectile.damage, 0, Projectile.owner, Projectile.whoAmI);
             }
         }
 

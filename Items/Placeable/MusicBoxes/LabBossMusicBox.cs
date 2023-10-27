@@ -10,10 +10,11 @@ namespace Redemption.Items.Placeable.MusicBoxes
 	{
 		public override void SetStaticDefaults()
 		{
-			DisplayName.SetDefault("Music Box (Abandoned Lab Minibosses)");
-            Tooltip.SetDefault("inSignia - Safety Violation");
-
-			SacrificeTotal = 1;
+            // DisplayName.SetDefault("Music Box (Abandoned Lab Minibosses)");
+            // Tooltip.SetDefault("inSignia - Safety Violation");
+            ItemID.Sets.CanGetPrefixes[Type] = false;
+            ItemID.Sets.ShimmerTransformToItem[Type] = ItemID.MusicBox;
+            Item.ResearchUnlockCount = 1;
 
 			MusicLoader.AddMusicBox(Mod, MusicLoader.GetMusicSlot(Mod, "Sounds/Music/LabBossMusic"), ModContent.ItemType<LabBossMusicBox>(), ModContent.TileType<LabBossMusicBoxTile>());
 		}
@@ -33,7 +34,7 @@ namespace Redemption.Items.Placeable.MusicBoxes
 			CreateRecipe()
 				.AddIngredient(ItemID.MusicBox)
 				.AddIngredient(ModContent.ItemType<LabPlating>(), 20)
-				.AddIngredient(ModContent.ItemType<XenomiteItem>(), 8)
+				.AddIngredient(ModContent.ItemType<Xenomite>(), 8)
 				.AddTile(TileID.MythrilAnvil)
 				.Register();
         }

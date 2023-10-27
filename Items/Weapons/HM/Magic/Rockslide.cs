@@ -4,6 +4,7 @@ using Redemption.Projectiles.Magic;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.Items.Weapons.HM.Magic
@@ -12,15 +13,15 @@ namespace Redemption.Items.Weapons.HM.Magic
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Casts a large amount of rocks to float above the player\n" +
-                "Release left-click to launch them at cursor point");
+            /* Tooltip.SetDefault("Casts a large amount of rocks to float above the player\n" +
+                "Release left-click to launch them at cursor point"); */
 
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
         {
-            Item.damage = 85;
+            Item.damage = 80;
             Item.DamageType = DamageClass.Magic;
             Item.mana = 10;
             Item.width = 32;
@@ -46,11 +47,7 @@ namespace Redemption.Items.Weapons.HM.Magic
         {
             if (Main.keyState.PressingShift())
             {
-                TooltipLine line = new(Mod, "Lore",
-                    "'An ancient relic owned by King Tenebris. The texts contained within this tome were said\n" +
-                    "to hold the knowledge necessary to master psychic magic.\n\n" +
-                    "King Tenebris reigns over Erellon within the capital of Arrgath, a province protected by\n" +
-                    "lands of plentiful life and barren death. It is said his knowledge of the ancient times is truly boundless.'")
+                TooltipLine line = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.Items.Rockslide.Lore"))
                 {
                     OverrideColor = Color.LightGray
                 };
@@ -58,7 +55,7 @@ namespace Redemption.Items.Weapons.HM.Magic
             }
             else
             {
-                TooltipLine line = new(Mod, "HoldShift", "Hold [Shift] to view lore")
+                TooltipLine line = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.SpecialTooltips.Viewer"))
                 {
                     OverrideColor = Color.Gray,
                 };
@@ -68,7 +65,7 @@ namespace Redemption.Items.Weapons.HM.Magic
         public override void AddRecipes()
         {
             CreateRecipe()
-                .AddIngredient(ItemID.SpellTome)
+                .AddIngredient(ModContent.ItemType<Earthbind>())
                 .AddIngredient(ItemID.BeetleHusk, 4)
                 .AddIngredient(ItemID.LunarTabletFragment, 10)
                 .AddIngredient(ItemID.SoulofNight, 15)

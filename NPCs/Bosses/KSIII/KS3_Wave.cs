@@ -1,6 +1,8 @@
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Redemption.BaseExtension;
+using Redemption.Globals;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.ID;
@@ -12,9 +14,10 @@ namespace Redemption.NPCs.Bosses.KSIII
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("King Slayer III");
+            // DisplayName.SetDefault("King Slayer III");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 4;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjWind[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -27,6 +30,7 @@ namespace Redemption.NPCs.Bosses.KSIII
             Projectile.tileCollide = false;
             Projectile.alpha = 100;
             Projectile.timeLeft = 30;
+            Projectile.Redemption().TechnicallyMelee = true;
         }
         public override bool PreDraw(ref Color lightColor)
         {

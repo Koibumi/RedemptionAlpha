@@ -15,7 +15,8 @@ namespace Redemption.Projectiles.Ritualist
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Hellfire Charge");
+            // DisplayName.SetDefault("Hellfire Charge");
+            ElementID.ProjFire[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -61,7 +62,7 @@ namespace Redemption.Projectiles.Ritualist
             else
                 Projectile.alpha = 0;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             if (Projectile.ai[1] == 1)
             {
@@ -77,7 +78,7 @@ namespace Redemption.Projectiles.Ritualist
                         continue;
 
                     target.immune[Projectile.whoAmI] = 1;
-                    int hitDirection = Projectile.Center.X > target.Center.X ? -1 : 1;
+                    int hitDirection = target.RightOfDir(Projectile);
                     BaseAI.DamageNPC(target, Projectile.damage, Projectile.knockBack, hitDirection, Projectile, crit: Projectile.HeldItemCrit());
                 }
             }

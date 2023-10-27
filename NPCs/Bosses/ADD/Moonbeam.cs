@@ -9,6 +9,7 @@ using Terraria.ModLoader;
 using Terraria.Audio;
 using Terraria.GameContent;
 using Redemption.BaseExtension;
+using Redemption.Globals;
 
 namespace Redemption.NPCs.Bosses.ADD
 {
@@ -16,8 +17,10 @@ namespace Redemption.NPCs.Bosses.ADD
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Moonbeam");
+            // DisplayName.SetDefault("Moonbeam");
             ProjectileID.Sets.DrawScreenCheckFluff[Type] = 2400;
+            ElementID.ProjArcane[Type] = true;
+            ElementID.ProjCelestial[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -108,7 +111,7 @@ namespace Redemption.NPCs.Bosses.ADD
         public override bool PreDraw(ref Color lightColor)
         {
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.Default, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
 
             if (Projectile.velocity == Vector2.Zero)
             {

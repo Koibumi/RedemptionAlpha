@@ -14,7 +14,8 @@ namespace Redemption.Projectiles.Ranged
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Omega Beam");
+            // DisplayName.SetDefault("Omega Beam");
+            ElementID.ProjThunder[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -26,6 +27,7 @@ namespace Redemption.Projectiles.Ranged
             Projectile.timeLeft = 700;
             Projectile.penetrate = 8;
             Projectile.tileCollide = true;
+            Projectile.DamageType = DamageClass.Ranged;
             Projectile.usesIDStaticNPCImmunity = true;
             Projectile.idStaticNPCHitCooldown = 10;
             Projectile.Redemption().EnergyBased = true;
@@ -42,7 +44,7 @@ namespace Redemption.Projectiles.Ranged
                 }
             }
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             Player player = Main.player[Projectile.owner];
             RedeDraw.SpawnRing(Projectile.Center, Color.IndianRed, glowScale: 3);

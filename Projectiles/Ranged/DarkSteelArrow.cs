@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.Dusts;
+using Redemption.Globals;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
@@ -15,9 +16,10 @@ namespace Redemption.Projectiles.Ranged
         public float[] oldrot = new float[8];
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Dark-Steel Arrow");
+            // DisplayName.SetDefault("Dark-Steel Arrow");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 8;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjShadow[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -52,7 +54,7 @@ namespace Redemption.Projectiles.Ranged
             width = height = 14;
             return true;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             SoundEngine.PlaySound(SoundID.Item103, Projectile.position);
             if (Projectile.owner == Main.myPlayer)
@@ -88,7 +90,7 @@ namespace Redemption.Projectiles.Ranged
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
             return false;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             for (int i = 0; i < 18; i++)
                 Dust.NewDust(Projectile.position + Projectile.velocity, Projectile.width, Projectile.height, ModContent.DustType<VoidFlame>(), Projectile.velocity.X * 0.1f, Projectile.velocity.Y * 0.1f, Scale: 2);

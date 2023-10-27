@@ -4,6 +4,7 @@ using Terraria.ModLoader;
 using Redemption.NPCs.Bosses.Obliterator;
 using Redemption.Globals;
 using Terraria.Audio;
+using Terraria.ID;
 
 namespace Redemption.Items.Weapons.PostML.Magic
 {
@@ -12,7 +13,8 @@ namespace Redemption.Items.Weapons.PostML.Magic
         public override string Texture => "Redemption/NPCs/Bosses/Obliterator/OO_Laser";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Omega Laser");
+            // DisplayName.SetDefault("Omega Laser");
+            ProjectileID.Sets.DontCancelChannelOnKill[Type] = true;
             Main.projFrames[Projectile.type] = 8;
         }
         public override void SetDefaults()
@@ -23,6 +25,7 @@ namespace Redemption.Items.Weapons.PostML.Magic
             Projectile.hostile = false;
             Projectile.penetrate = 1;
             Projectile.timeLeft = 120;
+            Projectile.extraUpdates = 1;
         }
     }
     public class OOFingergun_Fingerflash : OO_Fingerflash
@@ -30,7 +33,7 @@ namespace Redemption.Items.Weapons.PostML.Magic
         public override string Texture => "Redemption/NPCs/Bosses/Obliterator/OO_Fingerflash";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Fingerflash");
+            // DisplayName.SetDefault("Fingerflash");
             Main.projFrames[Projectile.type] = 9;
         }
         public override void SetDefaults() 

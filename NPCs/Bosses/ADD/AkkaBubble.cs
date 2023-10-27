@@ -1,8 +1,8 @@
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Redemption.Base;
 using Redemption.Globals;
+using Redemption.Helpers;
 using Redemption.Particles;
 using Terraria;
 using Terraria.Audio;
@@ -15,7 +15,9 @@ namespace Redemption.NPCs.Bosses.ADD
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Bubble");
+            // DisplayName.SetDefault("Bubble");
+            ElementID.ProjWater[Type] = true;
+            ElementID.ProjThunder[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -38,7 +40,7 @@ namespace Redemption.NPCs.Bosses.ADD
             if (ZAPPED)
             {
                 if (Main.rand.NextBool(2))
-                    DustHelper.DrawParticleElectricity(Projectile.Center, Projectile.Center + RedeHelper.PolarVector(38, Main.rand.NextFloat(0, MathHelper.TwoPi)), new LightningParticle(), 1f, 30, 0.1f);
+                    DustHelper.DrawParticleElectricity<LightningParticle>(Projectile.Center, Projectile.Center + RedeHelper.PolarVector(38, RedeHelper.RandomRotation()), 1f, 30, 0.1f);
 
                 Projectile.velocity *= 0.5f;
                 Projectile.velocity += new Vector2(Main.rand.Next(-1, 2), Main.rand.Next(-1, 2));
@@ -74,26 +76,16 @@ namespace Redemption.NPCs.Bosses.ADD
                     target.AddBuff(BuffID.Wet, 600);
             }
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             if (!ZAPPED)
                 return;
 
             Projectile.hostile = true;
             SoundEngine.PlaySound(SoundID.Item54, Projectile.position);
-            SoundEngine.PlaySound(CustomSounds.Zap2, Projectile.position);
-            for (int i = 0; i < Main.maxPlayers; i++)
-            {
-                Player target = Main.player[i];
-                if (!target.active || target.dead)
-                    continue;
-
-                if (Projectile.DistanceSQ(target.Center) > 200 * 200)
-                    continue;
-
-                int hitDirection = Projectile.Center.X > target.Center.X ? -1 : 1;
-                BaseAI.DamagePlayer(target, Projectile.damage * 4, Projectile.knockBack, hitDirection, Projectile);
-            }
+            if (!Main.dedServ)
+                SoundEngine.PlaySound(CustomSounds.Zap2, Projectile.position);
+            RedeHelper.PlayerRadiusDamage(200, Projectile, NPCHelper.HostileProjDamageInc(Projectile.damage), Projectile.knockBack);
             for (int i = 0; i < 10; i++)
             {
                 int dustIndex = Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.Water, Scale: 2);
@@ -107,15 +99,15 @@ namespace Redemption.NPCs.Bosses.ADD
             Vector2 position = Projectile.Center - Main.screenPosition;
             Vector2 origin = new(telegraph.Width / 2f, telegraph.Height / 2f);
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginAdditive();
 
             Main.EntitySpriteDraw(telegraph, position, null, Color.LightBlue * teleAlpha, Projectile.rotation, origin, Projectile.scale, 0, 0);
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginDefault();
             return true;
         }
-        public override void ModifyHitPlayer(Player target, ref int damage, ref bool crit)
+        public override void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers)
         {
             target.AddBuff(BuffID.Electrified, target.HasBuff(BuffID.Wet) ? 320 : 160);
         }

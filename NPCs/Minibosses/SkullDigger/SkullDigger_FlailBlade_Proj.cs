@@ -12,9 +12,10 @@ namespace Redemption.NPCs.Minibosses.SkullDigger
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Skull Digger's Skull Digger");
+            // DisplayName.SetDefault("Skull Digger's Skull Digger");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 5;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjArcane[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -49,7 +50,7 @@ namespace Redemption.NPCs.Minibosses.SkullDigger
             }
         }
 
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             for (int i = 0; i < 12; i++)
             {
@@ -90,14 +91,16 @@ namespace Redemption.NPCs.Minibosses.SkullDigger
         public override void SetStaticDefaults()
         {
             base.SetStaticDefaults();
-            DisplayName.SetDefault("Skull Digger's Skull Digger");
+            // DisplayName.SetDefault("Skull Digger's Skull Digger");
         }
         public override void SetDefaults()
         {
             base.SetDefaults();
+            Projectile.penetrate = 3;
             Projectile.friendly = true;
             Projectile.hostile = false;
         }
+        public override bool? CanCutTiles() => false;
         public override bool PreAI()
         {
             Projectile host = Main.projectile[(int)Projectile.ai[0]];
@@ -105,9 +108,11 @@ namespace Redemption.NPCs.Minibosses.SkullDigger
 
             if (Projectile.localAI[0]++ == 0)
                 Projectile.rotation = host.rotation;
-
-            if (Projectile.localAI[0] == 5 && player.whoAmI == Main.myPlayer)
+            bool spirit = Projectile.localAI[1] == 1;
+            if (!spirit && Projectile.localAI[0] == 5 && player.whoAmI == Main.myPlayer)
+            {
                 Projectile.velocity = RedeHelper.PolarVector(0.08f, (Main.MouseWorld - Projectile.Center).ToRotation());
+            }
             if (Projectile.localAI[0] >= 5)
             {
                 Projectile.LookByVelocity();
@@ -115,9 +120,7 @@ namespace Redemption.NPCs.Minibosses.SkullDigger
                 Projectile.rotation += Projectile.velocity.Length() / 30 * Projectile.spriteDirection;
             }
 
-            Point tile = new Vector2(Projectile.Center.X, Projectile.Center.Y).ToTileCoordinates();
-            Tile tile2 = Main.tile[tile.X, tile.Y];
-            if (tile2 is { HasUnactuatedTile: true } && Main.tileSolid[tile2.TileType])
+            if (Collision.SolidCollision(Projectile.position, Projectile.width, Projectile.height))
                 Projectile.timeLeft -= 4;
             return false;
         }

@@ -1,5 +1,4 @@
 using Microsoft.Xna.Framework;
-using Redemption.Items.Placeable.Tiles;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -13,11 +12,12 @@ namespace Redemption.Tiles.Tiles
             Main.tileSolid[Type] = true;
             Main.tileMergeDirt[Type] = true;
             Main.tileBlockLight[Type] = true;
+            Main.tileBlendAll[Type] = true;
+            Main.tileBrick[Type] = true;
             Main.tileMerge[Type][ModContent.TileType<IrradiatedDirtTile>()] = true;
             Main.tileMerge[ModContent.TileType<IrradiatedDirtTile>()][Type] = true;
             Main.tileMerge[Type][TileID.SpookyWood] = true;
             Main.tileMerge[TileID.SpookyWood][Type] = true;
-            ItemDrop = ModContent.ItemType<PetrifiedWood>();
             DustType = DustID.Ash;
             MinPick = 0;
             MineResist = 1.5f;

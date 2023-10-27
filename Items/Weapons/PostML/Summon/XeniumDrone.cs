@@ -15,11 +15,11 @@ namespace Redemption.Items.Weapons.PostML.Summon
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Xenium Autoturret");
-            Tooltip.SetDefault("Summons a friendly Xenium Autoturret to fight for you"
+            // DisplayName.SetDefault("Xenium Autoturret");
+            /* Tooltip.SetDefault("Summons a friendly Xenium Autoturret to fight for you"
                 + "\nFires bullets from your inventory"
-                + "\n80% chance not to consume ammo");
-            SacrificeTotal = 1;
+                + "\n80% chance not to consume ammo"); */
+            Item.ResearchUnlockCount = 1;
             ItemID.Sets.GamepadWholeScreenUseRange[Item.type] = true;
             ItemID.Sets.LockOnIgnoresCollision[Item.type] = true;
         }
@@ -36,7 +36,7 @@ namespace Redemption.Items.Weapons.PostML.Summon
             Item.noMelee = true;
             Item.knockBack = 0;
             Item.value = Item.sellPrice(0, 0, 45, 0);
-            Item.rare = ItemRarityID.Orange;
+            Item.rare = ItemRarityID.Purple;
             Item.UseSound = SoundID.Item44;
             Item.autoReuse = false;
             Item.buffType = ModContent.BuffType<XeniumTurretBuff>();

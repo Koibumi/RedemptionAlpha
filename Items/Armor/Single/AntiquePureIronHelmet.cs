@@ -1,10 +1,12 @@
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ID;
+using Terraria.Localization;
 using Redemption.Items.Armor.PreHM.PureIron;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Redemption.BaseExtension;
+using Redemption.Globals;
 
 namespace Redemption.Items.Armor.Single
 {
@@ -13,11 +15,11 @@ namespace Redemption.Items.Armor.Single
 	{
 		public override void SetStaticDefaults()
 		{
-			DisplayName.SetDefault("Antique Pure-Iron Helmet");
-            Tooltip.SetDefault("7% increased damage");
+			// DisplayName.SetDefault("Antique Pure-Iron Helmet");
+            // Tooltip.SetDefault("7% increased damage");
             ArmorIDs.Head.Sets.DrawHead[EquipLoader.GetEquipSlot(Mod, Name, EquipType.Head)] = false;
-
-            SacrificeTotal = 1;
+            ItemID.Sets.ShimmerTransformToItem[Type] = ModContent.ItemType<PureIronHelmet>();
+            Item.ResearchUnlockCount = 1;
 		}
 
 		public override void SetDefaults()
@@ -41,10 +43,9 @@ namespace Redemption.Items.Armor.Single
 
         public override void UpdateArmorSet(Player player)
         {
-            player.setBonus = "20% increased Fire elemental resistance\n" +
-                "33% chance for weapons to inflict Pure Chill\n" +
-                "100% chance for all Pure-Iron weapons to inflict Pure Chill";
-            player.RedemptionPlayerBuff().ElementalResistance[1] += 0.2f;
+            player.setBonus = Language.GetTextValue("Mods.Redemption.GenericTooltips.ArmorSetBonus.PureIron.20Increased") + ElementID.FireS + Language.GetTextValue("Mods.Redemption.GenericTooltips.ArmorSetBonus.VanillaArmor.Resistance") +
+                Language.GetTextValue("Mods.Redemption.GenericTooltips.ArmorSetBonus.PureIron.Bonus");
+            player.RedemptionPlayerBuff().ElementalResistance[ElementID.Fire] += 0.2f;
             player.RedemptionPlayerBuff().pureIronBonus = true;
             player.RedemptionPlayerBuff().MetalSet = true;
         }
@@ -54,9 +55,7 @@ namespace Redemption.Items.Armor.Single
             if (Main.keyState.PressingShift())
             {
                 TooltipLine line = new(Mod, "Lore",
-                    "'An outdated design of the Iron Realm's warrior's helmet.\n" +
-                    "Discovered in the Catacombs of Gathuram by Happins, a fallen.\n" +
-                    "This design has fur to keep the neck and shoulders warm in the harsh environment.'")
+                    Language.GetTextValue("Mods.Redemption.SpecialTooltips.PureIron.AntiquePureIronHelmet"))
                 {
                     OverrideColor = Color.LightGray
                 };
@@ -64,7 +63,7 @@ namespace Redemption.Items.Armor.Single
             }
             else
             {
-                TooltipLine line = new(Mod, "HoldShift", "Hold [Shift] to view lore")
+                TooltipLine line = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.SpecialTooltips.Viewer"))
                 {
                     OverrideColor = Color.Gray,
                 };

@@ -1,8 +1,8 @@
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ID;
-using Redemption.Items.Materials.PostML;
 using Redemption.Items.Accessories.HM;
 using Redemption.Globals.Player;
 using Terraria.Audio;
@@ -21,12 +21,11 @@ namespace Redemption.Tiles.Ores
             TileID.Sets.Ore[Type] = true;
             Main.tileOreFinderPriority[Type] = 900;
             DustType = DustID.FlameBurst;
-            ItemDrop = ModContent.ItemType<Corium>();
-            MinPick = 500;
+            MinPick = 1000;
             MineResist = 10f;
             HitSound = SoundID.Tink;
-            ModTranslation name = CreateMapEntryName();
-            name.SetDefault("Solid Corium");
+            LocalizedText name = CreateMapEntryName();
+            // name.SetDefault("Solid Corium");
             AddMapEntry(new Color(208, 101, 70), name);
         }
         public override void ModifyLight(int i, int j, ref float r, ref float g, ref float b)

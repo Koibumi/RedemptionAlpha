@@ -15,11 +15,13 @@ namespace Redemption.Projectiles.Ranged
         public override string Texture => "Redemption/NPCs/Critters/MoonflareBat_Trail";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Moonflare Bat");
+            // DisplayName.SetDefault("Moonflare Bat");
             Main.projFrames[Projectile.type] = 5;
             ProjectileID.Sets.CultistIsResistantTo[Projectile.type] = true;
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 4;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjFire[Type] = true;
+            ElementID.ProjNature[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -82,7 +84,7 @@ namespace Redemption.Projectiles.Ranged
 
             return false;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(SoundID.NPCDeath4, Projectile.position);
             for (int i = 0; i < 8; i++)

@@ -2,21 +2,22 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.Biomes;
 using Redemption.Buffs.Debuffs;
-using Redemption.Buffs.NPCBuffs;
 using Redemption.Dusts;
-using Redemption.Items.Armor.Vanity;
+using Redemption.Globals;
+using Redemption.Globals.NPC;
 using Redemption.Items.Armor.Vanity.Intruder;
 using Redemption.Items.Materials.HM;
 using Redemption.Items.Materials.PreHM;
 using Redemption.Items.Placeable.Banners;
 using Redemption.Items.Usable.Potions;
+using Redemption.NPCs.Lab.MACE;
 using Terraria;
 using Terraria.Audio;
-using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.NPCs.Wasteland
@@ -27,23 +28,14 @@ namespace Redemption.NPCs.Wasteland
         public override void SetStaticDefaults()
         {
             Main.npcFrameCount[NPC.type] = 5;
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Poisoned,
-                    ModContent.BuffType<BileDebuff>(),
-                    ModContent.BuffType<GreenRashesDebuff>(),
-                    ModContent.BuffType<GlowingPustulesDebuff>(),
-                    ModContent.BuffType<FleshCrystalsDebuff>(),
-                    ModContent.BuffType<InfestedDebuff>(),
-                    ModContent.BuffType<NecroticGougeDebuff>(),
-                    ModContent.BuffType<DirtyWoundDebuff>()
-                }
-            });
+            NPCID.Sets.ShimmerTransformToNPC[NPC.type] = NPCID.ShimmerSlime;
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.NoBlood);
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Infected);
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0);
-
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
+            ElementID.NPCWater[Type] = true;
+            ElementID.NPCPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -58,20 +50,20 @@ namespace Redemption.NPCs.Wasteland
             NPC.value = 400f;
             NPC.knockBackResist = 0.5f;
             NPC.aiStyle = 1;
-            NPC.alpha = 80;
+            NPC.alpha = 40;
             AIType = NPCID.IlluminantSlime;
             SpawnModBiomes = new int[1] { ModContent.GetInstance<WastelandPurityBiome>().Type };
             Banner = NPC.type;
             BannerItem = ModContent.ItemType<NuclearSlimeBanner>();
         }
-        public override void ModifyHitPlayer(Player target, ref int damage, ref bool crit)
+        public override void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers)
         {
             if (Main.rand.NextBool(2) || Main.expertMode)
                 target.AddBuff(ModContent.BuffType<GreenRashesDebuff>(), Main.rand.Next(200, 500));
         }
         public override void ModifyNPCLoot(NPCLoot npcLoot)
         {
-            npcLoot.Add(ItemDropRule.ByCondition(new Conditions.BeatAnyMechBoss(), ModContent.ItemType<XenomiteShard>(), 2, 6, 8));
+            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<XenomiteShard>(), 2, 6, 8));
             npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<ToxicBile>(), 4, 1, 3));
             npcLoot.Add(ItemDropRule.OneFromOptions(50, ModContent.ItemType<IntruderMask>(), ModContent.ItemType<IntruderArmour>(), ModContent.ItemType<IntruderPants>()));
             npcLoot.Add(ItemDropRule.Common(ItemID.Gel, 1, 3, 8));
@@ -86,8 +78,7 @@ namespace Redemption.NPCs.Wasteland
         {
             bestiaryEntry.Info.AddRange(new IBestiaryInfoElement[]
             {
-                new FlavorTextBestiaryInfoElement(
-                    "F is for the Fire that burns down the whole town, U is for Uranium bombs! N is for No Survivors-")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.NuclearSlime"))
             });
         }
         public override void FindFrame(int frameHeight)
@@ -111,17 +102,17 @@ namespace Redemption.NPCs.Wasteland
         }
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
-            Texture2D NukeTex = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Overlay").Value;
+            Texture2D NukeTex = ModContent.Request<Texture2D>(Texture + "_Overlay").Value;
             int Height = NukeTex.Height / 5;
             int y = Height * (NPC.frame.Y / 42);
             Rectangle rect = new(0, y, NukeTex.Width, Height);
             Vector2 origin = new(NukeTex.Width / 2f, Height / 2f);
-            spriteBatch.Draw(NukeTex, NPC.Center - screenPos + new Vector2(14, -12), new Rectangle?(rect), NPC.GetAlpha(drawColor), NPC.rotation, origin, NPC.scale, 0, 0);
+            spriteBatch.Draw(NukeTex, NPC.Center - screenPos + new Vector2(14, -12), new Rectangle?(rect), drawColor, NPC.rotation, origin, NPC.scale, 0, 0);
 
             spriteBatch.Draw(TextureAssets.Npc[NPC.type].Value, NPC.Center - screenPos - new Vector2(0, 2), NPC.frame, NPC.GetAlpha(drawColor), NPC.rotation, NPC.frame.Size() / 2, NPC.scale, 0, 0);
             return false;
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -136,7 +127,11 @@ namespace Redemption.NPCs.Wasteland
                 {
                     for (int i = 0; i < 15; i++)
                     {
-                        Projectile.NewProjectile(NPC.GetSource_FromAI(), NPC.Center.X, NPC.Center.Y, -8 + Main.rand.Next(0, 17), -3 + Main.rand.Next(-11, 0), ProjectileID.DD2BetsyFireball, 70, 3);
+                        SoundEngine.PlaySound(SoundID.DD2_BetsyFireballShot, NPC.position);
+                        int p = Projectile.NewProjectile(NPC.GetSource_FromAI(), NPC.Center.X, NPC.Center.Y, -8 + Main.rand.Next(0, 17), -3 + Main.rand.Next(-11, 0), ModContent.ProjectileType<MACE_Miniblast>(), NPCHelper.HostileProjDamage(100), 3, Main.myPlayer, 1);
+                        Main.projectile[p].timeLeft = 300;
+                        Main.projectile[p].friendly = true;
+                        Main.projectile[p].netUpdate = true;
                     }
                 }
                 for (int i = 0; i < 30; i++)

@@ -21,7 +21,8 @@ namespace Redemption.Items.Weapons.HM.Melee
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Bloodstained Pike");
+            // DisplayName.SetDefault("Bloodstained Pike");
+            ElementID.ProjBlood[Type] = true;
         }
 
         public override void SetDefaults()
@@ -95,7 +96,7 @@ namespace Redemption.Items.Weapons.HM.Melee
                                         int p = Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center, Vector2.Zero, ModContent.ProjectileType<BloodstainedPike_Proj2>(), Projectile.damage * 2, Projectile.knockBack, Projectile.owner);
                                         Main.projectile[p].rotation = Projectile.rotation;
                                         Main.projectile[p].spriteDirection = Projectile.spriteDirection;
-                                        Main.projectile[p].netUpdate2 = true;
+                                        Main.projectile[p].netUpdate = true;
                                     }
                                     Projectile.Kill();
                                 }
@@ -120,7 +121,7 @@ namespace Redemption.Items.Weapons.HM.Melee
                 Projectile.rotation = (Projectile.Center - player.Center).ToRotation() - MathHelper.Pi - MathHelper.PiOver4;
             return false;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Player player = Main.player[Projectile.owner];
             if (skewered.Count < 5 && player.channel && (Projectile.timeLeft > player.itemAnimationMax / 2 || player.velocity.Length() > 1) && (target.life <= 500 || target.life <= target.lifeMax / 10) && target.knockBackResist > 0 && target.width < 100 && target.height < 100 && !target.dontTakeDamage && !target.immortal)
@@ -129,7 +130,7 @@ namespace Redemption.Items.Weapons.HM.Melee
                     skewered.Add(target.whoAmI);
             }
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             skewered.Clear();
         }
@@ -155,10 +156,11 @@ namespace Redemption.Items.Weapons.HM.Melee
         public float[] oldrot = new float[4];
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Bloodstained Pike");
+            // DisplayName.SetDefault("Bloodstained Pike");
             ProjectileID.Sets.CultistIsResistantTo[Projectile.type] = true;
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 4;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjBlood[Type] = true;
         }
 
         public override void SetDefaults()
@@ -210,7 +212,7 @@ namespace Redemption.Items.Weapons.HM.Melee
             else
                 Projectile.rotation = Projectile.velocity.ToRotation() - MathHelper.Pi - MathHelper.PiOver4;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             RedeDraw.SpawnRing(Projectile.Center, Color.Red, 0.2f, 0.9f, 4);
         }

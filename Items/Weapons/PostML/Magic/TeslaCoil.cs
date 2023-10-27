@@ -1,7 +1,7 @@
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ID;
-using Redemption.Globals.Player;
+using Terraria.Localization;
 using Microsoft.Xna.Framework;
 using Terraria.DataStructures;
 using System.Collections.Generic;
@@ -12,13 +12,13 @@ namespace Redemption.Items.Weapons.PostML.Magic
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Arcs lightning from coil, targeting multiple enemies at the same time\n" +
-                "Right-click to change firing modes between multi-target and single target");
-            SacrificeTotal = 1;
+            /* Tooltip.SetDefault("Arcs lightning from coil, targeting multiple enemies at the same time\n" +
+                "Right-click to change firing modes between multi-target and single target"); */
+            Item.ResearchUnlockCount = 1;
         }
         public override void SetDefaults()
         {
-            Item.damage = 70;
+            Item.damage = 90;
             Item.width = 30;
             Item.height = 86;
             Item.useTime = 10;
@@ -57,9 +57,9 @@ namespace Redemption.Items.Weapons.PostML.Magic
                 AttackMode = !AttackMode;
 
                 if (!AttackMode)
-                    CombatText.NewText(player.getRect(), Color.LightCyan, "Multi-target", true, true);
+                    CombatText.NewText(player.getRect(), Color.LightCyan, Language.GetTextValue("Mods.Redemption.Items.TeslaCoil.Multi"), true, true);
                 else
-                    CombatText.NewText(player.getRect(), Color.LightCyan, "Single Target", true, true);
+                    CombatText.NewText(player.getRect(), Color.LightCyan, Language.GetTextValue("Mods.Redemption.Items.TeslaCoil.Single"), true, true);
             }
             else
             {
@@ -74,9 +74,9 @@ namespace Redemption.Items.Weapons.PostML.Magic
         {
             string shotType;
             if (!AttackMode)
-                shotType = "Multi-target";
+                shotType = Language.GetTextValue("Mods.Redemption.Items.TeslaCoil.Multi");
             else
-                shotType = "Single Target";
+                shotType = Language.GetTextValue("Mods.Redemption.Items.TeslaCoil.Single");
             TooltipLine line = new(Mod, "ShotName", shotType)
             {
                 OverrideColor = Color.LightCyan,

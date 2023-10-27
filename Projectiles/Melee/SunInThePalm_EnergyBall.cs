@@ -1,6 +1,5 @@
 
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using ParticleLibrary;
 using Redemption.Base;
@@ -9,7 +8,6 @@ using Redemption.Globals;
 using Redemption.Items.Weapons.PostML.Melee;
 using Redemption.Particles;
 using ReLogic.Utilities;
-using System.Data;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
@@ -24,9 +22,10 @@ namespace Redemption.Projectiles.Melee
         public override string Texture => "Redemption/NPCs/Lab/MACE/MACE_FireBlast";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Sun Blast");
+            // DisplayName.SetDefault("Sun Blast");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 8;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjFire[Type] = true;
         }
 
         public override void SetDefaults()
@@ -41,6 +40,7 @@ namespace Redemption.Projectiles.Melee
             Projectile.ignoreWater = true;
             Projectile.penetrate = -1;
             Projectile.scale = 1;
+            Projectile.DamageType = DamageClass.Melee;
             Projectile.usesIDStaticNPCImmunity = true;
             Projectile.idStaticNPCHitCooldown = 10;
         }
@@ -77,7 +77,7 @@ namespace Redemption.Projectiles.Melee
                             if (target.damage > 160 / 4 || target.width + target.height > Projectile.width + Projectile.height)
                                 continue;
 
-                            if (target.velocity.Length() == 0 || !Projectile.Hitbox.Intersects(target.Hitbox) || target.minion || ProjectileID.Sets.CultistIsResistantTo[target.type] || target.Redemption().ParryBlacklist || Main.projPet[target.type])
+                            if (target.velocity.Length() == 0 || !Projectile.Hitbox.Intersects(target.Hitbox) || target.ProjBlockBlacklist(true))
                                 continue;
 
                             target.Redemption().DissolveTimer++;
@@ -137,9 +137,13 @@ namespace Redemption.Projectiles.Melee
             Lighting.AddLight(Projectile.Center, Projectile.Opacity * 0.9f, Projectile.Opacity * 0.2f, Projectile.Opacity * 0.2f);
         }
         public override bool? CanHitNPC(NPC target) => Projectile.localAI[0] == 1 ? null : false;
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.OnFire3, 900);
+        }
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+        {
+            modifiers.FinalDamage *= ((Projectile.scale / 8) + 1);
         }
         public override bool PreDraw(ref Color lightColor)
         {
@@ -176,7 +180,7 @@ namespace Redemption.Projectiles.Melee
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
             return false;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             if (sound != null)
             {
@@ -203,7 +207,7 @@ namespace Redemption.Projectiles.Melee
                     continue;
 
                 target.immune[Projectile.whoAmI] = 20;
-                int hitDirection = Projectile.Center.X > target.Center.X ? -1 : 1;
+                int hitDirection = target.RightOfDir(Projectile);
                 BaseAI.DamageNPC(target, (int)(Projectile.damage * (Projectile.scale * 1.5f)), 7, hitDirection, Projectile, crit: Projectile.HeldItemCrit());
                 BaseAI.DamageNPC(target, (int)(Projectile.damage * (Projectile.scale * 1.25f)), 4, hitDirection, Projectile, crit: Projectile.HeldItemCrit());
             }

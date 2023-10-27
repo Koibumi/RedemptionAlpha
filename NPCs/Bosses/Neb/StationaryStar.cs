@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Redemption.Base;
+using Redemption.Globals;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -10,8 +11,9 @@ namespace Redemption.NPCs.Bosses.Neb
 	{
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Starplane");
+            // DisplayName.SetDefault("Starplane");
             Main.projFrames[Projectile.type] = 6;
+            ElementID.ProjCelestial[Type] = true;
         }
 
         public override void SetDefaults()
@@ -37,7 +39,7 @@ namespace Redemption.NPCs.Bosses.Neb
         {
             return Color.White * Projectile.Opacity;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
 		{
             for (int m = 0; m < 8; m++)
             {

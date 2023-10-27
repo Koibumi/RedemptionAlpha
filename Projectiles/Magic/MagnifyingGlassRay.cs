@@ -1,6 +1,5 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System.IO;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.GameContent;
@@ -9,7 +8,6 @@ using Terraria.ID;
 using Redemption.Globals;
 using System;
 using Terraria.Audio;
-using Redemption.BaseExtension;
 
 namespace Redemption.Projectiles.Magic
 {
@@ -18,7 +16,9 @@ namespace Redemption.Projectiles.Magic
         private new const float FirstSegmentDrawDist = 10;
         public override void SetSafeStaticDefaults()
         {
-            DisplayName.SetDefault("Scorching Ray");
+            // DisplayName.SetDefault("Scorching Ray");
+            ElementID.ProjFire[Type] = true;
+            ElementID.ProjHoly[Type] = true;
         }
 
         public override void SetSafeDefaults()
@@ -44,7 +44,7 @@ namespace Redemption.Projectiles.Magic
         public override bool ShouldUpdatePosition() => false;
         public override bool? CanCutTiles() => false;
 
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.OnFire, 300);
         }

@@ -1,7 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
-using System;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.GameContent;
@@ -15,7 +14,7 @@ namespace Redemption.NPCs.Bosses.ADD
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Barrier");
+            // DisplayName.SetDefault("Barrier");
             ProjectileID.Sets.DrawScreenCheckFluff[Type] = 2400;
         }
         public override void SetDefaults()
@@ -69,7 +68,7 @@ namespace Redemption.NPCs.Bosses.ADD
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
-            Texture2D fog = ModContent.Request<Texture2D>(Projectile.ModProjectile.Texture + "_Fog").Value;
+            Texture2D fog = ModContent.Request<Texture2D>(Texture + "_Fog").Value;
             int projHeight = texture.Height;
             var effects = Projectile.spriteDirection == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
@@ -94,7 +93,7 @@ namespace Redemption.NPCs.Bosses.ADD
         public override string Texture => "Redemption/NPCs/Bosses/ADD/UkkoBarrier";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Barrier");
+            // DisplayName.SetDefault("Barrier");
         }
         public override void SetDefaults()
         {
@@ -145,7 +144,7 @@ namespace Redemption.NPCs.Bosses.ADD
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
-            Texture2D fog = ModContent.Request<Texture2D>(Projectile.ModProjectile.Texture + "_Fog").Value;
+            Texture2D fog = ModContent.Request<Texture2D>(Texture + "_Fog").Value;
             int projHeight = texture.Height;
             var effects = Projectile.ai[1] >= 0 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 

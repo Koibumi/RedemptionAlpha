@@ -4,6 +4,7 @@ using Terraria;
 using Terraria.DataStructures;
 using Terraria.Enums;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 
@@ -31,10 +32,10 @@ namespace Redemption.Tiles.Furniture.Shade
             TileObjectData.newTile.AnchorTop = new AnchorData(AnchorType.SolidTile, TileObjectData.newTile.Width, 0);
             TileObjectData.newTile.AnchorBottom = new AnchorData(AnchorType.SolidTile, TileObjectData.newTile.Width, 0);
             TileObjectData.addTile(Type);
-            ModTranslation name = CreateMapEntryName();
-            name.SetDefault("Shadestone Gate");
+            LocalizedText name = CreateMapEntryName();
+            // name.SetDefault("Shadestone Gate");
             AddMapEntry(new Color(50, 50, 50), name);
-            MinPick = 500;
+            MinPick = 1000;
             MineResist = 30f;
             DustType = ModContent.DustType<VoidFlame>();
             AnimationFrameHeight = 180;
@@ -50,23 +51,6 @@ namespace Redemption.Tiles.Furniture.Shade
         {
             num = 1;
         }
-        /*public override bool RightClick(int i, int j) // TODO: Warden key unlock
-        {
-            Player player = Main.LocalPlayer;
-            if (player.HasItem(ModContent.ItemType<WardensKey>()) && !_activated)
-            {
-                SoundEngine.PlaySound(SoundID.Unlock);
-                _activated = true;
-            }
-            return true;
-        }
-        public override void MouseOver(int i, int j)
-        {
-            Player player = Main.LocalPlayer;
-            player.noThrow = 2;
-            player.cursorItemIconEnabled = true;
-            player.cursorItemIconID = ModContent.ItemType<WardensKey>();
-        }*/
         public override bool CanKillTile(int i, int j, ref bool blockDamaged) => false;
         public override bool CanExplode(int i, int j) => false;
         public override void NearbyEffects(int i, int j, bool closer)
@@ -85,13 +69,14 @@ namespace Redemption.Tiles.Furniture.Shade
     }
     public class ShadestoneGate : PlaceholderTile
     {
-        public override void SetStaticDefaults()
+        public override void SetSafeStaticDefaults()
         {
-            Tooltip.SetDefault("[c/ff0000:Unbreakable]");
+            // Tooltip.SetDefault("[c/ff0000:Unbreakable]");
         }
 
         public override void SetDefaults()
         {
+            base.SetDefaults();
             Item.createTile = ModContent.TileType<ShadestoneGateTile>();
         }
     }

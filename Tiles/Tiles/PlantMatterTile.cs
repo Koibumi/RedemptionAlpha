@@ -1,8 +1,8 @@
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ID;
-using Redemption.Items.Placeable.Tiles;
 
 namespace Redemption.Tiles.Tiles
 {
@@ -12,6 +12,7 @@ namespace Redemption.Tiles.Tiles
 		{
 			Main.tileSolid[Type] = true;
 			Main.tileMergeDirt[Type] = true;
+            Main.tileBrick[Type] = true;
             Main.tileMerge[Type][TileID.Mud] = true;
             Main.tileMerge[TileID.Mud][Type] = true;
             Main.tileMerge[Type][TileID.Grass] = true;
@@ -33,16 +34,23 @@ namespace Redemption.Tiles.Tiles
             Main.tileSpelunker[Type] = true;
             Main.tileBlockLight[Type] = true;
             DustType = DustID.GrassBlades;
-			ItemDrop = ModContent.ItemType<PlantMatter>();
             MinPick = 0;
             MineResist = 1f;
             HitSound = SoundID.Grass;
-            ModTranslation name = CreateMapEntryName();
-            name.SetDefault("Plant Matter");
+            LocalizedText name = CreateMapEntryName();
+            // name.SetDefault("Plant Matter");
             AddMapEntry(new Color(109, 155, 67), name);
 		}
-
-		public override void NumDust(int i, int j, bool fail, ref int num)
+        public override void FloorVisuals(Player player)
+        {
+            if (player.velocity.X != 0f && Main.rand.NextBool(20))
+            {
+                Dust dust = Dust.NewDustDirect(player.Bottom, 0, 0, DustType, 0f, -Main.rand.NextFloat(2f));
+                dust.noGravity = true;
+                dust.fadeIn = 1f;
+            }
+        }
+        public override void NumDust(int i, int j, bool fail, ref int num)
 		{
 			num = fail ? 1 : 3;
 		}

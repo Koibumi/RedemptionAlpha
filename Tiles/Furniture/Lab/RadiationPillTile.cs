@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ID;
 using Terraria.ObjectData;
@@ -24,13 +25,13 @@ namespace Redemption.Tiles.Furniture.Lab
             TileObjectData.newTile.CoordinatePadding = 2;
             TileObjectData.newTile.AnchorBottom = new AnchorData(AnchorType.SolidTile | AnchorType.SolidWithTop | AnchorType.SolidSide | AnchorType.Table, TileObjectData.newTile.Width, 0);
             TileObjectData.addTile(Type);
-            ItemDrop = ModContent.ItemType<RadiationPill>();
+            RegisterItemDrop(ModContent.ItemType<RadiationPill>());
             DustType = DustID.OrangeStainedGlass;
             MinPick = 0;
             MineResist = 0.1f;
             HitSound = SoundID.Tink;
-            ModTranslation name = CreateMapEntryName();
-            name.SetDefault("Radiation Pill");
+            LocalizedText name = CreateMapEntryName();
+            // name.SetDefault("Radiation Pill");
             AddMapEntry(new Color(236, 144, 71), name);
         }
         public override void NumDust(int i, int j, bool fail, ref int num) => num = fail ? 1 : 3;
@@ -50,10 +51,10 @@ namespace Redemption.Tiles.Furniture.Lab
     }
     public class RadPillDeco : PlaceholderTile
     {
-        public override string Texture => "Redemption/Placeholder";
-        public override void SetStaticDefaults()
+        public override string Texture => Redemption.PLACEHOLDER_TEXTURE;
+        public override void SetSafeStaticDefaults()
         {
-            DisplayName.SetDefault("Radiation Pill (Deco)");
+            // DisplayName.SetDefault("Radiation Pill (Deco)");
         }
 
         public override void SetDefaults()

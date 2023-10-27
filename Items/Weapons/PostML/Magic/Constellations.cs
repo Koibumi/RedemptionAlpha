@@ -13,13 +13,13 @@ namespace Redemption.Items.Weapons.PostML.Magic
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("'We own the stars, we own the sky'");
-            SacrificeTotal = 1;
+            // Tooltip.SetDefault("'We own the stars, we own the sky'");
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
         {
-            Item.damage = 400;
+            Item.damage = 500;
             Item.DamageType = DamageClass.Magic;
             Item.mana = 18;
             Item.width = 30;
@@ -38,7 +38,7 @@ namespace Redemption.Items.Weapons.PostML.Magic
         }
         public override void ModifyShootStats(Player player, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
         {
-            position = Main.MouseWorld + RedeHelper.PolarVector(Main.rand.Next(100, 301), Main.rand.NextFloat(0, MathHelper.TwoPi));
+            position = Main.MouseWorld + RedeHelper.PolarVector(Main.rand.Next(100, 301), RedeHelper.RandomRotation());
         }
         public override void AddRecipes()
         {

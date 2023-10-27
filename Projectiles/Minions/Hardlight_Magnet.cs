@@ -8,7 +8,6 @@ using Redemption.Globals;
 using Terraria.Audio;
 using Redemption.Base;
 using Terraria.GameContent;
-using Redemption.BaseExtension;
 
 namespace Redemption.Projectiles.Minions
 {
@@ -17,7 +16,7 @@ namespace Redemption.Projectiles.Minions
         public override string Texture => "Redemption/NPCs/Bosses/KSIII/KS3_Magnet";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Energy Magnet Drone Mk.I");
+            // DisplayName.SetDefault("Energy Magnet Drone Mk.I");
             Main.projFrames[Projectile.type] = 12;
             ProjectileID.Sets.CultistIsResistantTo[Projectile.type] = true;
         }
@@ -86,7 +85,7 @@ namespace Redemption.Projectiles.Minions
                 for (int i = 0; i < Main.maxProjectiles; i++)
                 {
                     Projectile target = Main.projectile[i];
-                    if (!target.active || target.width >= 40 || target.height >= 40 || Projectile.DistanceSQ(target.Center) >= 200 * 200 || !target.hostile || target.damage <= 0 || target.Redemption().TechnicallyMelee || target.Redemption().ParryBlacklist)
+                    if (!target.active || target.width >= 40 || target.height >= 40 || Projectile.DistanceSQ(target.Center) >= 200 * 200 || !target.hostile || target.damage <= 0 || target.ProjBlockBlacklist())
                         continue;
 
                     if (Projectile.owner == Main.myPlayer)
@@ -148,7 +147,7 @@ namespace Redemption.Projectiles.Minions
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Surge");
+            // DisplayName.SetDefault("Surge");
         }
 
         public override void SetDefaults()

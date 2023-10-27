@@ -4,7 +4,6 @@ using Terraria.ModLoader;
 using System;
 using Terraria.ID;
 using Redemption.Globals;
-using Redemption.BaseExtension;
 using Terraria.Audio;
 using Redemption.NPCs.Bosses.Cleaver;
 using Terraria.GameContent;
@@ -17,8 +16,9 @@ namespace Redemption.NPCs.Bosses.Obliterator
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Omega Plasma Orb");
+            // DisplayName.SetDefault("Omega Plasma Orb");
             Main.projFrames[Projectile.type] = 4;
+            ElementID.ProjThunder[Type] = true;
         }
 
         public override void SetDefaults()
@@ -55,13 +55,14 @@ namespace Redemption.NPCs.Bosses.Obliterator
                 for (int i = 0; i < Main.maxProjectiles; i++)
                 {
                     Projectile proj = Main.projectile[i];
-                    if (!proj.active || proj.type == Type || proj.hostile || proj.minion || !proj.friendly || proj.damage < 5)
+                    if (!proj.active || proj.type == Type || proj.hostile || !proj.friendly || proj.damage < 5)
                         continue;
 
-                    if (proj.Redemption().TechnicallyMelee || !Projectile.Hitbox.Intersects(proj.Hitbox) || proj.Redemption().ParryBlacklist)
+                    if (!Projectile.Hitbox.Intersects(proj.Hitbox) || proj.ProjBlockBlacklist())
                         continue;
 
-                    SoundEngine.PlaySound(CustomSounds.BallFire, Projectile.position);
+                    if (!Main.dedServ)
+                        SoundEngine.PlaySound(CustomSounds.BallFire, Projectile.position);
                     DustHelper.DrawCircle(proj.Center, DustID.LifeDrain, 1, 4, 4, nogravity: true);
                     for (int j = 0; j < 4; j++)
                         Projectile.Shoot(Projectile.Center, ModContent.ProjectileType<OmegaBlast>(), 110, RedeHelper.PolarVector(Main.rand.NextFloat(9, 19), (Main.player[RedeHelper.GetNearestAlivePlayer(Projectile)].Center - Projectile.Center).ToRotation() + Main.rand.NextFloat(-0.06f, 0.06f)), false, SoundID.Item1);
@@ -93,7 +94,7 @@ namespace Redemption.NPCs.Bosses.Obliterator
                 AdjustMagnitude(ref Projectile.velocity);
             }
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             Dust dust2 = Dust.NewDustPerfect(Projectile.Center + new Vector2(4, 4), ModContent.DustType<GlowDust>(), Vector2.Zero, Scale: 3);
             dust2.noGravity = true;

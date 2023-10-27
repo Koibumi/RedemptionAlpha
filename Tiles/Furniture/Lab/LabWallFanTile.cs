@@ -1,10 +1,10 @@
 using Microsoft.Xna.Framework;
 using Redemption.Dusts.Tiles;
-using Redemption.Items.Placeable.Furniture.Lab;
 using Terraria;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
-using Terraria.DataStructures;
+using Terraria.ID;
 
 namespace Redemption.Tiles.Furniture.Lab
 {
@@ -16,6 +16,7 @@ namespace Redemption.Tiles.Furniture.Lab
 			Main.tileLavaDeath[Type] = false;
             Main.tileNoAttach[Type] = true;
             Main.tileTable[Type] = false;
+            TileID.Sets.FramesOnKillWall[Type] = true;
             TileObjectData.newTile.Width = 2;
             TileObjectData.newTile.Height = 2;
             TileObjectData.newTile.CoordinateHeights = new int[] { 16, 16 };
@@ -27,8 +28,8 @@ namespace Redemption.Tiles.Furniture.Lab
             DustType = ModContent.DustType<LabPlatingDust>();
             MinPick = 200;
             MineResist = 4f;
-			ModTranslation name = CreateMapEntryName();
-			name.SetDefault("Laboratory Wall Fan");
+			LocalizedText name = CreateMapEntryName();
+			// name.SetDefault("Laboratory Wall Fan");
 			AddMapEntry(new Color(56, 55, 61), name);
             AnimationFrameHeight = 36;
         }
@@ -42,10 +43,6 @@ namespace Redemption.Tiles.Furniture.Lab
                 if (frame > 5)
                     frame = 0;
             }
-        }
-        public override void KillMultiTile(int i, int j, int frameX, int frameY)
-        {
-            Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 32, 32, ModContent.ItemType<LabWallFan>());
         }
         public override bool CanExplode(int i, int j) => false;
     }

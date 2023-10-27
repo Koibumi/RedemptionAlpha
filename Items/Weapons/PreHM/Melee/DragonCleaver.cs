@@ -1,22 +1,27 @@
 using Microsoft.Xna.Framework;
+using Redemption.Globals;
 using Redemption.Items.Materials.PreHM;
+using Redemption.Projectiles.Melee;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.Items.Weapons.PreHM.Melee
 {
     public class DragonCleaver : ModItem
     {
+        public override LocalizedText Tooltip => base.Tooltip.WithFormatArgs(ElementID.FireS, ElementID.WindS);
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Swings can block fire projectiles\n" +
-                "Hold left-click to charge a Heat Wave, continue holding to go into a fiery flurry\n" +
-                "Deals more damage to dragon-like enemies");
+            /* Tooltip.SetDefault("Swings can block fire projectiles\n" +
+                "Hold left-click to charge a Heat Wave, dealing " + ElementID.WindS + " damage\n" +
+                "Continue holding left-click to go into a fiery flurry\n" +
+                "Deals more damage to dragon-like enemies"); */
 
             ItemID.Sets.SkipsInitialUseSound[Item.type] = true;
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -32,7 +37,7 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             Item.useAnimation = 40;
             Item.useTime = 40;
             Item.UseSound = SoundID.Item1;
-            Item.autoReuse = false;
+            Item.autoReuse = true;
 
             // Weapon Properties
             Item.damage = 50;
@@ -45,6 +50,7 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             // Projectile Properties
             Item.shootSpeed = 5f;
             Item.shoot = ModContent.ProjectileType<DragonCleaver_Proj>();
+            Item.ExtraItemShoot(ModContent.ProjectileType<FireSlash_Proj>());
         }
 
         public override void AddRecipes()
@@ -60,9 +66,7 @@ namespace Redemption.Items.Weapons.PreHM.Melee
         {
             if (Main.keyState.PressingShift())
             {
-                TooltipLine line = new(Mod, "Lore",
-                    "'A cleaver cast in melted dragon bone and metal, said to be used by the ancient warlords of Dragonrest.\n" +
-                    "This weapon is a great catalyst for fire magic, shooting out a wave of burning heat by channelling a swing.'")
+                TooltipLine line = new(Mod, "Lore", Language.GetTextValue("Mods.Redemption.Items.DragonCleaver.Lore"))
                 {
                     OverrideColor = Color.LightGray
                 };
@@ -70,15 +74,14 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             }
             else
             {
-                TooltipLine line = new(Mod, "HoldShift", "Hold [Shift] to view lore")
+                TooltipLine line = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.SpecialTooltips.Viewer"))
                 {
                     OverrideColor = Color.Gray,
                 };
                 tooltips.Add(line);
             }
-
-            TooltipLine axeLine = new(Mod, "SharpBonus", "Slash Bonus: Small chance to decapitate skeletons, killing them instantly") { OverrideColor = Colors.RarityOrange };
-            tooltips.Add(axeLine);
+            TooltipLine slashLine = new(Mod, "SharpBonus", Language.GetTextValue("Mods.Redemption.GenericTooltips.Bonuses.SlashBonus")) { OverrideColor = Colors.RarityOrange };
+            tooltips.Add(slashLine);
         }
     }
 }

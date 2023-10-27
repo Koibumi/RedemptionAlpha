@@ -5,7 +5,6 @@ using Terraria;
 using Terraria.ModLoader;
 using Terraria.GameContent;
 using System.Collections.Generic;
-using Redemption.BaseExtension;
 
 namespace Redemption.NPCs.Lab.Behemoth
 {
@@ -31,7 +30,7 @@ namespace Redemption.NPCs.Lab.Behemoth
         // >
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Telegraph");
+            // DisplayName.SetDefault("Telegraph");
         }
 
         public override void SetDefaults()
@@ -143,29 +142,6 @@ namespace Redemption.NPCs.Lab.Behemoth
             {
                 return false;
             }
-        }
-        #endregion
-
-        #region MP Sync
-        public override void SendExtraAI(BinaryWriter writer)
-        {
-            writer.Write(LaserLength);
-            writer.Write(LaserScale);
-            writer.Write(LaserSegmentLength);
-            writer.Write(LaserEndSegmentLength);
-            writer.Write(LaserWidth);
-            writer.Write(MaxLaserLength);
-            writer.Write(StopsOnTiles);
-        }
-        public override void ReceiveExtraAI(BinaryReader reader)
-        {
-            LaserLength = reader.ReadSingle();
-            LaserScale = reader.ReadSingle();
-            LaserSegmentLength = reader.ReadInt32();
-            LaserEndSegmentLength = reader.ReadInt32();
-            LaserWidth = reader.ReadInt32();
-            MaxLaserLength = reader.ReadInt32();
-            StopsOnTiles = reader.ReadBoolean();
         }
         #endregion
     }

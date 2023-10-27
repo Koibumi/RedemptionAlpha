@@ -5,6 +5,8 @@ using System;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.GameContent;
+using Redemption.Globals;
+using Redemption.Buffs.Debuffs;
 
 namespace Redemption.NPCs.Bosses.SeedOfInfection
 {
@@ -12,7 +14,8 @@ namespace Redemption.NPCs.Bosses.SeedOfInfection
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Xenomite Beam");
+            // DisplayName.SetDefault("Xenomite Beam");
+            ElementID.ProjPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -25,6 +28,7 @@ namespace Redemption.NPCs.Bosses.SeedOfInfection
             Projectile.timeLeft = 3600;
             Projectile.tileCollide = false;
         }
+        public override void OnHitPlayer(Player target, Player.HurtInfo info) => target.AddBuff(ModContent.BuffType<BileDebuff>(), 120);
         internal const float charge = 40f;
         public float LaserLength { get { return Projectile.localAI[1]; } set { Projectile.localAI[1] = value; } }
         public const float LaserLengthMax = 2000f;
@@ -101,7 +105,7 @@ namespace Redemption.NPCs.Bosses.SeedOfInfection
                 return false;
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginAdditive();
 
             Texture2D texture2D19 = TextureAssets.Projectile[Projectile.type].Value;
             Texture2D texture2D20 = ModContent.Request<Texture2D>("Redemption/NPCs/Bosses/SeedOfInfection/SeedLaser_Beam").Value;
@@ -142,7 +146,7 @@ namespace Redemption.NPCs.Bosses.SeedOfInfection
             arg_B1FF_0.Draw(arg_B1FF_1, arg_B1FF_2, sourceRectangle2, color44, Projectile.rotation, texture2D21.Frame(1, 1, 0, 0).Top(), new Vector2(Math.Min(Projectile.ai[1], charge) / charge, 1f), SpriteEffects.None, 0f);
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginDefault();
             return false;
         }
     }

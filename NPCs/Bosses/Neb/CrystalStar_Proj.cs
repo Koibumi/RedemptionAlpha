@@ -13,9 +13,10 @@ namespace Redemption.NPCs.Bosses.Neb
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Crystal Star");
+            // DisplayName.SetDefault("Crystal Star");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 5;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjCelestial[Type] = true;
         }
 
         public override void SetDefaults()
@@ -31,13 +32,13 @@ namespace Redemption.NPCs.Bosses.Neb
             Projectile.extraUpdates = 1;
         }
 
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(SoundID.Item27, Projectile.position);
             if (Main.myPlayer == Projectile.owner)
             {
                 for (int i = 0; i < 5; i++)
-                    Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center, RedeHelper.PolarVector(10, (MathHelper.ToRadians(72) * i) + Projectile.rotation), ModContent.ProjectileType<CrystalStarShard_Proj>(), Projectile.damage / 3, 0, Main.myPlayer);
+                    Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center, RedeHelper.PolarVector(10, (MathHelper.ToRadians(72) * i) + Projectile.rotation), ModContent.ProjectileType<CrystalStarShard_Proj>(), Projectile.damage / 2, 0, Main.myPlayer);
             }
         }
         public override void AI()
@@ -99,7 +100,7 @@ namespace Redemption.NPCs.Bosses.Neb
         // >
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Telegraph");
+            // DisplayName.SetDefault("Telegraph");
         }
 
         public override void SetDefaults()

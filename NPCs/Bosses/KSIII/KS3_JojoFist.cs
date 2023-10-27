@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Redemption.Globals;
 using System;
-using System.Xml;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.ModLoader;
@@ -12,7 +12,7 @@ namespace Redemption.NPCs.Bosses.KSIII
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("King Slayer III");
+            // DisplayName.SetDefault("King Slayer III");
             Main.projFrames[Projectile.type] = 7;
         }
         public override void SetDefaults()
@@ -57,17 +57,12 @@ namespace Redemption.NPCs.Bosses.KSIII
                 case 1:
                     Projectile.Center = new Vector2(npc.Center.X + vector.X + offset, npc.Center.Y + vector.Y);
                     if (Projectile.frame > 1)
-                    {
-                        if (npc.Center.X > Projectile.Center.X)
-                            offset -= 15;
-                        else
-                            offset += 15;
-                    }
+                        offset += 15 * Projectile.RightOfDir(npc);
                     break;
             }
             Projectile.velocity = Vector2.Zero;
             Projectile.rotation = (float)Math.PI / 2;
-            if (npc.Center.X > Projectile.Center.X)
+            if (npc.RightOf(Projectile))
                 Projectile.rotation = (float)-Math.PI / 2;
             else
                 Projectile.rotation = (float)Math.PI / 2;
@@ -82,12 +77,12 @@ namespace Redemption.NPCs.Bosses.KSIII
             SpriteEffects effects = Projectile.spriteDirection == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginAdditive();
 
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, new Rectangle?(rect), Projectile.GetAlpha(Color.White), Projectile.rotation, drawOrigin, Projectile.scale, effects, 0);
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginDefault();
             return false;
         }
     }

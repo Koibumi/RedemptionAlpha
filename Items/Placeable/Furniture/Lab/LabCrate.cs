@@ -19,11 +19,11 @@ namespace Redemption.Items.Placeable.Furniture.Lab
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Laboratory Crate");
-            Tooltip.SetDefault("{$CommonItemTooltip.RightClickToOpen}");
+            // DisplayName.SetDefault("Laboratory Crate");
+            // Tooltip.SetDefault("{$CommonItemTooltip.RightClickToOpen}");
             ItemID.Sets.IsFishingCrate[Type] = true;
             ItemID.Sets.IsFishingCrateHardmode[Type] = true;
-            SacrificeTotal = 10;
+            Item.ResearchUnlockCount = 10;
         }
 
         public override void SetDefaults()
@@ -32,7 +32,7 @@ namespace Redemption.Items.Placeable.Furniture.Lab
             Item.width = 32;
             Item.height = 32;
             Item.rare = ItemRarityID.Lime;
-            Item.maxStack = 9999;
+            Item.maxStack = Item.CommonMaxStack;
         }
         public override void ModifyResearchSorting(ref ContentSamples.CreativeHelper.ItemGroup itemGroup)
         {
@@ -56,7 +56,7 @@ namespace Redemption.Items.Placeable.Furniture.Lab
             {
                 ModContent.ItemType<ScrapMetal>(),
                 ModContent.ItemType<AIChip>(),
-                ModContent.ItemType<Capacitator>(),
+                ModContent.ItemType<Capacitor>(),
                 ModContent.ItemType<Plating>()
             };
             int[] LabChestLoot3 = new int[]

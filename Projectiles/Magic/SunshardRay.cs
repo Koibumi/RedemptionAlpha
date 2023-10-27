@@ -1,11 +1,8 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System.IO;
 using Terraria;
 using Terraria.ModLoader;
-using Terraria.Enums;
 using Terraria.GameContent;
-using Redemption.BaseExtension;
 using Redemption.Globals;
 
 namespace Redemption.Projectiles.Magic
@@ -14,7 +11,8 @@ namespace Redemption.Projectiles.Magic
     {
         public override void SetSafeStaticDefaults()
         {
-            DisplayName.SetDefault("Sunshard Ray");
+            // DisplayName.SetDefault("Sunshard Ray");
+            ElementID.ProjHoly[Type] = true;
         }
 
         public override void SetSafeDefaults()
@@ -25,7 +23,7 @@ namespace Redemption.Projectiles.Magic
             Projectile.DamageType = DamageClass.Magic;
             Projectile.timeLeft = 60;
             Projectile.usesIDStaticNPCImmunity = true;
-            Projectile.idStaticNPCHitCooldown = 5;
+            Projectile.idStaticNPCHitCooldown = 6;
             LaserSegmentLength = 14;
             LaserWidth = 20;
             LaserEndSegmentLength = 14;

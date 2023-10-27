@@ -6,6 +6,7 @@ using Redemption.Items.Materials.PreHM;
 using Redemption.Items.Placeable.Banners;
 using Redemption.Items.Usable;
 using Redemption.NPCs.Friendly;
+using System.IO;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -13,6 +14,7 @@ using Terraria.GameContent;
 using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.NPCs.PreHM
@@ -34,7 +36,7 @@ namespace Redemption.NPCs.PreHM
 
         public override void SetSafeStaticDefaults()
         {
-            DisplayName.SetDefault("Dancing Skeleton");
+            // DisplayName.SetDefault("Dancing Skeleton");
             Main.npcFrameCount[NPC.type] = 36;
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0);
@@ -57,7 +59,7 @@ namespace Redemption.NPCs.PreHM
             Banner = NPC.type;
             BannerItem = ModContent.ItemType<EpidotrianSkeletonBanner>();
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -83,9 +85,20 @@ namespace Redemption.NPCs.PreHM
                 NPC.Transform(ModContent.NPCType<EpidotrianSkeleton>());
                 NPC.life = life;
                 (Main.npc[NPC.whoAmI].ModNPC as EpidotrianSkeleton).HasEyes = HasEyes;
+                NPC.frame.Width = TextureAssets.Npc[NPC.type].Width() / 3;
                 TimerRand = Main.rand.Next(80, 280);
-                NPC.alpha = 0;
+                NPC.netUpdate = true;
             }
+        }
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.Write(DanceType);
+            writer.Write(DanceSpeed);
+        }
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            DanceType = reader.ReadInt32();
+            DanceSpeed = reader.ReadInt32();
         }
         public override void OnSpawn(IEntitySource source)
         {
@@ -96,6 +109,7 @@ namespace Redemption.NPCs.PreHM
             DanceSpeed = Main.rand.Next(4, 11);
 
             AIState = TimerRand == 0 ? ActionState.Trumpet : ActionState.Dancing;
+            NPC.netUpdate = true;
         }
         public override void AI()
         {
@@ -120,6 +134,7 @@ namespace Redemption.NPCs.PreHM
                         (Main.npc[NPC.whoAmI].ModNPC as EpidotrianSkeleton).HasEyes = HasEyes;
                         TimerRand = Main.rand.Next(80, 280);
                         NPC.alpha = 0;
+                        NPC.netUpdate = true;
                     }
                     break;
             }
@@ -135,61 +150,58 @@ namespace Redemption.NPCs.PreHM
         private int DanceSpeed = 10;
         public override void FindFrame(int frameHeight)
         {
-            if (Main.netMode != NetmodeID.Server)
+            if (NPC.collideY || NPC.velocity.Y == 0)
+                NPC.rotation = 0;
+            else
+                NPC.rotation = NPC.velocity.X * 0.05f;
+
+            if (AIState is ActionState.Trumpet)
             {
-                if (NPC.collideY || NPC.velocity.Y == 0)
-                    NPC.rotation = 0;
-                else
-                    NPC.rotation = NPC.velocity.X * 0.05f;
-
-                if (AIState is ActionState.Trumpet)
-                {
-                    if (++NPC.frameCounter >= 10)
-                    {
-                        NPC.frameCounter = 0;
-                        NPC.frame.Y += frameHeight;
-                        if (NPC.frame.Y > 1 * frameHeight)
-                            NPC.frame.Y = 0 * frameHeight;
-                    }
-                    return;
-                }
-                switch (DanceType)
-                {
-                    case 0:
-                        StartFrame = 2;
-                        EndFrame = 5;
-                        break;
-                    case 1:
-                        StartFrame = 6;
-                        EndFrame = 9;
-                        break;
-                    case 2:
-                        StartFrame = 10;
-                        EndFrame = 15;
-                        break;
-                    case 3:
-                        StartFrame = 16;
-                        EndFrame = 21;
-                        break;
-                    case 4:
-                        StartFrame = 22;
-                        EndFrame = 27;
-                        break;
-                    case 5:
-                        StartFrame = 28;
-                        EndFrame = 35;
-                        break;
-                }
-
-                if (NPC.frame.Y < StartFrame * frameHeight)
-                    NPC.frame.Y = StartFrame * frameHeight;
-                if (++NPC.frameCounter >= DanceSpeed)
+                if (++NPC.frameCounter >= 10)
                 {
                     NPC.frameCounter = 0;
                     NPC.frame.Y += frameHeight;
-                    if (NPC.frame.Y > EndFrame * frameHeight)
-                        NPC.frame.Y = StartFrame * frameHeight;
+                    if (NPC.frame.Y > 1 * frameHeight)
+                        NPC.frame.Y = 0 * frameHeight;
                 }
+                return;
+            }
+            switch (DanceType)
+            {
+                case 0:
+                    StartFrame = 2;
+                    EndFrame = 5;
+                    break;
+                case 1:
+                    StartFrame = 6;
+                    EndFrame = 9;
+                    break;
+                case 2:
+                    StartFrame = 10;
+                    EndFrame = 15;
+                    break;
+                case 3:
+                    StartFrame = 16;
+                    EndFrame = 21;
+                    break;
+                case 4:
+                    StartFrame = 22;
+                    EndFrame = 27;
+                    break;
+                case 5:
+                    StartFrame = 28;
+                    EndFrame = 35;
+                    break;
+            }
+
+            if (NPC.frame.Y < StartFrame * frameHeight)
+                NPC.frame.Y = StartFrame * frameHeight;
+            if (++NPC.frameCounter >= DanceSpeed)
+            {
+                NPC.frameCounter = 0;
+                NPC.frame.Y += frameHeight;
+                if (NPC.frame.Y > EndFrame * frameHeight)
+                    NPC.frame.Y = StartFrame * frameHeight;
             }
         }
         public int GetNearestNPC()
@@ -214,7 +226,7 @@ namespace Redemption.NPCs.PreHM
         }
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
-            Texture2D glow = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Glow").Value;
+            Texture2D glow = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
             var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
             spriteBatch.Draw(TextureAssets.Npc[NPC.type].Value, NPC.Center - screenPos, NPC.frame, drawColor, NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
@@ -224,7 +236,7 @@ namespace Redemption.NPCs.PreHM
 
             return false;
         }
-        public override bool? CanHitNPC(NPC target) => false;
+        public override bool CanHitNPC(NPC target) => false;
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => false;
         public override void OnKill()
         {
@@ -237,8 +249,7 @@ namespace Redemption.NPCs.PreHM
         {
             npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<Trumpet>(), 15));
             npcLoot.Add(ItemDropRule.Food(ItemID.MilkCarton, 150));
-            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<EpidotrianSkull>(), 50));
-            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<OldTophat>(), 500));
+            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<EpidotrianSkull>(), 100));
             npcLoot.Add(ItemDropRule.ByCondition(new LostSoulCondition(), ModContent.ItemType<LostSoul>(), 7));
         }
         public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
@@ -248,8 +259,7 @@ namespace Redemption.NPCs.PreHM
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Biomes.Surface,
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Times.NightTime,
 
-                new FlavorTextBestiaryInfoElement(
-                    "Created when a corpse is bound by a soul, and the soul can still remember the last piece of music it heard. It will attempt to mimic the exact sounds it remembers. If it can't do that, then it will just dance uncontrollably. Some tunes are more deadly than others.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.RaveyardSkeleton"))
             });
         }
     }

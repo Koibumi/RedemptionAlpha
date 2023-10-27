@@ -1,11 +1,10 @@
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Redemption.BaseExtension;
-using Redemption.Items.Weapons.HM.Ranged;
+using Redemption.Items.Weapons.PostML.Ranged;
 using Redemption.Projectiles.Melee;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.Items.Weapons.PostML.Melee
@@ -14,13 +13,13 @@ namespace Redemption.Items.Weapons.PostML.Melee
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Mythril's Bane");
-            Tooltip.SetDefault("Hitting armed enemies with the blade inflicts Disarmed and Broken Armor\n" +
+            // DisplayName.SetDefault("Mythril's Bane");
+            /* Tooltip.SetDefault("Hitting armed enemies with the blade inflicts Disarmed and Broken Armor\n" +
                 "Disarmed heavily decreases contact damage and their weapon damage\n" +
-                "Blocks weak physical projectiles");
-
+                "Blocks weak physical projectiles"); */
+            ItemID.Sets.ShimmerTransformToItem[Type] = ModContent.ItemType<DarkSteelBow>();
             ItemID.Sets.SkipsInitialUseSound[Item.type] = true;
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -58,9 +57,7 @@ namespace Redemption.Items.Weapons.PostML.Melee
         {
             if (Main.keyState.PressingShift())
             {
-                TooltipLine line = new(Mod, "Lore",
-                    "'The mighty blade of Zephos, recieved during his time in Arrgath - Capital of Erellon.\n" +
-                    "Similarly to his previous weapon, this sword has a slit for catching opponent's blades and snapping them.'")
+                TooltipLine line = new(Mod, "Lore", Language.GetTextValue("Mods.Redemption.Items.MythrilsBane.Lore"))
                 {
                     OverrideColor = Color.LightGray
                 };
@@ -68,15 +65,15 @@ namespace Redemption.Items.Weapons.PostML.Melee
             }
             else
             {
-                TooltipLine line = new(Mod, "HoldShift", "Hold [Shift] to view lore")
+                TooltipLine line = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.SpecialTooltips.Viewer"))
                 {
                     OverrideColor = Color.Gray,
                 };
                 tooltips.Add(line);
             }
 
-            TooltipLine axeLine = new(Mod, "SharpBonus", "Slash Bonus: Small chance to decapitate skeletons, killing them instantly") { OverrideColor = Colors.RarityOrange };
-            tooltips.Add(axeLine);
+            TooltipLine slashLine = new(Mod, "SharpBonus", Language.GetTextValue("Mods.Redemption.GenericTooltips.Bonuses.SlashBonus")) { OverrideColor = Colors.RarityOrange };
+            tooltips.Add(slashLine);
         }
     }
 }

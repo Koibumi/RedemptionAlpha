@@ -1,11 +1,6 @@
-﻿using Microsoft.Xna.Framework;
-using ParticleLibrary;
-using Redemption.BaseExtension;
-using Redemption.Dusts;
+﻿using Redemption.Dusts;
 using Redemption.Globals;
-using Redemption.Particles;
 using Terraria;
-using Terraria.Audio;
 using Terraria.ModLoader;
 
 namespace Redemption.Projectiles.Ranged
@@ -15,7 +10,8 @@ namespace Redemption.Projectiles.Ranged
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Dark Tendril");
+            // DisplayName.SetDefault("Dark Tendril");
+            ElementID.ProjShadow[Type] = true;
         }
         public override void SetDefaults()
         {

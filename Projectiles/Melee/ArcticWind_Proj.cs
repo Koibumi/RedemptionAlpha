@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Redemption.Buffs.NPCBuffs;
+using Redemption.Buffs.Debuffs;
 using Redemption.Globals;
 using Terraria;
 using Terraria.GameContent;
@@ -14,7 +14,7 @@ namespace Redemption.Projectiles.Melee
         public override string Texture => "Redemption/Textures/IceFlake";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Arctic Wind");
+            // DisplayName.SetDefault("Arctic Wind");
         }
         public override void SetDefaults()
         {

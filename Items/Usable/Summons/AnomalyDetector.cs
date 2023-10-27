@@ -5,6 +5,8 @@ using Terraria.ModLoader;
 using Redemption.NPCs.Bosses.SeedOfInfection;
 using Terraria.DataStructures;
 using Redemption.Globals;
+using Redemption.WorldGeneration.Soulless;
+using SubworldLibrary;
 
 namespace Redemption.Items.Usable.Summons
 {
@@ -12,12 +14,11 @@ namespace Redemption.Items.Usable.Summons
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Summons a strange portal..."
-                + "\n[c/67ff3e:Begins the Infection]"
-                + "\nNot consumable");
+            /* Tooltip.SetDefault("Summons a strange portal..."
+                + "\nNot consumable"); */
             Main.RegisterItemAnimation(Item.type, new DrawAnimationVertical(4, 4));
 
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
             ItemID.Sets.SortingPriorityBossSpawns[Type] = 12;
             ItemID.Sets.AnimatesAsSoul[Item.type] = true;
         }
@@ -38,7 +39,7 @@ namespace Redemption.Items.Usable.Summons
 
         public override bool CanUseItem(Player player)
         {
-            return !NPC.AnyNPCs(ModContent.NPCType<SoI>());
+            return !SubworldSystem.IsActive<SoullessSub>() && !NPC.AnyNPCs(ModContent.NPCType<SoI>());
         }
 
         public override bool? UseItem(Player player)
@@ -52,7 +53,7 @@ namespace Redemption.Items.Usable.Summons
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                     NPC.SpawnOnPlayer(player.whoAmI, type);
                 else
-                    NetMessage.SendData(MessageID.SpawnBoss, number: player.whoAmI, number2: type);
+                    NetMessage.SendData(MessageID.SpawnBossUseLicenseStartEvent, number: player.whoAmI, number2: type);
             }
             return true;
         }

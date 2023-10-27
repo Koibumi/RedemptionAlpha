@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.Base;
 using Redemption.Buffs.Debuffs;
+using Redemption.Globals;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
@@ -14,7 +15,7 @@ namespace Redemption.NPCs.Bosses.KSIII
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Stun Grenade");
+            // DisplayName.SetDefault("Stun Grenade");
             Main.projFrames[Projectile.type] = 3;
         }
         public override void SetDefaults()
@@ -28,7 +29,7 @@ namespace Redemption.NPCs.Bosses.KSIII
             Projectile.ignoreWater = false;
             Projectile.timeLeft = 90;
         }
-        public override void OnHitPlayer(Player target, int damage, bool crit)
+        public override void OnHitPlayer(Player target, Player.HurtInfo info)
         {
             Projectile.Kill();
         }
@@ -44,7 +45,7 @@ namespace Redemption.NPCs.Bosses.KSIII
             Projectile.rotation += Projectile.velocity.X / 40 * Projectile.direction;
             Projectile.velocity.Y += 0.3f;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             if (!Main.dedServ)
                 SoundEngine.PlaySound(CustomSounds.Zap2, Projectile.position);
@@ -66,7 +67,7 @@ namespace Redemption.NPCs.Bosses.KSIII
         public override string Texture => "Redemption/Textures/TransitionTex";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Flash");
+            // DisplayName.SetDefault("Flash");
         }
 
         public override void SetDefaults()
@@ -104,7 +105,7 @@ namespace Redemption.NPCs.Bosses.KSIII
                     if (!player.active || player.dead || Projectile.DistanceSQ(player.Center) >= 60 * 60)
                         continue;
 
-                    int hitDirection = Projectile.Center.X > player.Center.X ? -1 : 1;
+                    int hitDirection = player.RightOfDir(Projectile);
                     BaseAI.DamagePlayer(player, Projectile.damage, 3, hitDirection, Projectile);
 
                     player.AddBuff(BuffID.Confused, 180);

@@ -13,7 +13,9 @@ using Terraria.GameContent.Bestiary;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Redemption.Items.Placeable.Banners;
-using Redemption.Buffs.NPCBuffs;
+using System.IO;
+using Terraria.Localization;
+using Redemption.Globals.NPC;
 
 namespace Redemption.NPCs.Lab
 {
@@ -38,24 +40,13 @@ namespace Redemption.NPCs.Lab
         public override void SetStaticDefaults()
         {
             Main.npcFrameCount[NPC.type] = 5;
-
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Bleeding,
-                    ModContent.BuffType<BileDebuff>(),
-                    ModContent.BuffType<GreenRashesDebuff>(),
-                    ModContent.BuffType<GlowingPustulesDebuff>(),
-                    ModContent.BuffType<FleshCrystalsDebuff>(),
-                    ModContent.BuffType<InfestedDebuff>(),
-                    ModContent.BuffType<NecroticGougeDebuff>(),
-                    ModContent.BuffType<DirtyWoundDebuff>()
-                }
-            });
+            NPCID.Sets.ShimmerTransformToNPC[NPC.type] = NPCID.ShimmerSlime;
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Infected);
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0);
-
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
+            ElementID.NPCWater[Type] = true;
+            ElementID.NPCPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -78,18 +69,27 @@ namespace Redemption.NPCs.Lab
         public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
         {
             bestiaryEntry.Info.AddRange(new IBestiaryInfoElement[] {
-                new FlavorTextBestiaryInfoElement("An amorphous blob of foul-smelling ooze. Below its icky slime is something organic, excreting its fluid almost endlessly... God, what a mess.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.OozeBlob"))
             });
+        }
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.Write(Xvel);
+        }
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            Xvel = reader.ReadInt32();
         }
         public int Xvel;
         public int consumed;
         public override void OnSpawn(IEntitySource source)
         {
             TimerRand = Main.rand.Next(10, 30);
+            NPC.netUpdate = true;
         }
         public override void AI()
         {
-            if (LabArea.Active)
+            if (Main.LocalPlayer.InModBiome<LabBiome>())
                 NPC.DiscourageDespawn(60);
 
             NPC.height = (int)(16 * NPC.scale);
@@ -109,6 +109,7 @@ namespace Redemption.NPCs.Lab
                         AITimer = 0;
                         TimerRand = Main.rand.Next(10, 30);
                         AIState = ActionState.Bounce;
+                        NPC.netUpdate = true;
                     }
                     break;
 
@@ -163,6 +164,7 @@ namespace Redemption.NPCs.Lab
             NPC.knockBackResist -= 0.05f;
             NPC.knockBackResist = MathHelper.Clamp(NPC.knockBackResist, 0, 1);
             consumed++;
+            NPC.netUpdate = true;
         }
         public override void FindFrame(int frameHeight)
         {
@@ -190,7 +192,7 @@ namespace Redemption.NPCs.Lab
             spriteBatch.Draw(TextureAssets.Npc[NPC.type].Value, NPC.Center - screenPos, NPC.frame, NPC.GetAlpha(drawColor), NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
             return false;
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -207,7 +209,7 @@ namespace Redemption.NPCs.Lab
                     RedeHelper.SpawnNPC(NPC.GetSource_FromAI(), (int)NPC.position.X + Main.rand.Next(0, NPC.width), (int)NPC.position.Y + Main.rand.Next(0, NPC.height), ModContent.NPCType<OozeBlob>());
             }
         }
-        public override void ModifyHitPlayer(Player target, ref int damage, ref bool crit)
+        public override void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers)
         {
             if (Main.rand.NextBool(2) || Main.expertMode)
                 target.AddBuff(ModContent.BuffType<GreenRashesDebuff>(), (int)(Main.rand.Next(60, 300) * (NPC.scale * 2)));

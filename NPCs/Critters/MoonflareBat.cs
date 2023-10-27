@@ -12,6 +12,7 @@ using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.Events;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Utilities;
 
@@ -27,6 +28,7 @@ namespace Redemption.NPCs.Critters
         public override void SetStaticDefaults()
         {
             Main.npcFrameCount[Type] = 5;
+            NPCID.Sets.ShimmerTransformToNPC[NPC.type] = NPCID.Shimmerfly;
             NPCID.Sets.CountsAsCritter[Type] = true;
             NPCID.Sets.DontDoHardmodeScaling[Type] = true;
             NPCID.Sets.TakesDamageFromHostilesWithoutBeingFriendly[Type] = true;
@@ -55,15 +57,15 @@ namespace Redemption.NPCs.Critters
             BannerItem = ModContent.ItemType<MoonflareBatBanner>();
         }
 
-        public override void ModifyHitByItem(Player player, Item item, ref int damage, ref float knockback, ref bool crit)
+        public override void ModifyHitByItem(Player player, Item item, ref NPC.HitModifiers modifiers)
         {
-            if (ItemLists.Shadow.Contains(item.type))
-                damage = (int)(damage * 1.25f);
+            if (item.HasElement(ElementID.Shadow))
+                modifiers.FinalDamage *= 1.25f;
         }
-        public override void ModifyHitByProjectile(Projectile projectile, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
+        public override void ModifyHitByProjectile(Projectile projectile, ref NPC.HitModifiers modifiers)
         {
-            if (ProjectileLists.Shadow.Contains(projectile.type))
-                damage = (int)(damage * 1.25f);
+            if (projectile.HasElement(ElementID.Shadow))
+                modifiers.FinalDamage *= 1.25f;
         }
 
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => false;
@@ -105,7 +107,7 @@ namespace Redemption.NPCs.Critters
             if (NPC.velocity.X == 0)
                 NPC.velocity.X = 3 * Main.rand.NextFloatDirection();
 
-            int tilePosY = BaseWorldGen.GetFirstTileFloor((int)(NPC.Center.X / 16), (int)(NPC.Center.Y / 16));
+            int tilePosY = BaseWorldGen.GetFirstTileFloor((int)(NPC.Center.X / 16), (int)(NPC.Center.Y / 16), true, true);
             int dist = (tilePosY * 16) - (int)NPC.Center.Y;
 
             NPC.velocity.X *= 1.04f;
@@ -153,21 +155,20 @@ namespace Redemption.NPCs.Critters
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Times.NightTime,
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Visuals.Moon,
 
-                new FlavorTextBestiaryInfoElement(
-                    "These bats have thin wings, causing moonlight to pass through, creating the illusion that they glow. They store the light of the moon within them and convert it to weak energy.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.MoonflareBat"))
             });
         }
 
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
-            Texture2D Glow = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Glow").Value;
-            Texture2D Trail = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Trail").Value;
+            Texture2D Glow = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
+            Texture2D Trail = ModContent.Request<Texture2D>(Texture + "_Trail").Value;
             var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
             if (!Main.dayTime && Main.moonPhase != 4 && !NPC.IsABestiaryIconDummy)
             {
                 spriteBatch.End();
-                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+                spriteBatch.BeginAdditive();
 
                 for (int i = 0; i < NPCID.Sets.TrailCacheLength[NPC.type]; i++)
                 {
@@ -176,7 +177,7 @@ namespace Redemption.NPCs.Critters
                 }
 
                 spriteBatch.End();
-                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
             }
 
             spriteBatch.Draw(TextureAssets.Npc[NPC.type].Value, NPC.Center - screenPos, NPC.frame, drawColor, NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
@@ -186,7 +187,7 @@ namespace Redemption.NPCs.Critters
             return false;
         }
 
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {

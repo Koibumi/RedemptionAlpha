@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.Localization;
 
 namespace Redemption.Items.Armor.PreHM.CommonGuard
 {
@@ -12,9 +13,9 @@ namespace Redemption.Items.Armor.PreHM.CommonGuard
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Reduces damage taken by 4%");
+            // Tooltip.SetDefault("Reduces damage taken by 4%");
 
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -44,13 +45,7 @@ namespace Redemption.Items.Armor.PreHM.CommonGuard
         {
             if (Main.keyState.PressingShift())
             {
-                TooltipLine line = new(Mod, "Lore",
-                    "'Plate mail of the Common Guard unit of Anglon that were scavenged by skeletons.\n" +
-                    "Originally shining steel, the metal has since dulled with time and coated with layers of dust.\n\n" +
-                    "The Common Guard was founded when an Overlord's city was completely obliterated\n" +
-                    "by a stray demon that sneaked through an unguarded portal to Demonhollow.\n\n" +
-                    "They now guard cities and landmarks of great importance. Despite being stronger than the average\n" +
-                    "knight, they don't get involved in wars.'")
+                TooltipLine line = new(Mod, "Lore",Language.GetTextValue("Mods.Redemption.SpecialTooltips.CommonGuard.CommonGuardPlateMail"))
                 {
                     OverrideColor = Color.LightGray
                 };
@@ -58,7 +53,7 @@ namespace Redemption.Items.Armor.PreHM.CommonGuard
             }
             else
             {
-                TooltipLine line = new(Mod, "HoldShift", "Hold [Shift] to view lore")
+                TooltipLine line = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.SpecialTooltips.Viewer"))
                 {
                     OverrideColor = Color.Gray,
                 };

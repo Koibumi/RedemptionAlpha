@@ -8,8 +8,6 @@ using Redemption.Base;
 using Redemption.Globals;
 using Redemption.Buffs.Debuffs;
 using Terraria.Audio;
-using Terraria.ID;
-using Redemption.BaseExtension;
 
 namespace Redemption.NPCs.Bosses.Obliterator
 {
@@ -18,7 +16,8 @@ namespace Redemption.NPCs.Bosses.Obliterator
         private new readonly float FirstSegmentDrawDist = 96;
         public override void SetSafeStaticDefaults()
         {
-            DisplayName.SetDefault("Stun Beam");
+            // DisplayName.SetDefault("Stun Beam");
+            ElementID.ProjThunder[Type] = true;
         }
         public override void SetSafeDefaults()
         {
@@ -36,7 +35,7 @@ namespace Redemption.NPCs.Bosses.Obliterator
             MaxLaserLength = 1760;
             maxLaserFrames = 3;
         }
-        public override void OnHitPlayer(Player target, int damage, bool crit)
+        public override void OnHitPlayer(Player target, Player.HurtInfo info)
         {
             target.AddBuff(ModContent.BuffType<StaticStunDebuff>(), 120);
         }
@@ -47,7 +46,8 @@ namespace Redemption.NPCs.Bosses.Obliterator
             if (AITimer == 0)
             {
                 LaserScale = 0.1f;
-                SoundEngine.PlaySound(CustomSounds.ElectricNoise, Projectile.position);
+                if (!Main.dedServ)
+                    SoundEngine.PlaySound(CustomSounds.ElectricNoise, Projectile.position);
             }
 
             NPC npc = Main.npc[(int)Projectile.ai[0]];
@@ -116,12 +116,12 @@ namespace Redemption.NPCs.Bosses.Obliterator
         public override bool PreDraw(ref Color lightColor)
         {
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginAdditive();
 
             DrawLaser(TextureAssets.Projectile[Projectile.type].Value, Projectile.Center + (new Vector2(Projectile.width, 0).RotatedBy(Projectile.rotation) * LaserScale), new Vector2(1f, 0).RotatedBy(Projectile.rotation) * LaserScale, -1.57f, LaserScale, LaserLength, Projectile.GetAlpha(Color.White), (int)FirstSegmentDrawDist);
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginDefault();
             return false;
         }
         #endregion

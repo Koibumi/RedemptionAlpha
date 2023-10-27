@@ -6,6 +6,8 @@ using Redemption.Items.Armor.Vanity;
 using Redemption.Items.Materials.PreHM;
 using Redemption.Items.Placeable.Banners;
 using Redemption.NPCs.Friendly;
+using ReLogic.Content;
+using System.IO;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.GameContent.ItemDropRules;
@@ -17,6 +19,17 @@ namespace Redemption.NPCs.PreHM
 {
     public class DancingSkeleton : SkeletonBase
     {
+        private static Asset<Texture2D> soulless;
+        public override void Load()
+        {
+            if (Main.dedServ)
+                return;
+            soulless = ModContent.Request<Texture2D>("Redemption/Textures/Misc/TheSoulless");
+        }
+        public override void Unload()
+        {
+            soulless = null;
+        }
         public override string Texture => "Redemption/NPCs/PreHM/RaveyardSkeleton";
         public enum ActionState
         {
@@ -33,7 +46,7 @@ namespace Redemption.NPCs.PreHM
 
         public override void SetSafeStaticDefaults()
         {
-            DisplayName.SetDefault("Dancing Skeleton");
+            // DisplayName.SetDefault("Dancing Skeleton");
             Main.npcFrameCount[NPC.type] = 36;
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0) { Hide = true };
@@ -55,7 +68,7 @@ namespace Redemption.NPCs.PreHM
             Banner = NPC.type;
             BannerItem = ModContent.ItemType<EpidotrianSkeletonBanner>();
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -75,7 +88,14 @@ namespace Redemption.NPCs.PreHM
             Dust.NewDust(NPC.position + NPC.velocity, NPC.width, NPC.height, DustID.Bone,
                 NPC.velocity.X * 0.5f, NPC.velocity.Y * 0.5f);
         }
-
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.Write(DanceType);
+        }
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            DanceType = reader.ReadInt32();
+        }
         public override void AI()
         {
             Player player = Main.LocalPlayer;
@@ -89,6 +109,7 @@ namespace Redemption.NPCs.PreHM
                     DanceType = Main.rand.Next(6);
 
                     AIState = ActionState.Dancing;
+                    NPC.netUpdate = true;
                     break;
                 case ActionState.Dancing:
                     if (NPC.life < NPC.lifeMax)
@@ -129,50 +150,47 @@ namespace Redemption.NPCs.PreHM
         private int AniCounter;
         public override void FindFrame(int frameHeight)
         {
-            if (Main.netMode != NetmodeID.Server)
+            if (NPC.collideY || NPC.velocity.Y == 0)
+                NPC.rotation = 0;
+            else
+                NPC.rotation = NPC.velocity.X * 0.05f;
+
+            switch (DanceType)
             {
-                if (NPC.collideY || NPC.velocity.Y == 0)
-                    NPC.rotation = 0;
-                else
-                    NPC.rotation = NPC.velocity.X * 0.05f;
+                case 0:
+                    StartFrame = 2;
+                    EndFrame = 5;
+                    break;
+                case 1:
+                    StartFrame = 6;
+                    EndFrame = 9;
+                    break;
+                case 2:
+                    StartFrame = 10;
+                    EndFrame = 15;
+                    break;
+                case 3:
+                    StartFrame = 16;
+                    EndFrame = 21;
+                    break;
+                case 4:
+                    StartFrame = 22;
+                    EndFrame = 27;
+                    break;
+                case 5:
+                    StartFrame = 28;
+                    EndFrame = 35;
+                    break;
+            }
 
-                switch (DanceType)
-                {
-                    case 0:
-                        StartFrame = 2;
-                        EndFrame = 5;
-                        break;
-                    case 1:
-                        StartFrame = 6;
-                        EndFrame = 9;
-                        break;
-                    case 2:
-                        StartFrame = 10;
-                        EndFrame = 15;
-                        break;
-                    case 3:
-                        StartFrame = 16;
-                        EndFrame = 21;
-                        break;
-                    case 4:
-                        StartFrame = 22;
-                        EndFrame = 27;
-                        break;
-                    case 5:
-                        StartFrame = 28;
-                        EndFrame = 35;
-                        break;
-                }
-
-                if (NPC.frame.Y < StartFrame * frameHeight)
+            if (NPC.frame.Y < StartFrame * frameHeight)
+                NPC.frame.Y = StartFrame * frameHeight;
+            if (++NPC.frameCounter >= 10)
+            {
+                NPC.frameCounter = 0;
+                NPC.frame.Y += frameHeight;
+                if (NPC.frame.Y > EndFrame * frameHeight)
                     NPC.frame.Y = StartFrame * frameHeight;
-                if (++NPC.frameCounter >= 10)
-                {
-                    NPC.frameCounter = 0;
-                    NPC.frame.Y += frameHeight;
-                    if (NPC.frame.Y > EndFrame * frameHeight)
-                        NPC.frame.Y = StartFrame * frameHeight;
-                }
             }
             if (AniCounter++ >= 2)
             {
@@ -183,23 +201,22 @@ namespace Redemption.NPCs.PreHM
         }
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
-            Texture2D glow = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Glow").Value;
-            Texture2D soulless = ModContent.Request<Texture2D>("Redemption/Textures/Misc/TheSoulless").Value;
+            Texture2D glow = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
             var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             int shader = GameShaders.Armor.GetShaderIdFromItemId(ItemID.VoidDye);
 
             if (NPC.life < NPC.lifeMax)
             {
                 spriteBatch.End();
-                spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.NonPremultiplied, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
-                GameShaders.Armor.ApplySecondary(shader, Main.player[Main.myPlayer], null);
+                spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.NonPremultiplied, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
+                GameShaders.Armor.ApplySecondary(shader, Main.LocalPlayer, null);
             }
 
             spriteBatch.Draw(TextureAssets.Npc[NPC.type].Value, NPC.Center - screenPos, NPC.frame, drawColor, NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
             if (NPC.life < NPC.lifeMax)
             {
                 spriteBatch.End();
-                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+                spriteBatch.BeginDefault();
             }
 
             spriteBatch.Draw(glow, NPC.Center - screenPos, NPC.frame, NPC.life < NPC.lifeMax ? Color.Red : Color.White, NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
@@ -208,17 +225,17 @@ namespace Redemption.NPCs.PreHM
             {
                 float opacity = (float)NPC.life / NPC.lifeMax;
 
-                int Height = soulless.Height / 28;
+                int Height = soulless.Value.Height / 28;
                 int y = Height * AniFrameY;
-                Rectangle rect = new(0, y, soulless.Width, Height);
-                Vector2 origin = new(soulless.Width / 2f, Height / 2f);
-                spriteBatch.Draw(soulless, NPC.Center - screenPos - new Vector2(0, 12), new Rectangle?(rect), drawColor * MathHelper.Lerp(0.6f, 0f, opacity), NPC.rotation, origin, NPC.scale, effects, 0);
-                spriteBatch.Draw(soulless, NPC.Center - screenPos - new Vector2(0, 12), new Rectangle?(rect), drawColor * MathHelper.Lerp(0.1f, 0f, opacity), NPC.rotation, origin, NPC.scale * 10, effects, 0);
-                spriteBatch.Draw(soulless, NPC.Center - screenPos - new Vector2(0, 12), new Rectangle?(rect), drawColor * MathHelper.Lerp(0.05f, 0f, opacity), NPC.rotation, origin, NPC.scale * 20, effects, 0);
+                Rectangle rect = new(0, y, soulless.Value.Width, Height);
+                Vector2 origin = new(soulless.Value.Width / 2f, Height / 2f);
+                spriteBatch.Draw(soulless.Value, NPC.Center - screenPos - new Vector2(0, 12), new Rectangle?(rect), drawColor * MathHelper.Lerp(0.6f, 0f, opacity), NPC.rotation, origin, NPC.scale, effects, 0);
+                spriteBatch.Draw(soulless.Value, NPC.Center - screenPos - new Vector2(0, 12), new Rectangle?(rect), drawColor * MathHelper.Lerp(0.1f, 0f, opacity), NPC.rotation, origin, NPC.scale * 10, effects, 0);
+                spriteBatch.Draw(soulless.Value, NPC.Center - screenPos - new Vector2(0, 12), new Rectangle?(rect), drawColor * MathHelper.Lerp(0.05f, 0f, opacity), NPC.rotation, origin, NPC.scale * 20, effects, 0);
             }
             return false;
         }
-        public override bool? CanHitNPC(NPC target) => false;
+        public override bool CanHitNPC(NPC target) => false;
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => false;
         public override void OnKill()
         {
@@ -227,8 +244,7 @@ namespace Redemption.NPCs.PreHM
         public override void ModifyNPCLoot(NPCLoot npcLoot)
         {
             npcLoot.Add(ItemDropRule.Food(ItemID.MilkCarton, 150));
-            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<EpidotrianSkull>(), 50));
-            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<OldTophat>(), 500));
+            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<EpidotrianSkull>(), 100));
             npcLoot.Add(ItemDropRule.ByCondition(new LostSoulCondition(), ModContent.ItemType<LostSoul>()));
         }
     }

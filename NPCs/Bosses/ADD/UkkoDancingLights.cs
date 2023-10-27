@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.Buffs.Debuffs;
+using Redemption.Globals;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.ModLoader;
@@ -12,7 +13,8 @@ namespace Redemption.NPCs.Bosses.ADD
         public override string Texture => "Redemption/Textures/WhiteOrb";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Dancing Light");
+            // DisplayName.SetDefault("Dancing Light");
+            ElementID.ProjHoly[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -54,12 +56,12 @@ namespace Redemption.NPCs.Bosses.ADD
             Rectangle rect = new(0, 0, texture.Width, texture.Height);
             Vector2 origin = new(texture.Width / 2, texture.Height / 2);
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginAdditive();
 
             Main.EntitySpriteDraw(texture, position, new Rectangle?(rect), new Color(255, 243, 162) * Projectile.Opacity, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginDefault();
             return false;
         }
     }

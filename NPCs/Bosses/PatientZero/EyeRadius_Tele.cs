@@ -14,7 +14,7 @@ namespace Redemption.NPCs.Bosses.PatientZero
         public override string Texture => "Redemption/Textures/RadialTelegraph2";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Telegraph");
+            // DisplayName.SetDefault("Telegraph");
         }
         public override void SetDefaults()
         {
@@ -25,7 +25,7 @@ namespace Redemption.NPCs.Bosses.PatientZero
             Projectile.friendly = false;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
-            Projectile.timeLeft = 20;
+            Projectile.timeLeft = 25;
             Projectile.scale = 0.1f;
         }
         public override bool ShouldUpdatePosition() => false;
@@ -43,12 +43,12 @@ namespace Redemption.NPCs.Bosses.PatientZero
             Rectangle rect = new(0, 0, texture.Width, texture.Height);
             Vector2 drawOrigin = new(texture.Width / 2, texture.Height / 2);
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginAdditive();
 
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, new Rectangle?(rect), Projectile.GetAlpha(Color.Green), Projectile.rotation, drawOrigin, Projectile.scale, SpriteEffects.None, 0);
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginDefault();
             return false;
         }
     }
@@ -57,7 +57,7 @@ namespace Redemption.NPCs.Bosses.PatientZero
         public override string Texture => "Redemption/Textures/RadialTelegraph2";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Telegraph");
+            // DisplayName.SetDefault("Telegraph");
         }
         public override void SetDefaults()
         {
@@ -79,7 +79,7 @@ namespace Redemption.NPCs.Bosses.PatientZero
             if (npc.ai[0] != 1)
                 Projectile.Kill();
             Projectile.rotation = Projectile.velocity.ToRotation();
-            if (Projectile.localAI[1]++ <= 20 && Projectile.localAI[1] % 8 == 0 && Main.myPlayer == Projectile.owner)
+            if (Projectile.localAI[1]++ <= (Main.getGoodWorld ? 20 : 40) && Projectile.localAI[1] % 8 == 0 && Main.myPlayer == Projectile.owner)
             {
                 Projectile.NewProjectile(Projectile.GetSource_FromAI(), npc.Center, Projectile.velocity, ModContent.ProjectileType<EyeRadius_Tele>(), 0, 0, Main.myPlayer);
             }
@@ -102,12 +102,12 @@ namespace Redemption.NPCs.Bosses.PatientZero
             Rectangle rect = new(0, 0, texture.Width, texture.Height);
             Vector2 drawOrigin = new(texture.Width / 2, texture.Height / 2);
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginAdditive();
 
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, new Rectangle?(rect), Projectile.GetAlpha(Color.Green), Projectile.rotation, drawOrigin, Projectile.scale, SpriteEffects.None, 0);
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginDefault();
             return false;
         }
     }

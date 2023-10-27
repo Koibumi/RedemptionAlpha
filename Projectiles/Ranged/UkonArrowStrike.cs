@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.Base;
+using Redemption.BaseExtension;
 using Redemption.Globals;
 using Terraria;
 using Terraria.Audio;
@@ -15,8 +16,9 @@ namespace Redemption.Projectiles.Ranged
         public override string Texture => "Redemption/NPCs/Bosses/ADD/UkkoStrike";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Ukko's Lightning");
+            // DisplayName.SetDefault("Ukko's Lightning");
             Main.projFrames[Projectile.type] = 24;
+            ElementID.ProjThunder[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -31,8 +33,9 @@ namespace Redemption.Projectiles.Ranged
             Projectile.scale *= 2;
             Projectile.alpha = 255;
             Projectile.usesLocalNPCImmunity = true;
+            Projectile.Redemption().ParryBlacklist = true;
         }
-        public override bool? CanHitNPC(NPC target) => Projectile.frame >= 12 && Projectile.frame < 15 ? null : false;
+        public override bool? CanHitNPC(NPC target) => !target.friendly && Projectile.frame >= 12 && Projectile.frame < 15 ? null : false;
         private int npcType;
         public override void AI()
         {
@@ -71,14 +74,14 @@ namespace Redemption.Projectiles.Ranged
                 for (int i = 0; i < Main.maxNPCs; i++)
                 {
                     NPC target = Main.npc[i];
-                    if (!target.active || target.dontTakeDamage)
+                    if (!target.active || target.friendly || target.dontTakeDamage)
                         continue;
 
                     if (target.immune[Projectile.whoAmI] > 0 || !target.Hitbox.Intersects(boom))
                         continue;
 
                     target.immune[Projectile.whoAmI] = 20;
-                    int hitDirection = Projectile.Center.X > target.Center.X ? -1 : 1;
+                    int hitDirection = target.RightOfDir(Projectile);
                     BaseAI.DamageNPC(target, (int)(Projectile.damage * 1.2f), Projectile.knockBack, hitDirection, Projectile, crit: Projectile.HeldItemCrit());
                 }
             }
@@ -104,7 +107,7 @@ namespace Redemption.Projectiles.Ranged
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
             return false;
         }
-        public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
             Projectile.localNPCImmunity[target.whoAmI] = 10;
             target.immune[Projectile.owner] = 0;

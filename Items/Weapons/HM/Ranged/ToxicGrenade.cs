@@ -10,17 +10,17 @@ namespace Redemption.Items.Weapons.HM.Ranged
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Throw a grenade that leaves behind a radioactive cloud");
-            SacrificeTotal = 99;
+            // Tooltip.SetDefault("Throw a grenade that leaves behind a radioactive cloud");
+            Item.ResearchUnlockCount = 99;
         }
 
         public override void SetDefaults()
         {
             Item.width = 18;
             Item.height = 18;
-            Item.damage = 60;
+            Item.damage = 56;
             Item.knockBack = 8;
-            Item.maxStack = 9999;
+            Item.maxStack = Item.CommonMaxStack;
             Item.value = Item.sellPrice(0, 0, 0, 85);
             Item.rare = ItemRarityID.LightRed;
             Item.useStyle = ItemUseStyleID.Swing;
@@ -39,7 +39,7 @@ namespace Redemption.Items.Weapons.HM.Ranged
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
             if (!Main.hardMode)
-                damage.Base -= 12;
+                damage.Base -= 14;
         }
         public override void AddRecipes()
         {

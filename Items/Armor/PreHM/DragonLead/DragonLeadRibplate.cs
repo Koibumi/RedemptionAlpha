@@ -1,9 +1,11 @@
 using Microsoft.Xna.Framework;
+using Redemption.Buffs.Debuffs;
 using Redemption.Items.Materials.PreHM;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.Localization;
 
 namespace Redemption.Items.Armor.PreHM.DragonLead
 {
@@ -12,13 +14,13 @@ namespace Redemption.Items.Armor.PreHM.DragonLead
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Dragon-Lead Ribplate");
-            Tooltip.SetDefault("7% increased damage\n" +
-                "Immunity to most ice-related debuffs");
+            // DisplayName.SetDefault("Dragon-Lead Ribplate");
+            /* Tooltip.SetDefault("7% increased damage\n" +
+                "Immunity to most ice-related debuffs"); */
             ArmorIDs.Body.Sets.IncludedCapeBack[EquipLoader.GetEquipSlot(Mod, Name, EquipType.Body)] = Redemption.dragonLeadCapeID;
             ArmorIDs.Body.Sets.IncludedCapeBackFemale[EquipLoader.GetEquipSlot(Mod, Name, EquipType.Body)] = Redemption.dragonLeadCapeID;
 
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -38,6 +40,7 @@ namespace Redemption.Items.Armor.PreHM.DragonLead
             player.buffImmune[BuffID.Frostburn] = true;
             player.buffImmune[BuffID.Frostburn2] = true;
             player.buffImmune[BuffID.Wet] = true;
+            player.buffImmune[ModContent.BuffType<PureChillDebuff>()] = true;
         }
 
         public override void AddRecipes()
@@ -53,11 +56,7 @@ namespace Redemption.Items.Armor.PreHM.DragonLead
         {
             if (Main.keyState.PressingShift())
             {
-                TooltipLine line = new(Mod, "Lore",
-                    "'Armour forged from melted dragon bone and metal, made to look like a ribcage. It is said to be used by\n" +
-                    "the ancient warlords of Dragonrest.\n" +
-                    "The warlords were famous dragon slayers who used the bones of their victims for weaponry and armour,\n" +
-                    "nearly bringing the dragons to extinction. That was until every single one was wiped out by Goliathon, the Dragon God.'")
+                TooltipLine line = new(Mod, "Lore", Language.GetTextValue("Mods.Redemption.SpecialTooltips.DragonLead.DragonLeadRibplate"))
                 {
                     OverrideColor = Color.LightGray
                 };
@@ -65,7 +64,7 @@ namespace Redemption.Items.Armor.PreHM.DragonLead
             }
             else
             {
-                TooltipLine line = new(Mod, "HoldShift", "Hold [Shift] to view lore")
+                TooltipLine line = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.SpecialTooltips.Viewer"))
                 {
                     OverrideColor = Color.Gray,
                 };

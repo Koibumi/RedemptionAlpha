@@ -1,3 +1,5 @@
+using Redemption.BaseExtension;
+using Redemption.Globals;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -8,8 +10,9 @@ namespace Redemption.Projectiles.Hostile
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Ooze");
+            // DisplayName.SetDefault("Ooze");
             Main.projFrames[Projectile.type] = 4;
+            ElementID.ProjPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -22,9 +25,10 @@ namespace Redemption.Projectiles.Hostile
             Projectile.ignoreWater = true;
             Projectile.alpha = 160;
             Projectile.timeLeft = 200;
+            Projectile.Redemption().friendlyHostile = true;
         }
         public override bool? CanHitNPC(NPC target) => target.whoAmI != Projectile.ai[0] ? null : false;
-        public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection) => damage *= 4;
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers) => modifiers.FinalDamage *= 4;
         public override void AI()
         {
             if (++Projectile.frameCounter >= 5)
@@ -38,7 +42,7 @@ namespace Redemption.Projectiles.Hostile
             if (Main.rand.NextBool(4))
                 Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.ToxicBubble, Alpha: 100, Scale: 1);
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             for (int i = 0; i < 10; i++)
             {

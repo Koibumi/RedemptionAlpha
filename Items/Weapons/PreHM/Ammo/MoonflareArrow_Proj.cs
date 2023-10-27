@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.Buffs.NPCBuffs;
 using Redemption.Dusts;
+using Redemption.Globals;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
@@ -15,10 +16,12 @@ namespace Redemption.Items.Weapons.PreHM.Ammo
         public override string Texture => "Redemption/Items/Weapons/PreHM/Ammo/MoonflareArrow";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Moonflare Arrow");
+            // DisplayName.SetDefault("Moonflare Arrow");
 			ProjectileID.Sets.TrailCacheLength[Projectile.type] = 4;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
-		}
+            ElementID.ProjFire[Type] = true;
+            ElementID.ProjNature[Type] = true;
+        }
 		public override void SetDefaults()
 		{
 			Projectile.width = 14;
@@ -39,7 +42,7 @@ namespace Redemption.Items.Weapons.PreHM.Ammo
             Projectile.rotation = Projectile.velocity.ToRotation() - MathHelper.PiOver2;
             Projectile.velocity.Y += 0.03f;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             if (!Main.rand.NextBool(3) || Main.dayTime || Main.moonPhase == 4)
                 return;
@@ -76,7 +79,7 @@ namespace Redemption.Items.Weapons.PreHM.Ammo
 
             return false;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             for (int i = 0; i < 4; i++)
                 Dust.NewDust(Projectile.position + Projectile.velocity, Projectile.width, Projectile.height, ModContent.DustType<MoonflareDust>(), Projectile.velocity.X * 0.5f, Projectile.velocity.Y * 0.5f);

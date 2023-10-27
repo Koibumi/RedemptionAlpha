@@ -18,6 +18,7 @@ namespace Redemption.Projectiles.Ranged
             ProjectileID.Sets.DontAttachHideToAlpha[Type] = true;
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 5;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjThunder[Type] = true;
         }
         private int origDamage;
         public override void SetDefaults()
@@ -93,7 +94,7 @@ namespace Redemption.Projectiles.Ranged
             return projHitbox.Intersects(targetHitbox);
         }
 
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(SoundID.Dig, Projectile.position);
         }
@@ -109,17 +110,18 @@ namespace Redemption.Projectiles.Ranged
             get { return Projectile.ai[1]; }
             set { Projectile.ai[1] = value; }
         }
-
-        public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            origDamage = Projectile.damage;
+            Projectile.damage = 0;
+        }
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
             IsStickingToTarget = true;
             TargetWhoAmI = target.whoAmI;
             Projectile.velocity = (target.Center - Projectile.Center) * 0.75f;
             Projectile.netUpdate = true;
             target.AddBuff(ModContent.BuffType<UkonArrowDebuff>(), 156);
-
-            origDamage = Projectile.damage;
-            Projectile.damage = 0;
 
             int maxStickingJavelins = 20;
             Point[] stickingJavelins = new Point[maxStickingJavelins];

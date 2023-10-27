@@ -9,7 +9,6 @@ using Terraria.GameContent;
 using Terraria.Audio;
 using Redemption.BaseExtension;
 using Redemption.Items.Weapons.HM.Ammo;
-using System.Security.AccessControl;
 using Redemption.Projectiles.Ranged;
 
 namespace Redemption.Items.Weapons.PostML.Ranged
@@ -19,15 +18,14 @@ namespace Redemption.Items.Weapons.PostML.Ranged
         public override string Texture => "Redemption/Items/Weapons/PostML/Ranged/SwarmerCannon";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Swarmer Cannon");
+            // DisplayName.SetDefault("Swarmer Cannon");
         }
-        public override void SetDefaults()
+        public override void SetSafeDefaults()
         {
             Projectile.width = 64;
             Projectile.height = 36;
             Projectile.friendly = false;
             Projectile.hostile = false;
-            Projectile.tileCollide = false;
             Projectile.penetrate = -1;
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.ignoreWater = true;

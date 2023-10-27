@@ -2,7 +2,6 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ID;
-using Redemption.Items.Placeable.Tiles;
 
 namespace Redemption.Walls
 {
@@ -12,7 +11,6 @@ namespace Redemption.Walls
 		{
 			Main.wallHouse[Type] = true;
             DustType = DustID.Ash;
-			ItemDrop = ModContent.ItemType<PetrifiedWoodWall>();
 			AddMapEntry(new Color(48, 44, 42));
 		}
 

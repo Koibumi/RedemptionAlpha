@@ -13,17 +13,19 @@ namespace Redemption.Items.Weapons.PostML.Summon
 	{
 		public override void SetStaticDefaults()
 		{
-            DisplayName.SetDefault("Portable Hologram Projector");
-            Tooltip.SetDefault("Summon a hologram-projected minion to fight for you\n" +
-                "Has multiple attack modes it automatically swaps to");
-            SacrificeTotal = 1;
+            // DisplayName.SetDefault("Portable Hologram Projector");
+            /* Tooltip.SetDefault("Summon a hologram-projected minion to fight for you\n" +
+                "Has multiple attack modes it automatically swaps to"); */
+            Main.RegisterItemAnimation(Item.type, new DrawAnimationVertical(6, 4));
+            ItemID.Sets.AnimatesAsSoul[Item.type] = true;
+            Item.ResearchUnlockCount = 1;
             ItemID.Sets.GamepadWholeScreenUseRange[Item.type] = true;
             ItemID.Sets.LockOnIgnoresCollision[Item.type] = true;
         }
 
         public override void SetDefaults()
         {
-            Item.damage = 130;
+            Item.damage = 160;
             Item.DamageType = DamageClass.Summon;
             Item.width = 38;
             Item.height = 22;

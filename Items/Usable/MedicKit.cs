@@ -1,9 +1,9 @@
 ﻿using Redemption.Rarities;
 using Terraria;
-using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Redemption.BaseExtension;
+using Terraria.Audio;
 
 namespace Redemption.Items.Usable
 {
@@ -11,9 +11,9 @@ namespace Redemption.Items.Usable
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Permanently increases maximum life by 50"
-                + "\nCan only be used if the max amount of life fruit has been consumed");
-            SacrificeTotal = 1;
+            /* Tooltip.SetDefault("Permanently increases maximum life by 50"
+                + "\nCan only be used if the max amount of life fruit has been consumed"); */
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()

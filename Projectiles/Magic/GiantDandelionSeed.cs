@@ -3,6 +3,7 @@ using Terraria;
 using Terraria.ModLoader;
 using Terraria.ID;
 using Redemption.Base;
+using Redemption.Globals;
 
 namespace Redemption.Projectiles.Magic
 {
@@ -11,6 +12,8 @@ namespace Redemption.Projectiles.Magic
         public override void SetStaticDefaults()
         {
             Main.projFrames[Projectile.type] = 4;
+            ElementID.ProjWind[Type] = true;
+            ElementID.ProjNature[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -19,6 +22,7 @@ namespace Redemption.Projectiles.Magic
             Projectile.penetrate = 1;
             Projectile.hostile = false;
             Projectile.friendly = true;
+            Projectile.DamageType = DamageClass.Magic;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.timeLeft = 800;
@@ -64,7 +68,7 @@ namespace Redemption.Projectiles.Magic
             Projectile.alpha -= 5;
             Projectile.alpha = (int)MathHelper.Max(Projectile.alpha, 0);
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             for (int i = 0; i < 8; i++)
                 Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.Cloud, Scale: 1.5f);

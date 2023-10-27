@@ -3,6 +3,7 @@ using Redemption.DamageClasses;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.Items.Weapons.PreHM.Ritualist
@@ -11,7 +12,7 @@ namespace Redemption.Items.Weapons.PreHM.Ritualist
     {
         public override void SetStaticDefaults()
         {
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -47,16 +48,17 @@ namespace Redemption.Items.Weapons.PreHM.Ritualist
             Vector2 Offset = Vector2.Normalize(velocity) * 50f;
             position += Offset;
         }
+        /*
         public override void AddRecipes()
         {
             CreateRecipe()
                 .AddIngredient(ItemID.Obsidian, 20)
                 .AddTile(TileID.Furnaces)
                 .Register();
-        }
+        }*/
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
-            TooltipLine slashLine = new(Mod, "SharpBonus", "Slash Bonus: Small chance to decapitate skeletons, killing them instantly") { OverrideColor = Colors.RarityOrange };
+            TooltipLine slashLine = new(Mod, "SharpBonus", Language.GetTextValue("Mods.Redemption.GenericTooltips.Bonuses.SlashBonus")) { OverrideColor = Colors.RarityOrange };
             tooltips.Add(slashLine);
         }
     }

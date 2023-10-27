@@ -1,9 +1,8 @@
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.Localization;
 using Terraria.ModLoader;
-using Terraria.ID;
 using Redemption.Dusts;
-using Redemption.Items.Placeable.Tiles;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.Dusts.Tiles;
 using Terraria.DataStructures;
@@ -18,18 +17,13 @@ namespace Redemption.Tiles.Tiles
             Main.tileSolid[Type] = true;
             Main.tileMergeDirt[Type] = true;
             Main.tileBlockLight[Type] = true;
-            Main.tileMerge[Type][ModContent.TileType<ShadestoneBrickTile>()] = true;
-            Main.tileMerge[Type][ModContent.TileType<ShadestoneRubbleTile>()] = true;
-            Main.tileMerge[Type][ModContent.TileType<ShadestoneSlabTile>()] = true;
-            Main.tileMerge[Type][ModContent.TileType<ShadestoneMossyTile>()] = true;
-            Main.tileMerge[Type][ModContent.TileType<ShadestoneBrickMossyTile>()] = true;
+            Main.tileBrick[Type] = true;
             DustType = ModContent.DustType<ShadestoneDust>();
-            ItemDrop = ModContent.ItemType<Shadestone>();
             MinPick = 350;
             MineResist = 11f;
-            HitSound = SoundID.Tink;
-            ModTranslation name = CreateMapEntryName();
-            name.SetDefault("Shadestone");
+            HitSound = CustomSounds.StoneHit;
+            LocalizedText name = CreateMapEntryName();
+            // name.SetDefault("Shadestone");
             AddMapEntry(new Color(30, 30, 30));
         }
         public override void DrawEffects(int i, int j, SpriteBatch spriteBatch, ref TileDrawInfo drawData)

@@ -7,7 +7,6 @@ using Microsoft.Xna.Framework;
 using Terraria.GameContent;
 using Terraria.GameContent.ItemDropRules;
 using Redemption.Items.Weapons.PostML.Ranged;
-using Redemption.Items.Weapons.PostML.Summon;
 using Redemption.Items.Weapons.PostML.Melee;
 using Redemption.Items.Accessories.PostML;
 
@@ -17,13 +16,13 @@ namespace Redemption.Items.Usable
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Treasure Bag (Ukko)");
-            Tooltip.SetDefault("{$CommonItemTooltip.RightClickToOpen}");
-            SacrificeTotal = 3;
+            // DisplayName.SetDefault("Treasure Bag (Ukko)");
+            // Tooltip.SetDefault("{$CommonItemTooltip.RightClickToOpen}");
+            Item.ResearchUnlockCount = 3;
         }
         public override void SetDefaults()
         {
-            Item.maxStack = 9999;
+            Item.maxStack = Item.CommonMaxStack;
             Item.consumable = true;
             Item.width = 24;
             Item.height = 24;
@@ -36,8 +35,8 @@ namespace Redemption.Items.Usable
         }
         public override void ModifyItemLoot(ItemLoot itemLoot)
         {
-            itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<UkkoMask>(), 7));
-            itemLoot.Add(ItemDropRule.OneFromOptions(1, ModContent.ItemType<Ukonnuoli>(), ModContent.ItemType<Ukonvasara>()));
+            itemLoot.Add(ItemDropRule.NotScalingWithLuck(ModContent.ItemType<UkkoMask>(), 7));
+            itemLoot.Add(ItemDropRule.OneFromOptions(1, ModContent.ItemType<Salamanisku>(), ModContent.ItemType<Ukonvasara>()));
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<VasaraPendant>()));
         }
         public override void PostUpdate()

@@ -1,20 +1,23 @@
 using Microsoft.Xna.Framework;
+using Redemption.Globals;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.Items.Weapons.PreHM.Melee
 {
     public class EaglecrestJavelin : ModItem
     {
+        public override LocalizedText Tooltip => base.Tooltip.WithFormatArgs(ElementID.ThunderS);
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Hold left-click to charge the javelin, release to throw\n" +
-                "Strikes the ground and foe alike with lightning, dealing Thunder damage");
+            /* Tooltip.SetDefault("Hold left-click to charge the javelin, release to throw\n" +
+                "Strikes the ground and foe alike with lightning, dealing " + ElementID.ThunderS + " damage"); */
 
             ItemID.Sets.SkipsInitialUseSound[Item.type] = true;
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -23,7 +26,7 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             Item.width = 42;
             Item.height = 46;
             Item.rare = ItemRarityID.Orange;
-            Item.value = Item.sellPrice(gold: 3);
+            Item.value = Item.sellPrice(gold: 1);
 
             // Use Properties
             Item.useStyle = ItemUseStyleID.Shoot;
@@ -33,7 +36,7 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             Item.autoReuse = true;
 
             // Weapon Properties
-            Item.damage = 32;
+            Item.damage = 24;
             Item.knockBack = 6;
             Item.noUseGraphic = true;
             Item.DamageType = DamageClass.Melee;
@@ -44,14 +47,13 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             // Projectile Properties
             Item.shootSpeed = 0f;
             Item.shoot = ModContent.ProjectileType<EaglecrestJavelin_Proj>();
+            Item.ExtraItemShoot(ModContent.ProjectileType<EaglecrestJavelin_Thunder>());
         }
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
             if (Main.keyState.PressingShift())
             {
-                TooltipLine line = new(Mod, "Lore",
-                    "'An ancient spear used in rituals to the great god Ukko in ancient Gathuram.\n" +
-                    "Charged with electric magic to signify Ukko, while the blade has dulled it still works as a fine weapon.'")
+                TooltipLine line = new(Mod, "Lore", Language.GetTextValue("Mods.Redemption.Items.EaglecrestJavelin.Lore"))
                 {
                     OverrideColor = Color.LightGray
                 };
@@ -59,7 +61,7 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             }
             else
             {
-                TooltipLine line = new(Mod, "HoldShift", "Hold [Shift] to view lore")
+                TooltipLine line = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.SpecialTooltips.Viewer"))
                 {
                     OverrideColor = Color.Gray,
                 };

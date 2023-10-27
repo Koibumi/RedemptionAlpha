@@ -15,9 +15,10 @@ namespace Redemption.NPCs.Friendly
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Daerel");
+            // DisplayName.SetDefault("Daerel");
             Main.npcFrameCount[NPC.type] = 4;
             NPCID.Sets.ActsLikeTownNPC[Type] = true;
+            NPCID.Sets.NoTownNPCHappiness[Type] = true;
             NPCID.Sets.NPCBestiaryDrawModifiers drawModifiers = new(0)
             {
                 Hide = true
@@ -70,6 +71,8 @@ namespace Redemption.NPCs.Friendly
         }
         public override void AI()
         {
+            if (NPC.AnyNPCs(ModContent.NPCType<Daerel>()))
+                NPC.active = false;
             NPC.dontTakeDamage = true;
             NPC.velocity.X = 0;
             if (Main.netMode != NetmodeID.MultiplayerClient)
@@ -104,7 +107,7 @@ namespace Redemption.NPCs.Friendly
         {
             button = "Use Revival Potion";
         }
-        public override void OnChatButtonClicked(bool firstButton, ref bool shop)
+        public override void OnChatButtonClicked(bool firstButton, ref string shopName)
         {
             Player player = Main.player[Main.myPlayer];
             if (firstButton)
@@ -133,9 +136,7 @@ namespace Redemption.NPCs.Friendly
         }
         public static string NoPotionChat()
         {
-            WeightedRandom<string> chat = new(Main.rand);
-            chat.Add("You aren't holding a Revival Potion.");
-            return chat;
+            return "You aren't holding a Revival Potion.";
         }
         public static string PotionChat()
         {

@@ -5,6 +5,9 @@ using Terraria.ModLoader;
 using System;
 using Terraria.Audio;
 using Redemption.BaseExtension;
+using Microsoft.Xna.Framework.Graphics;
+using Terraria.GameContent;
+using Redemption.Globals;
 
 namespace Redemption.Projectiles.Minions
 {
@@ -12,10 +15,11 @@ namespace Redemption.Projectiles.Minions
 	{
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Fist Rocket");
-            Main.projFrames[Projectile.type] = 2;
+            // DisplayName.SetDefault("Fist Rocket");
+            Main.projFrames[Projectile.type] = 3;
             ProjectileID.Sets.MinionShot[Projectile.type] = true;
             ProjectileID.Sets.CultistIsResistantTo[Projectile.type] = true;
+            ElementID.ProjExplosive[Type] = true;
         }
 
         public override void SetDefaults()
@@ -28,6 +32,7 @@ namespace Redemption.Projectiles.Minions
             Projectile.hostile = false;
             Projectile.penetrate = 1;
             Projectile.tileCollide = true;
+            Projectile.DamageType = DamageClass.Summon;
             Projectile.timeLeft = 60;
 		}
 
@@ -36,12 +41,13 @@ namespace Redemption.Projectiles.Minions
             if (++Projectile.frameCounter >= 3)
             {
                 Projectile.frameCounter = 0;
-                if (++Projectile.frame >= 2)
+                if (++Projectile.frame >= 3)
                     Projectile.frame = 0;
             }
             if (Main.rand.NextBool(10))
             {
-                int dust = Dust.NewDust(Projectile.position + Projectile.velocity, Projectile.width, Projectile.height, DustID.Electric, Projectile.velocity.X * 0.5f, Projectile.velocity.Y * 0.5f);
+                int dust = Dust.NewDust(Projectile.position + Projectile.velocity, Projectile.width, Projectile.height, DustID.Electric);
+                Main.dust[dust].velocity *= 0;
                 Main.dust[dust].noGravity = true;
             }
             Projectile.rotation = Projectile.velocity.ToRotation() + 1.57f;
@@ -83,7 +89,21 @@ namespace Redemption.Projectiles.Minions
                 vector *= 12f / magnitude;
             }
         }
-        public override void Kill(int timeLeft)
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
+            Texture2D glow = ModContent.Request<Texture2D>(Projectile.ModProjectile.Texture + "_Glow").Value;
+            int height = texture.Height / 3;
+            int y = height * Projectile.frame;
+            Rectangle rect = new(0, y, texture.Width, height);
+            Vector2 drawOrigin = new(texture.Width / 2, Projectile.height / 2);
+            var effects = Projectile.spriteDirection == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, new Rectangle?(rect), lightColor * Projectile.Opacity, Projectile.rotation, drawOrigin, Projectile.scale, effects, 0);
+            Main.EntitySpriteDraw(glow, Projectile.Center - Main.screenPosition, new Rectangle?(rect), Color.White * Projectile.Opacity, Projectile.rotation, drawOrigin, Projectile.scale, effects, 0);
+            return false;
+        }
+        public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(SoundID.Item14, Projectile.position);
             for (int i = 0; i < 10; i++)

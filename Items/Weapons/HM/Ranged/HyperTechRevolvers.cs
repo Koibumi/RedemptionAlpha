@@ -14,12 +14,12 @@ namespace Redemption.Items.Weapons.HM.Ranged
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Hyper-Tech Revolvers");
-            Tooltip.SetDefault("Right-click to toss one in the air, catching it gives a stackable fire rate boost\n" +
+            // DisplayName.SetDefault("Hyper-Tech Revolvers");
+            /* Tooltip.SetDefault("Right-click to toss one in the air, catching it gives a stackable fire rate boost\n" +
                 "Missing the catch will cause you to only shoot one gun for 5 seconds\n" +
-                "Replaces normal bullets with nano bullets");
+                "Replaces normal bullets with nano bullets"); */
             ItemID.Sets.SkipsInitialUseSound[Item.type] = true;
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -36,14 +36,14 @@ namespace Redemption.Items.Weapons.HM.Ranged
             Item.channel = true;
             Item.knockBack = 2;
             Item.value = Item.sellPrice(0, 10, 0, 0);
-            Item.rare = ItemRarityID.Cyan;
+            Item.rare = ItemRarityID.LightPurple;
             Item.UseSound = SoundID.Item41;
             Item.autoReuse = true;
             Item.shoot = ProjectileID.PurificationPowder;
             Item.shootSpeed = 90;
             Item.useAmmo = AmmoID.Bullet;
             if (!Main.dedServ)
-                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Item.ModItem.Texture + "_Glow").Value;
+                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
         }
         public override bool AltFunctionUse(Player player) => true;
         public override bool CanConsumeAmmo(Item ammo, Player player) => false;

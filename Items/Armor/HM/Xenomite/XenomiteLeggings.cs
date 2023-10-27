@@ -1,7 +1,6 @@
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ID;
-using Redemption.Items.Materials.HM;
 
 namespace Redemption.Items.Armor.HM.Xenomite
 {
@@ -10,10 +9,10 @@ namespace Redemption.Items.Armor.HM.Xenomite
     {
 		public override void SetStaticDefaults()
 		{
-			Tooltip.SetDefault("4% increased damage and critical strike chance\n" +
-				"8% increased movement speed");
+			/* Tooltip.SetDefault("4% increased damage and critical strike chance\n" +
+				"8% increased movement speed"); */
 
-			SacrificeTotal = 1;
+			Item.ResearchUnlockCount = 1;
 		}
 
 		public override void SetDefaults()
@@ -21,8 +20,8 @@ namespace Redemption.Items.Armor.HM.Xenomite
 			Item.width = 22;
 			Item.height = 18;
 			Item.sellPrice(silver: 30);
-			Item.rare = ItemRarityID.Lime;
-			Item.defense = 10;
+			Item.rare = ItemRarityID.Pink;
+			Item.defense = 12;
 		}
 
 		public override void UpdateEquip(Player player)
@@ -34,14 +33,14 @@ namespace Redemption.Items.Armor.HM.Xenomite
 
 		public override void AddRecipes()
 		{
-			CreateRecipe()
+            CreateRecipe()
 				.AddIngredient(ItemID.TitaniumBar, 5)
-				.AddIngredient(ModContent.ItemType<XenomiteItem>(), 15)
+				.AddIngredient(ModContent.ItemType<Materials.HM.Xenomite>(), 15)
 				.AddTile(TileID.MythrilAnvil)
 				.Register();
-			CreateRecipe()
+            CreateRecipe()
 				.AddIngredient(ItemID.AdamantiteBar, 5)
-				.AddIngredient(ModContent.ItemType<XenomiteItem>(), 15)
+				.AddIngredient(ModContent.ItemType<Materials.HM.Xenomite>(), 15)
 				.AddTile(TileID.MythrilAnvil)
 				.Register();
 		}

@@ -1,5 +1,4 @@
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.ID;
 using System;
@@ -9,6 +8,7 @@ using Redemption.Base;
 using ParticleLibrary;
 using Redemption.Particles;
 using Redemption.Buffs.Debuffs;
+using Redemption.Globals;
 
 namespace Redemption.Projectiles.Magic
 {
@@ -17,7 +17,10 @@ namespace Redemption.Projectiles.Magic
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Helix Bolt");
+            // DisplayName.SetDefault("Helix Bolt");
+            ProjectileID.Sets.DontCancelChannelOnKill[Type] = true;
+            ElementID.ProjArcane[Type] = true;
+            ElementID.ProjPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -28,6 +31,7 @@ namespace Redemption.Projectiles.Magic
             Projectile.penetrate = 1;
             Projectile.timeLeft = 180;
             Projectile.tileCollide = false;
+            Projectile.DamageType = DamageClass.Magic;
             Projectile.extraUpdates = 2;
         }
         public float vectorOffset = 0f;
@@ -61,14 +65,14 @@ namespace Redemption.Projectiles.Magic
             Projectile.velocity = BaseUtility.RotateVector(default, new Vector2(Projectile.velocity.Length(), 0f), velRot + (vectorOffset * 0.5f));
             Projectile.rotation = (float)Math.Atan2(Projectile.velocity.Y, Projectile.velocity.X) + 1.57f;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             if (Main.rand.NextBool(3))
                 target.AddBuff(ModContent.BuffType<GreenRashesDebuff>(), 300);
             else if (Main.rand.NextBool(6))
                 target.AddBuff(ModContent.BuffType<GlowingPustulesDebuff>(), 150);
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             int pieCut = 20;
             for (int m = 0; m < pieCut; m++)

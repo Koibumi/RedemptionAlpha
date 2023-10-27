@@ -12,20 +12,20 @@ namespace Redemption.Items.Materials.PreHM
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Lost Soul");
-            Tooltip.SetDefault("'The incarnation of Willpower'");
+            // DisplayName.SetDefault("Lost Soul");
+            // Tooltip.SetDefault("'The incarnation of Willpower'");
             Main.RegisterItemAnimation(Item.type, new DrawAnimationVertical(5, 8));
             ItemID.Sets.AnimatesAsSoul[Item.type] = true;
             ItemID.Sets.ItemIconPulse[Item.type] = true;
             ItemID.Sets.ItemNoGravity[Item.type] = true;
 
-            SacrificeTotal = 10;
+            Item.ResearchUnlockCount = 10;
         }
         public override void SetDefaults()
         {
             Item.width = 16;
             Item.height = 16;
-            Item.maxStack = 9999;
+            Item.maxStack = Item.CommonMaxStack;
             Item.value = 50;
             Item.rare = ItemRarityID.Blue;
             Item.useAnimation = 30;
@@ -36,9 +36,9 @@ namespace Redemption.Items.Materials.PreHM
         }
         public override void OnSpawn(IEntitySource source)
         {
-            if (source is EntitySource_CatchEntity sourceParent)
+            if (source is EntitySource_Caught sourceParent)
             {
-                if (sourceParent.CaughtEntity is NPC caughtNPC)
+                if (sourceParent.Entity is NPC caughtNPC)
                 {
                     float scale = (Main.npc[caughtNPC.whoAmI].ModNPC as LostSoulNPC).Scale;
                     int dropAmount = (int)(scale / 2 * 10);

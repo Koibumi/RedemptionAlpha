@@ -5,6 +5,7 @@ using Redemption.Globals;
 using Redemption.Particles;
 using Terraria;
 using Terraria.Audio;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace Redemption.Projectiles.Ranged
@@ -14,7 +15,9 @@ namespace Redemption.Projectiles.Ranged
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Xenium Laser");
+            // DisplayName.SetDefault("Xenium Laser");
+            ProjectileID.Sets.DontCancelChannelOnKill[Type] = true;
+            ElementID.ProjThunder[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -26,6 +29,7 @@ namespace Redemption.Projectiles.Ranged
             Projectile.timeLeft = 700;
             Projectile.penetrate = 8;
             Projectile.tileCollide = true;
+            Projectile.DamageType = DamageClass.Ranged;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.Redemption().EnergyBased = true;
         }
@@ -42,12 +46,12 @@ namespace Redemption.Projectiles.Ranged
                 }
             }
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Projectile.localNPCImmunity[target.whoAmI] = 100;
             target.immune[Projectile.owner] = 0;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             Player player = Main.player[Projectile.owner];
             RedeDraw.SpawnRing(Projectile.Center, Color.LightGreen);
@@ -61,7 +65,8 @@ namespace Redemption.Projectiles.Ranged
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Xenium Laser");
+            // DisplayName.SetDefault("Xenium Laser");
+            ElementID.ProjThunder[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -72,6 +77,7 @@ namespace Redemption.Projectiles.Ranged
             Projectile.extraUpdates = 100;
             Projectile.timeLeft = 700;
             Projectile.penetrate = 30;
+            Projectile.DamageType = DamageClass.Ranged;
             Projectile.tileCollide = false;
             Projectile.Redemption().EnergyBased = true;
         }

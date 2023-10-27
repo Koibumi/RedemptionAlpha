@@ -15,8 +15,9 @@ namespace Redemption.NPCs.Bosses.KSIII
         public override string Texture => "Redemption/Projectiles/Ranged/Hardlight_SoSMissile";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("SoS Missile");
+            // DisplayName.SetDefault("SoS Missile");
             Main.projFrames[Projectile.type] = 4;
+            ElementID.ProjExplosive[Type] = true;
         }
 
         public override void SetDefaults()
@@ -31,7 +32,7 @@ namespace Redemption.NPCs.Bosses.KSIII
             Projectile.timeLeft = 300;
             Projectile.DamageType = DamageClass.Ranged;
         }
-        public override void OnHitPlayer(Player target, int damage, bool crit)
+        public override void OnHitPlayer(Player target, Player.HurtInfo info)
         {
             Projectile.Kill();
         }
@@ -59,7 +60,7 @@ namespace Redemption.NPCs.Bosses.KSIII
             if (Projectile.localAI[0] > 20)
                 Projectile.Move(projAim.Center, 30, 60);
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             if (!Main.dedServ)
                 SoundEngine.PlaySound(CustomSounds.MissileExplosion with { PitchVariance = .1f }, Projectile.position);
@@ -85,7 +86,7 @@ namespace Redemption.NPCs.Bosses.KSIII
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
-            Texture2D glow = ModContent.Request<Texture2D>(Projectile.ModProjectile.Texture + "_Glow").Value;
+            Texture2D glow = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
             var effects = Projectile.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             int height = texture.Height / 4;
             int y = height * Projectile.frame;
@@ -103,7 +104,7 @@ namespace Redemption.NPCs.Bosses.KSIII
         public override string Texture => "Redemption/Projectiles/Ranged/Hardlight_MissileBlast";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Explosion");
+            // DisplayName.SetDefault("Explosion");
             Main.projFrames[Projectile.type] = 5;
         }
 
@@ -148,18 +149,18 @@ namespace Redemption.NPCs.Bosses.KSIII
             Rectangle rect = new(0, y, texture.Width, height);
             Vector2 origin = new(texture.Width / 2f, height / 2f);
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginAdditive();
 
             Main.EntitySpriteDraw(texture, position, new Rectangle?(rect), Projectile.GetAlpha(Color.White), Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginDefault();
             return false;
         }
         public override void PostDraw(Color lightColor)
         {
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginAdditive();
 
             Texture2D teleportGlow = ModContent.Request<Texture2D>("Redemption/Textures/WhiteGlow").Value;
             Rectangle rect2 = new(0, 0, teleportGlow.Width, teleportGlow.Height);
@@ -173,7 +174,7 @@ namespace Redemption.NPCs.Bosses.KSIII
             }
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginDefault();
         }
     }
 }

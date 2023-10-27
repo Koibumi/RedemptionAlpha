@@ -57,14 +57,19 @@ namespace Redemption.NPCs.Bosses.Thorn
                 for (int i = 0; i < Main.maxProjectiles; i++)
                 {
                     Projectile target = Main.projectile[i];
-                    if (!target.active || target.whoAmI == Projectile.whoAmI || target.hostile || target.minion || target.damage > 100)
+                    if (!target.active || target.whoAmI == Projectile.whoAmI || target.hostile || target.damage > 100)
                         continue;
 
-                    if (target.velocity.Length() == 0 || target.DamageType != DamageClass.Magic || ProjectileID.Sets.CultistIsResistantTo[target.type] || !Projectile.Hitbox.Intersects(target.Hitbox))
+                    if (target.velocity.Length() == 0 || !Projectile.Hitbox.Intersects(target.Hitbox) || target.ProjBlockBlacklist(true))
                         continue;
 
                     SoundEngine.PlaySound(SoundID.Item29, Projectile.position);
                     DustHelper.DrawCircle(target.Center, DustID.MagicMirror, 1, 4, 4, nogravity: true);
+                    if (target.DamageType != DamageClass.Magic)
+                    {
+                        target.Kill();
+                        return;
+                    }
                     if (!target.hostile && target.friendly)
                     {
                         target.hostile = true;
@@ -83,12 +88,12 @@ namespace Redemption.NPCs.Bosses.Thorn
             Vector2 drawOrigin = new(texture.Width / 2, Projectile.height / 2);
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginAdditive();
 
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, new Rectangle?(rect), Projectile.GetAlpha(Color.White), Projectile.rotation, drawOrigin, Projectile.scale, SpriteEffects.None, 0);
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginDefault();
             return false;
         }
     }

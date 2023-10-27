@@ -9,6 +9,8 @@ using ReLogic.Content;
 using Redemption.BaseExtension;
 using Redemption.Effects.PrimitiveTrails;
 using Redemption.Buffs.Debuffs;
+using Redemption.NPCs.Bosses.SeedOfInfection;
+using Terraria.Audio;
 
 namespace Redemption.Items.Weapons.HM.Melee
 {
@@ -16,7 +18,8 @@ namespace Redemption.Items.Weapons.HM.Melee
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Xenomite Glaive");
+            //DisplayName.SetDefault("Infectious Glaive");
+            ElementID.ProjPoison[Type] = true;
         }
         private Vector2 startVector;
         public override void SetDefaults()
@@ -53,14 +56,20 @@ namespace Redemption.Items.Weapons.HM.Melee
             else
                 Projectile.rotation = (Projectile.Center - player.Center).ToRotation() - MathHelper.Pi - MathHelper.PiOver4;
 
+            player.SetCompositeArmFront(true, Length >= 60 ? Player.CompositeArmStretchAmount.Full : Player.CompositeArmStretchAmount.Quarter, (player.Center - Projectile.Center).ToRotation() + MathHelper.PiOver2);
+
             switch (Projectile.ai[0])
             {
                 case 0:
-                    player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, (player.Center - Projectile.Center).ToRotation() + MathHelper.PiOver2);
                     if (Timer++ == 0)
                     {
                         startVector = RedeHelper.PolarVector(1, Projectile.velocity.ToRotation() - (MathHelper.PiOver2 * Projectile.spriteDirection));
                         speed = MathHelper.ToRadians(3);
+                    }
+                    if (Timer > 8 && Timer < 14 && Main.myPlayer == Projectile.owner)
+                    {
+                        SoundEngine.PlaySound(SoundID.Item42 with { Volume = 0.3f }, Projectile.position);
+                        Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center, RedeHelper.PolarVector(12, vector.ToRotation()), ModContent.ProjectileType<InfectiousGlaive_Shard>(), (int)(Projectile.damage * .5f), Projectile.knockBack, Projectile.owner);
                     }
                     if (Timer < 10)
                     {
@@ -82,7 +91,6 @@ namespace Redemption.Items.Weapons.HM.Melee
                     Length = MathHelper.Clamp(Length, 40, 130);
                     break;
                 case 1:
-                    player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, (player.Center - Projectile.Center).ToRotation() + MathHelper.PiOver2);
                     if (Timer++ == 0)
                     {
                         startVector = RedeHelper.PolarVector(1, Projectile.velocity.ToRotation() + (MathHelper.PiOver2 * Projectile.spriteDirection));
@@ -112,7 +120,7 @@ namespace Redemption.Items.Weapons.HM.Melee
                 Projectile.alpha = 0;
             return false;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             if (Main.rand.NextBool(3))
                 target.AddBuff(ModContent.BuffType<GreenRashesDebuff>(), 300);

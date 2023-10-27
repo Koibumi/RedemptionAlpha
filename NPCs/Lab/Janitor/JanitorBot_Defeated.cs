@@ -2,12 +2,13 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.BaseExtension;
 using Redemption.Globals;
-using Redemption.UI;
+using Redemption.UI.ChatUI;
 using Redemption.WorldGeneration;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.NPCs.Lab.Janitor
@@ -21,7 +22,7 @@ namespace Redemption.NPCs.Lab.Janitor
         public ref float TimerRand => ref NPC.ai[2];
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("The Janitor");
+            // DisplayName.SetDefault("The Janitor");
             Main.npcFrameCount[NPC.type] = 19;
             NPCID.Sets.DontDoHardmodeScaling[Type] = true;
 
@@ -45,7 +46,7 @@ namespace Redemption.NPCs.Lab.Janitor
             NPC.dontTakeDamage = true;
             NPC.npcSlots = 0;
         }
-
+        private static readonly SoundStyle voice = CustomSounds.Voice6 with { Pitch = 0.2f };
         private Vector2 moveTo;
         public override void AI()
         {
@@ -53,23 +54,23 @@ namespace Redemption.NPCs.Lab.Janitor
             if (NPC.target < 0 || NPC.target == 255 || player.dead || !player.active)
                 NPC.TargetClosest();
             NPC.LookByVelocity();
-            SoundStyle voice = CustomSounds.Voice6 with { Pitch = 0.2f };
 
             moveTo = new((RedeGen.LabVector.X + 190) * 16, (RedeGen.LabVector.Y + 21) * 16);
             switch (State)
             {
                 case 0:
-                    if (AITimer++ == 10)
+                    if (AITimer++ == 10 && !Main.dedServ)
                     {
                         DialogueChain chain = new();
-                        chain.Add(new(NPC, "Okay,[10] okay!", Colors.RarityYellow, new Color(100, 86, 0), voice, 2, 100, 0, false)) // 132
-                             .Add(new(NPC, "Alright fine,[10] you probably can handle yourself here.", Colors.RarityYellow, new Color(100, 86, 0), voice, 2, 100, 0, false)) // 214
-                             .Add(new(NPC, "Here,[10] have this Lab Access thing and get lost!", Colors.RarityYellow, new Color(100, 86, 0), voice, 2, 100, 0, false)) // 202
-                             .Add(new(NPC, "I got moppin' to do.", Colors.RarityYellow, new Color(100, 86, 0), voice, 2, 100, 30, true)); // 170
-                        TextBubbleUI.Visible = true;
-                        TextBubbleUI.Add(chain);
+                        chain.Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.Janitor.Defeat.1"), Colors.RarityYellow, new Color(100, 86, 0), voice, .03f, 2f, 0, false))
+                             .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.Janitor.Defeat.2"), Colors.RarityYellow, new Color(100, 86, 0), voice, .03f, 2f, 0, false))
+                             .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.Janitor.Defeat.3"), Colors.RarityYellow, new Color(100, 86, 0), voice, .03f, 2f, 0, false))
+                             .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.Janitor.Defeat.4"), Colors.RarityYellow, new Color(100, 86, 0), voice, .03f, 2f, .5f, true));
+                        chain.OnSymbolTrigger += Chain_OnSymbolTrigger;
+                        ChatUI.Visible = true;
+                        ChatUI.Add(chain);
                     }
-                    if (AITimer >= 558)
+                    if (AITimer >= 2000)
                     {
                         if (NPC.DistanceSQ(moveTo) < 16 * 16)
                         {
@@ -90,8 +91,8 @@ namespace Redemption.NPCs.Lab.Janitor
                                 State = 3;
                                 NPC.netUpdate = true;
                             }
-                            NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20);
-                            RedeHelper.HorizontallyMove(NPC, moveTo, 0.4f, 1.4f, 12, 8, NPC.Center.Y > moveTo.Y);
+                            NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20, moveTo.Y);
+                            NPCHelper.HorizontallyMove(NPC, moveTo, 0.4f, 1.4f, 12, 8, NPC.Center.Y > moveTo.Y);
                         }
                     }
                     break;
@@ -116,8 +117,8 @@ namespace Redemption.NPCs.Lab.Janitor
                             State = 3;
                             NPC.netUpdate = true;
                         }
-                        NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20);
-                        RedeHelper.HorizontallyMove(NPC, moveTo, 0.4f, 1.4f, 12, 8, NPC.Center.Y > moveTo.Y);
+                        NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20, moveTo.Y);
+                        NPCHelper.HorizontallyMove(NPC, moveTo, 0.4f, 1.4f, 12, 8, NPC.Center.Y > moveTo.Y);
                     }
                     break;
                 case 2:
@@ -137,16 +138,17 @@ namespace Redemption.NPCs.Lab.Janitor
                     }
                     break;
                 case 3:
-                    if (AITimer++ == 40)
+                    if (AITimer++ == 40 && !Main.dedServ)
                     {
                         DialogueChain chain = new();
-                        chain.Add(new(NPC, "Ey...", Colors.RarityYellow, new Color(100, 86, 0), voice, 2, 100, 0, false)) // 110
-                             .Add(new(NPC, "Did you just...[30] block my way?", Colors.RarityYellow, new Color(100, 86, 0), voice, 2, 100, 0, false)) // 188
-                             .Add(new(NPC, "Well screw you too!", Colors.RarityYellow, new Color(100, 86, 0), voice, 2, 100, 30, true)); // 168
-                        TextBubbleUI.Visible = true;
-                        TextBubbleUI.Add(chain);
+                        chain.Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.Janitor.Defeat.B1"), Colors.RarityYellow, new Color(100, 86, 0), voice, .03f, 2f, 0, false))
+                             .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.Janitor.Defeat.B2"), Colors.RarityYellow, new Color(100, 86, 0), voice, .03f, 2f, 0, false))
+                             .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.Janitor.Defeat.B3"), Colors.RarityYellow, new Color(100, 86, 0), voice, .03f, 2f, .5f, true, endID: 1));
+                        chain.OnEndTrigger += Chain_OnEndTrigger;
+                        ChatUI.Visible = true;
+                        ChatUI.Add(chain);
                     }
-                    if (AITimer > 486)
+                    if (AITimer > 2000)
                     {
                         NPC.noGravity = true;
                         NPC.noTileCollide = true;
@@ -162,6 +164,14 @@ namespace Redemption.NPCs.Lab.Janitor
                     }
                     break;
             }
+        }
+        private void Chain_OnSymbolTrigger(Dialogue dialogue, string signature)
+        {
+            AITimer = 3000;
+        }
+        private void Chain_OnEndTrigger(Dialogue dialogue, int ID)
+        {
+            AITimer = 3000;
         }
         public override bool? CanFallThroughPlatforms() => NPC.Redemption().fallDownPlatform;
         private int WalkFrame;
@@ -197,7 +207,7 @@ namespace Redemption.NPCs.Lab.Janitor
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
             Texture2D texture = TextureAssets.Npc[NPC.type].Value;
-            Texture2D WalkAni = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_WalkAway").Value;
+            Texture2D WalkAni = ModContent.Request<Texture2D>(Texture + "_WalkAway").Value;
             var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
             if (NPC.velocity.X != 0)
@@ -213,6 +223,6 @@ namespace Redemption.NPCs.Lab.Janitor
             return false;
         }
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => false;
-        public override bool? CanHitNPC(NPC target) => false;
+        public override bool CanHitNPC(NPC target) => false;
     }
 }

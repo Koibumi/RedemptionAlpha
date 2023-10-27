@@ -13,7 +13,7 @@ namespace Redemption.NPCs.Bosses.Erhan
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Platform");
+            // DisplayName.SetDefault("Platform");
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0) { Hide = true };
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
         }
@@ -50,11 +50,12 @@ namespace Redemption.NPCs.Bosses.Erhan
              * value 1 = collides without the ability to drop through
              * value 2 = collides but the player can drop through, doesn't do anything different from value 1 unless the index is zero (Ie, the surface is set to collide with the bottom of the player)
              *
-             */
+            */
             return true;
         }
         public override void AI()
         {
+
             if (colliders != null && colliders.Length == 1 && NPC.alpha < 100)
             {
                 colliders[0].Update();
@@ -96,13 +97,13 @@ namespace Redemption.NPCs.Bosses.Erhan
             float scale = BaseUtility.MultiLerp(Main.LocalPlayer.miscCounter % 100 / 100f, 0f, 0.15f, 0f);
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginAdditive();
 
-            Main.EntitySpriteDraw(texture, NPC.Center - screenPos, null, NPC.GetAlpha(Color.White), NPC.rotation, drawOrigin, NPC.scale, SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(texture, NPC.Center - screenPos, null, NPC.GetAlpha(Color.White) * 0.5f, NPC.rotation, drawOrigin, NPC.scale + scale, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(texture, NPC.Center - new Vector2(0, -2 + (NPC.velocity.Y * 2)) - screenPos, null, NPC.GetAlpha(Color.White), NPC.rotation, drawOrigin, NPC.scale, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(texture, NPC.Center - new Vector2(0, -2 + (NPC.velocity.Y * 2)) - screenPos, null, NPC.GetAlpha(Color.White) * 0.5f, NPC.rotation, drawOrigin, NPC.scale + scale, SpriteEffects.None, 0);
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginDefault();
             return false;
         }
     }
@@ -110,7 +111,7 @@ namespace Redemption.NPCs.Bosses.Erhan
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Platform");
+            // DisplayName.SetDefault("Platform");
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0) { Hide = true };
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
         }
@@ -178,13 +179,13 @@ namespace Redemption.NPCs.Bosses.Erhan
             float scale = BaseUtility.MultiLerp(Main.LocalPlayer.miscCounter % 100 / 100f, 0f, 0.15f, 0f);
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginAdditive();
 
-            Main.EntitySpriteDraw(texture, NPC.Center - screenPos, null, NPC.GetAlpha(Color.White), NPC.rotation, drawOrigin, NPC.scale, SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(texture, NPC.Center - screenPos, null, NPC.GetAlpha(Color.White) * 0.5f, NPC.rotation, drawOrigin, NPC.scale + scale, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(texture, NPC.Center - new Vector2(0, -2 + (NPC.velocity.Y * 2)) - screenPos, null, NPC.GetAlpha(Color.White), NPC.rotation, drawOrigin, NPC.scale, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(texture, NPC.Center - new Vector2(0, -2 + (NPC.velocity.Y * 2)) - screenPos, null, NPC.GetAlpha(Color.White) * 0.5f, NPC.rotation, drawOrigin, NPC.scale + scale, SpriteEffects.None, 0);
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginDefault();
             return false;
         }
     }

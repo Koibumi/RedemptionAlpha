@@ -1,9 +1,9 @@
 using Microsoft.Xna.Framework;
 using Redemption.Dusts.Tiles;
-using Redemption.Items.Placeable.Furniture.Shade;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 
@@ -26,14 +26,12 @@ namespace Redemption.Tiles.Furniture.Shade
             // Placement
             TileObjectData.newTile.CopyFrom(TileObjectData.Style2xX);
             TileObjectData.newTile.Height = 5;
+            TileObjectData.newTile.DrawYOffset = 2;
             TileObjectData.newTile.CoordinateHeights = new[] { 16, 16, 16, 16, 16 };
             TileObjectData.newTile.Origin = new Point16(0, 4);
             TileObjectData.addTile(Type);
 
-            // Etc
-            ModTranslation name = CreateMapEntryName();
-            name.SetDefault("Shadestone Clock");
-            AddMapEntry(new Color(59, 61, 87), name);
+            AddMapEntry(new Color(59, 61, 87), Language.GetText("ItemName.GrandfatherClock"));
         }
 
         public override bool RightClick(int x, int y)
@@ -93,7 +91,5 @@ namespace Redemption.Tiles.Furniture.Shade
         }
 
         public override void NumDust(int i, int j, bool fail, ref int num) => num = fail ? 1 : 3;
-
-        public override void KillMultiTile(int i, int j, int frameX, int frameY) => Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 48, 32, ModContent.ItemType<ShadestoneClock>());
     }
 }

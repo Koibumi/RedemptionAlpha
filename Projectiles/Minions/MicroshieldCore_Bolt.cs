@@ -12,7 +12,7 @@ namespace Redemption.Projectiles.Minions
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Energy Bolt");
+            // DisplayName.SetDefault("Energy Bolt");
             ProjectileID.Sets.MinionShot[Projectile.type] = true;
         }
         public override void SetDefaults()
@@ -22,6 +22,7 @@ namespace Redemption.Projectiles.Minions
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.tileCollide = true;
+            Projectile.DamageType = DamageClass.Summon;
             Projectile.penetrate = 3;
             Projectile.timeLeft = 240;
         }

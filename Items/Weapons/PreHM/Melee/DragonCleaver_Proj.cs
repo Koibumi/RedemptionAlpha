@@ -11,6 +11,8 @@ using Terraria.Graphics.Shaders;
 using Redemption.Projectiles.Melee;
 using Redemption.Base;
 using Redemption.BaseExtension;
+using ParticleLibrary;
+using Redemption.Particles;
 
 namespace Redemption.Items.Weapons.PreHM.Melee
 {
@@ -21,9 +23,10 @@ namespace Redemption.Items.Weapons.PreHM.Melee
         public float[] oldrot = new float[4];
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Dragon Cleaver");
+            // DisplayName.SetDefault("Dragon Cleaver");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 4;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjFire[Type] = true;
         }
 
         public override bool ShouldUpdatePosition() => false;
@@ -50,10 +53,6 @@ namespace Redemption.Items.Weapons.PreHM.Melee
         private float glow;
         public override void AI()
         {
-            for (int k = Projectile.oldPos.Length - 1; k > 0; k--)
-                oldrot[k] = oldrot[k - 1];
-            oldrot[0] = Projectile.rotation;
-
             Player player = Main.player[Projectile.owner];
             if (player.noItems || player.CCed || player.dead || !player.active)
                 Projectile.Kill();
@@ -126,10 +125,13 @@ namespace Redemption.Items.Weapons.PreHM.Melee
                         player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, (player.Center - Projectile.Center).ToRotation() + MathHelper.PiOver2);
                         if (Timer++ == (int)(7 * SwingSpeed))
                         {
-                            SoundEngine.PlaySound(SoundID.DD2_PhantomPhoenixShot, Projectile.position);
-                            Projectile.NewProjectile(Projectile.GetSource_FromAI(), player.Center,
-                                RedeHelper.PolarVector(15, (Projectile.Center - player.Center).ToRotation()),
-                                ModContent.ProjectileType<FireSlash_Proj>(), Projectile.damage, Projectile.knockBack, Projectile.owner);
+                            if (hitFury is 0)
+                            {
+                                SoundEngine.PlaySound(SoundID.DD2_PhantomPhoenixShot, Projectile.position);
+                                Projectile.NewProjectile(Projectile.GetSource_FromAI(), player.Center,
+                                    RedeHelper.PolarVector(15, (Projectile.Center - player.Center).ToRotation()),
+                                    ModContent.ProjectileType<FireSlash_Proj>(), Projectile.damage, Projectile.knockBack, Projectile.owner);
+                            }
                         }
                         if (Timer < 15 * SwingSpeed)
                             BlockProj();
@@ -145,14 +147,29 @@ namespace Redemption.Items.Weapons.PreHM.Melee
                             speed *= 0.8f;
                             vector = startVector.RotatedBy(Rot) * Length;
                         }
-                        if (Timer >= 20 * SwingSpeed)
+                        if (Timer >= Main.rand.Next(13, 17) * SwingSpeed)
                         {
+                            if (--hitFury < 0)
+                                hitFury = 0;
+
                             if (!player.channel)
                             {
                                 Projectile.Kill();
                                 return;
                             }
                             SoundEngine.PlaySound(SoundID.Item71, Projectile.position);
+                            if (hitFury > 0)
+                            {
+                                if (Main.MouseWorld.X < player.Center.X)
+                                    player.direction = -1;
+                                else
+                                    player.direction = 1;
+
+                                Rot = 0;
+                                speed = MathHelper.ToRadians(1);
+                                startVector = RedeHelper.PolarVector(1, (Main.MouseWorld - player.Center).ToRotation() + ((MathHelper.PiOver2 + 0.2f) * Projectile.spriteDirection));
+                                vector = startVector * Length;
+                            }
                             Projectile.ai[0]++;
                             Timer = 0;
                             Projectile.netUpdate = true;
@@ -162,10 +179,13 @@ namespace Redemption.Items.Weapons.PreHM.Melee
                         player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, (player.Center - Projectile.Center).ToRotation() + MathHelper.PiOver2);
                         if (Timer++ == (int)(5 * SwingSpeed))
                         {
-                            SoundEngine.PlaySound(SoundID.DD2_PhantomPhoenixShot, Projectile.position);
-                            Projectile.NewProjectile(Projectile.GetSource_FromAI(), player.Center,
-                                RedeHelper.PolarVector(15, (Projectile.Center - player.Center).ToRotation()),
-                                ModContent.ProjectileType<FireSlash_Proj>(), Projectile.damage, Projectile.knockBack, Projectile.owner);
+                            if (hitFury is 0)
+                            {
+                                SoundEngine.PlaySound(SoundID.DD2_PhantomPhoenixShot, Projectile.position);
+                                Projectile.NewProjectile(Projectile.GetSource_FromAI(), player.Center,
+                                    RedeHelper.PolarVector(15, (Projectile.Center - player.Center).ToRotation()),
+                                    ModContent.ProjectileType<FireSlash_Proj>(), Projectile.damage, Projectile.knockBack, Projectile.owner);
+                            }
                         }
                         if (Timer < 15 * SwingSpeed)
                             BlockProj();
@@ -181,14 +201,29 @@ namespace Redemption.Items.Weapons.PreHM.Melee
                             speed *= 0.5f;
                             vector = startVector.RotatedBy(Rot) * Length;
                         }
-                        if (Timer >= 20 * SwingSpeed)
+                        if (Timer >= Main.rand.Next(13, 17) * SwingSpeed)
                         {
+                            if (--hitFury < 0)
+                                hitFury = 0;
+
                             if (!player.channel)
                             {
                                 Projectile.Kill();
                                 return;
                             }
                             SoundEngine.PlaySound(SoundID.Item71, Projectile.position);
+                            if (hitFury > 0)
+                            {
+                                if (Main.MouseWorld.X < player.Center.X)
+                                    player.direction = -1;
+                                else
+                                    player.direction = 1;
+
+                                Rot = 0;
+                                speed = MathHelper.ToRadians(1);
+                                startVector = RedeHelper.PolarVector(1, (Main.MouseWorld - player.Center).ToRotation() - ((MathHelper.PiOver2 + 0.6f) * Projectile.spriteDirection));
+                                vector = startVector * Length;
+                            }
                             Projectile.ai[0] = 1;
                             Timer = 0;
                             Projectile.netUpdate = true;
@@ -196,37 +231,53 @@ namespace Redemption.Items.Weapons.PreHM.Melee
                         break;
                 }
             }
+            if (Projectile.ai[0] > 0)
+            {
+                player.RedemptionScreen().Rumble(4, 1);
+                if (Main.rand.NextBool(4))
+                    ParticleManager.NewParticle(player.RandAreaInEntity(), RedeHelper.SpreadUp(1), new EmberParticle(), Color.OrangeRed, 1f);
+
+                int dustIndex = Dust.NewDust(player.position, player.width, player.height, DustID.FlameBurst, Scale: 1f);
+                Main.dust[dustIndex].velocity.Y = -5;
+                Main.dust[dustIndex].velocity.X = 0;
+                Main.dust[dustIndex].noGravity = true;
+            }
             if (Timer > 1)
                 Projectile.alpha = 0;
 
             Projectile.Center = player.MountedCenter + vector;
+            for (int k = Projectile.oldPos.Length - 1; k > 0; k--)
+                oldrot[k] = oldrot[k - 1];
+            oldrot[0] = Projectile.rotation;
         }
         private void BlockProj()
         {
             for (int i = 0; i < Main.maxProjectiles; i++)
             {
                 Projectile target = Main.projectile[i];
-                if (!target.active || target.whoAmI == Projectile.whoAmI || !target.hostile || target.damage > 200)
+                if (!target.active || target.whoAmI == Projectile.whoAmI || !target.hostile || target.damage > 200 / 4)
                     continue;
 
-                if (target.velocity.Length() == 0 || !Projectile.Hitbox.Intersects(target.Hitbox) || !ProjectileLists.Fire.Contains(target.type) || target.Redemption().TechnicallyMelee || target.Redemption().ParryBlacklist)
+                if (target.velocity.Length() == 0 || !Projectile.Hitbox.Intersects(target.Hitbox) || !target.HasElement(ElementID.Fire) || target.ProjBlockBlacklist(true))
                     continue;
 
                 DustHelper.DrawCircle(target.Center, DustID.Torch, 1, 4, 4, nogravity: true);
                 target.Kill();
             }
         }
-        public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
             if (NPCLists.Dragonlike.Contains(target.type))
-                damage *= 4;
-
-            RedeProjectile.Decapitation(target, ref damage, ref crit);
+                modifiers.FinalDamage *= 4;
         }
-
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        private int hitFury;
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            Projectile.localNPCImmunity[target.whoAmI] = 20;
+            RedeProjectile.Decapitation(target, ref damageDone, ref hit.Crit);
+
+            if (Projectile.ai[0] > 0 && hitFury is 0)
+                hitFury = 3;
+            Projectile.localNPCImmunity[target.whoAmI] = Projectile.ai[0] > 0 ? 13 : 20;
             target.immune[Projectile.owner] = 0;
 
             Player player = Main.player[Projectile.owner];

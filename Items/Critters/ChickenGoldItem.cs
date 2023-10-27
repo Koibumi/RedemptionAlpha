@@ -10,32 +10,25 @@ namespace Redemption.Items.Critters
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Gold Chicken");
+            // DisplayName.SetDefault("Gold Chicken");
 
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
         {
             Item.width = 30;
             Item.height = 26;
-            Item.maxStack = 9999;
+            Item.maxStack = Item.CommonMaxStack;
             Item.value = Item.sellPrice(gold: 10);
             Item.rare = ItemRarityID.LightRed;
-            Item.useAnimation = 30;
-            Item.useTime = 30;
-            Item.useStyle = ItemUseStyleID.HoldUp;
+            Item.useStyle = ItemUseStyleID.Swing;
+            Item.useTime = Item.useAnimation = 20;
+            Item.noUseGraphic = true;
+            Item.noMelee = true;
             Item.consumable = true;
-        }
-        public override bool? UseItem(Player player)
-        {
-            int index = NPC.NewNPC(new EntitySource_SpawnNPC(), (int)(player.position.X + Main.rand.Next(-20, 20)), (int)(player.position.Y - 0f),
-                ModContent.NPCType<ChickenGold>());
-
-            if (Main.netMode == NetmodeID.Server && index < Main.maxNPCs)
-                NetMessage.SendData(MessageID.SyncNPC, number: index);
-
-            return true;
+            Item.autoReuse = true;
+            Item.makeNPC = ModContent.NPCType<ChickenGold>();
         }
     }
 }

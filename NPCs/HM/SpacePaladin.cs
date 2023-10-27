@@ -1,6 +1,5 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Redemption.Buffs.Debuffs;
 using Redemption.Globals;
 using Redemption.Globals.NPC;
 using Redemption.Items.Placeable.Banners;
@@ -15,7 +14,6 @@ using Terraria.ModLoader;
 using Redemption.BaseExtension;
 using Redemption.Items.Materials.HM;
 using Redemption.Items.Usable.Potions;
-using Redemption.Buffs.NPCBuffs;
 using Redemption.Base;
 using Redemption.Projectiles.Hostile;
 using Terraria.ModLoader.Utilities;
@@ -25,11 +23,42 @@ using Terraria.GameContent.UI;
 using System;
 using System.Collections.Generic;
 using Redemption.Items.Usable;
+using ReLogic.Content;
+using Terraria.Localization;
 
 namespace Redemption.NPCs.HM
 {
     public class SpacePaladin : ModNPC
     {
+        private static Asset<Texture2D> glow;
+        private static Asset<Texture2D> upper;
+        private static Asset<Texture2D> upperGlow;
+        private static Asset<Texture2D> upperA;
+        private static Asset<Texture2D> upperAGlow;
+        private static Asset<Texture2D> shieldBack;
+        private static Asset<Texture2D> shieldFront;
+        public override void Load()
+        {
+            if (Main.dedServ)
+                return;
+            glow = ModContent.Request<Texture2D>(Texture + "_Glow");
+            upper = ModContent.Request<Texture2D>(Texture + "_Upper_Calm");
+            upperGlow = ModContent.Request<Texture2D>(Texture + "_Upper_Calm_Glow");
+            upperA = ModContent.Request<Texture2D>(Texture + "_Upper_Angry");
+            upperAGlow = ModContent.Request<Texture2D>(Texture + "_Upper_Angry_Glow");
+            shieldBack = ModContent.Request<Texture2D>(Texture + "_Shield_B");
+            shieldFront = ModContent.Request<Texture2D>(Texture + "_Shield_F");
+        }
+        public override void Unload()
+        {
+            glow = null;
+            upper = null;
+            upperGlow = null;
+            upperA = null;
+            upperAGlow = null;
+            shieldBack = null;
+            shieldFront = null;
+        }
         public enum ActionState
         {
             Idle,
@@ -52,22 +81,13 @@ namespace Redemption.NPCs.HM
         public ref float TimerRand => ref NPC.ai[2];
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Space Paladin Mk.I");
+            // DisplayName.SetDefault("Space Paladin Mk.I");
             Main.npcFrameCount[NPC.type] = 12;
             NPCID.Sets.CantTakeLunchMoney[Type] = true;
 
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Confused,
-                    BuffID.Poisoned,
-                    BuffID.Venom,
-                    ModContent.BuffType<InfestedDebuff>(),
-                    ModContent.BuffType<NecroticGougeDebuff>(),
-                    ModContent.BuffType<ViralityDebuff>(),
-                    ModContent.BuffType<DirtyWoundDebuff>()
-                }
-            });
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Inorganic);
+            NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Confused] = true;
+
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0) { Velocity = 1f };
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
@@ -94,6 +114,7 @@ namespace Redemption.NPCs.HM
         public override void OnSpawn(IEntitySource source)
         {
             TimerRand = Main.rand.Next(80, 120);
+            NPC.netUpdate = true;
         }
         private readonly List<int> projBlocked = new();
         private Vector2 p;
@@ -112,7 +133,7 @@ namespace Redemption.NPCs.HM
                 for (int p = 0; p < Main.maxProjectiles; p++)
                 {
                     Projectile proj = Main.projectile[p];
-                    if (!proj.active || proj.friendly || (NPC.Center.X > proj.Center.X && NPC.spriteDirection == 1) || (NPC.Center.X < proj.Center.X && NPC.spriteDirection == -1))
+                    if (!proj.active || proj.friendly || (NPC.RightOf(proj) && NPC.spriteDirection == 1) || (proj.RightOf(NPC) && NPC.spriteDirection == -1))
                         continue;
 
                     if (proj.Hitbox.Intersects(ShieldHitbox))
@@ -135,6 +156,7 @@ namespace Redemption.NPCs.HM
                         AITimer = 0;
                         TimerRand = Main.rand.Next(120, 260);
                         AIState = ActionState.Wander;
+                        NPC.netUpdate = true;
                     }
 
                     SightCheck();
@@ -149,10 +171,11 @@ namespace Redemption.NPCs.HM
                         AITimer = 0;
                         TimerRand = Main.rand.Next(80, 120);
                         AIState = ActionState.Idle;
+                        NPC.netUpdate = true;
                     }
 
-                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 30);
-                    RedeHelper.HorizontallyMove(NPC, moveTo * 16, 0.4f, 0.6f, 28, 36, NPC.Center.Y > player.Center.Y);
+                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 30, (moveTo.Y - 32) * 16);
+                    NPCHelper.HorizontallyMove(NPC, moveTo * 16, 0.4f, 0.6f, 28, 36, NPC.Center.Y > moveTo.Y * 16);
                     break;
 
                 case ActionState.Alert:
@@ -200,6 +223,7 @@ namespace Redemption.NPCs.HM
                         AITimer = 0;
                         NPC.velocity.X = 0;
                         AIState = ActionState.Laser;
+                        NPC.netUpdate = true;
                     }
                     if (Main.rand.NextBool(150) && NPC.velocity.Y == 0 && NPC.DistanceSQ(globalNPC.attacker.Center) > 60 * 60)
                     {
@@ -208,10 +232,11 @@ namespace Redemption.NPCs.HM
                         AITimer = 0;
                         NPC.velocity.X = 0;
                         AIState = ActionState.Stomp;
+                        NPC.netUpdate = true;
                     }
 
-                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 30);
-                    RedeHelper.HorizontallyMove(NPC, globalNPC.attacker.Center, 0.15f, 1.6f, 28, 36, NPC.Center.Y > globalNPC.attacker.Center.Y);
+                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 30, globalNPC.attacker.Center.Y);
+                    NPCHelper.HorizontallyMove(NPC, globalNPC.attacker.Center, 0.15f, 1.6f, 28, 36, NPC.Center.Y > globalNPC.attacker.Center.Y, globalNPC.attacker);
                     break;
 
                 case ActionState.Laser:
@@ -222,6 +247,7 @@ namespace Redemption.NPCs.HM
                         moveTo = NPC.FindGround(20);
                         TimerRand = Main.rand.Next(120, 260);
                         AIState = ActionState.Wander;
+                        NPC.netUpdate = true;
                     }
                     NPC.LookAtEntity(globalNPC.attacker);
 
@@ -248,7 +274,7 @@ namespace Redemption.NPCs.HM
                         p = globalNPC.attacker.Center;
                     if (AITimer == 60 || AITimer == 65 || AITimer == 70 || AITimer == 75)
                     {
-                        NPC.Shoot(originPos + new Vector2(-2 * NPC.spriteDirection, 4), ModContent.ProjectileType<PrototypeSilver_Beam>(), NPC.damage, RedeHelper.PolarVector(2, (p - originPos).ToRotation()), true, CustomSounds.Zap2 with { Pitch = 0.2f, Volume = 0.6f }, NPC.whoAmI);
+                        NPC.Shoot(originPos + new Vector2(-2 * NPC.spriteDirection, 4), ModContent.ProjectileType<PrototypeSilver_Beam>(), NPC.damage, RedeHelper.PolarVector(2, (p - originPos).ToRotation()), CustomSounds.Zap2 with { Pitch = 0.2f, Volume = 0.6f }, NPC.whoAmI);
                         NPC.velocity.X -= 1 * NPC.spriteDirection;
                     }
                     if (AITimer >= 90)
@@ -267,6 +293,7 @@ namespace Redemption.NPCs.HM
                         moveTo = NPC.FindGround(20);
                         TimerRand = Main.rand.Next(120, 260);
                         AIState = ActionState.Wander;
+                        NPC.netUpdate = true;
                     }
 
                     if (NPC.velocity.Y == 0)
@@ -312,18 +339,18 @@ namespace Redemption.NPCs.HM
                                     for (int i = 0; i < 8; i++)
                                     {
                                         int proj = Projectile.NewProjectile(NPC.GetSource_FromAI(), new Vector2(NPC.Center.X, NPC.Center.Y + 42),
-                                            RedeHelper.PolarVector(8, MathHelper.ToRadians(45) * i), ProjectileID.MartianTurretBolt, NPC.damage / 4, 0, Main.myPlayer);
+                                            RedeHelper.PolarVector(8, MathHelper.ToRadians(45) * i), ProjectileID.MartianTurretBolt, NPCHelper.HostileProjDamage(NPC.damage), 0, Main.myPlayer);
                                         Main.projectile[proj].tileCollide = false;
                                         Main.projectile[proj].timeLeft = 200;
-                                        Main.projectile[proj].netUpdate2 = true;
+                                        Main.projectile[proj].netUpdate = true;
                                     }
                                     for (int i = 0; i < 18; i++)
                                     {
                                         int proj = Projectile.NewProjectile(NPC.GetSource_FromAI(), new Vector2(NPC.Center.X, NPC.Center.Y + 42),
-                                            RedeHelper.PolarVector(7, MathHelper.ToRadians(20) * i), ProjectileID.MartianTurretBolt, NPC.damage / 4, 0, Main.myPlayer);
+                                            RedeHelper.PolarVector(7, MathHelper.ToRadians(20) * i), ProjectileID.MartianTurretBolt, NPCHelper.HostileProjDamage(NPC.damage), 0, Main.myPlayer);
                                         Main.projectile[proj].tileCollide = false;
                                         Main.projectile[proj].timeLeft = 200;
-                                        Main.projectile[proj].netUpdate2 = true;
+                                        Main.projectile[proj].netUpdate = true;
                                     }
                                 }
                                 slamOrigin = NPC.Center;
@@ -362,6 +389,7 @@ namespace Redemption.NPCs.HM
                         moveTo = NPC.FindGround(20);
                         TimerRand = Main.rand.Next(120, 260);
                         AIState = ActionState.Wander;
+                        NPC.netUpdate = true;
                     }
 
                     AITimer++;
@@ -379,7 +407,7 @@ namespace Redemption.NPCs.HM
                         DustHelper.DrawDustImage(NPC.Center, DustID.Frost, 0.2f, "Redemption/Effects/DustImages/WarpShape", 2, true, 0);
                         for (int i = 0; i < 25; i++)
                         {
-                            ParticleManager.NewParticle(RedeHelper.RandAreaInEntity(NPC), RedeHelper.SpreadUp(1), new LightningParticle(), Color.White, 4);
+                            ParticleManager.NewParticle(NPC.RandAreaInEntity(), RedeHelper.SpreadUp(1), new LightningParticle(), Color.White, 4, 0, 2);
                             int dust = Dust.NewDust(NPC.position, NPC.width, NPC.height, DustID.Frost, Scale: 3f);
                             Main.dust[dust].velocity *= 6f;
                             Main.dust[dust].noGravity = true;
@@ -401,34 +429,31 @@ namespace Redemption.NPCs.HM
         public override bool? CanFallThroughPlatforms() => NPC.Redemption().fallDownPlatform;
         public override void FindFrame(int frameHeight)
         {
-            if (Main.netMode != NetmodeID.Server)
+            if (NPC.collideY || NPC.velocity.Y == 0)
             {
-                if (NPC.collideY || NPC.velocity.Y == 0)
-                {
-                    NPC.rotation = 0;
-                    if (NPC.velocity.X == 0)
-                        NPC.frame.Y = 0;
-                    else
-                    {
-                        if (NPC.frame.Y < 1 * frameHeight)
-                            NPC.frame.Y = 1 * frameHeight;
-
-                        NPC.frameCounter += NPC.velocity.X * 0.5f;
-                        if (NPC.frameCounter is >= 3 or <= -3)
-                        {
-                            NPC.frameCounter = 0;
-                            NPC.frame.Y += frameHeight;
-                            if (NPC.frame.Y > 11 * frameHeight)
-                                NPC.frame.Y = 2 * frameHeight;
-                        }
-                    }
-                }
+                NPC.rotation = 0;
+                if (NPC.velocity.X == 0)
+                    NPC.frame.Y = 0;
                 else
                 {
-                    if (AIState is not ActionState.Stomp && TimerRand <= 1)
-                        NPC.rotation = NPC.velocity.X * 0.05f;
-                    NPC.frame.Y = 10 * frameHeight;
+                    if (NPC.frame.Y < 1 * frameHeight)
+                        NPC.frame.Y = 1 * frameHeight;
+
+                    NPC.frameCounter += NPC.velocity.X * 0.5f;
+                    if (NPC.frameCounter is >= 3 or <= -3)
+                    {
+                        NPC.frameCounter = 0;
+                        NPC.frame.Y += frameHeight;
+                        if (NPC.frame.Y > 11 * frameHeight)
+                            NPC.frame.Y = 2 * frameHeight;
+                    }
                 }
+            }
+            else
+            {
+                if (AIState is not ActionState.Stomp && TimerRand <= 1)
+                    NPC.rotation = NPC.velocity.X * 0.05f;
+                NPC.frame.Y = 10 * frameHeight;
             }
         }
         public void SightCheck()
@@ -459,6 +484,7 @@ namespace Redemption.NPCs.HM
                     moveTo = NPC.FindGround(20);
                     AITimer = 0;
                     AIState = ActionState.Alert;
+                    NPC.netUpdate = true;
                 }
             }
         }
@@ -476,12 +502,12 @@ namespace Redemption.NPCs.HM
                     int numtries = 0;
                     int x = (int)(origin.X / 16);
                     int y = (int)(origin.Y / 16);
-                    while (y < Main.maxTilesY - 10 && Main.tile[x, y] != null && !WorldGen.SolidTile2(x, y) && Main.tile[x - 1, y] != null && !WorldGen.SolidTile2(x - 1, y) && Main.tile[x + 1, y] != null && !WorldGen.SolidTile2(x + 1, y))
+                    while (WorldGen.InWorld(x, y) && Framing.GetTileSafely(x, y) != null && !WorldGen.SolidTile2(x, y) && Framing.GetTileSafely(x - 1, y) != null && !WorldGen.SolidTile2(x - 1, y) && Framing.GetTileSafely(x + 1, y) != null && !WorldGen.SolidTile2(x + 1, y))
                     {
                         y++;
                         origin.Y = y * 16;
                     }
-                    while ((WorldGen.SolidOrSlopedTile(x, y) || WorldGen.SolidTile2(x, y)) && numtries < 20)
+                    while (WorldGen.InWorld(x, y) && (WorldGen.SolidOrSlopedTile(x, y) || WorldGen.SolidTile2(x, y)) && numtries < 20)
                     {
                         numtries++;
                         y--;
@@ -490,7 +516,7 @@ namespace Redemption.NPCs.HM
                     if (numtries >= 20)
                         break;
 
-                    NPC.Shoot(origin - new Vector2(0, 8), ModContent.ProjectileType<SpacePaladin_GroundShock>(), NPC.damage, Vector2.Zero, false, SoundID.DD2_MonkStaffGroundImpact with { Volume = 0.2f });
+                    NPC.Shoot(origin - new Vector2(0, 8), ModContent.ProjectileType<SpacePaladin_GroundShock>(), NPC.damage, Vector2.Zero, SoundID.DD2_MonkStaffGroundImpact with { Volume = 0.2f });
                 }
             }
             if (slamTimer >= 60)
@@ -500,37 +526,40 @@ namespace Redemption.NPCs.HM
                 NPC.netUpdate = true;
             }
         }
-        public override void ModifyHitByItem(Player player, Item item, ref int damage, ref float knockback, ref bool crit)
+        public override void ModifyHitByItem(Player player, Item item, ref NPC.HitModifiers modifiers)
         {
             if (AIState is not ActionState.Alert && AIState is not ActionState.Laser)
                 return;
             Rectangle ShieldHitbox = new((int)(NPC.spriteDirection == -1 ? NPC.Center.X - 62 : NPC.Center.X), (int)(NPC.Center.Y - 54), 62, 92);
-            if (item.noMelee || item.damage <= 0 || (NPC.Center.X > player.Center.X && NPC.spriteDirection == 1) || (NPC.Center.X < player.Center.X && NPC.spriteDirection == -1))
+            if (item.noMelee || item.damage <= 0 || (NPC.RightOf(player) && NPC.spriteDirection == 1) || (player.RightOf(NPC) && NPC.spriteDirection == -1))
                 return;
 
             if (player.Redemption().meleeHitbox.Intersects(ShieldHitbox))
             {
                 SoundEngine.PlaySound(SoundID.NPCHit34, NPC.position);
-                damage = 0;
-                knockback = 0;
+                modifiers.SetMaxDamage(1);
+                modifiers.Knockback *= 0;
             }
         }
-        public override void ModifyHitByProjectile(Projectile projectile, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
+        public override void ModifyHitByProjectile(Projectile projectile, ref NPC.HitModifiers modifiers)
         {
             if (AIState is not ActionState.Alert && AIState is not ActionState.Laser)
                 return;
             Rectangle ShieldHitbox = new((int)(NPC.spriteDirection == -1 ? NPC.Center.X - 62 : NPC.Center.X), (int)(NPC.Center.Y - 54), 62, 92);
-            if (!projBlocked.Contains(projectile.whoAmI) && (!projectile.active || (NPC.Center.X > projectile.Center.X && NPC.spriteDirection == 1) || (NPC.Center.X < projectile.Center.X && NPC.spriteDirection == -1)))
+            if (!projBlocked.Contains(projectile.whoAmI) && (!projectile.active || (NPC.RightOf(projectile) && NPC.spriteDirection == 1) || (projectile.RightOf(NPC) && NPC.spriteDirection == -1)))
                 return;
 
-            if (projectile.Colliding(projectile.Hitbox, ShieldHitbox))
+            Rectangle projectileHitbox = projectile.Hitbox;
+            if (projectile.Redemption().swordHitbox != default)
+                projectileHitbox = projectile.Redemption().swordHitbox;
+            if (projectile.Colliding(projectileHitbox, ShieldHitbox))
             {
                 projBlocked.Remove(projectile.whoAmI);
-                if (projectile.penetrate != -1)
-                    projectile.Kill();
+                if (projectile.penetrate > 1)
+                    projectile.timeLeft = Math.Min(projectile.timeLeft, 2);
                 SoundEngine.PlaySound(SoundID.NPCHit34, NPC.position);
-                damage = 0;
-                knockback = 0;
+                modifiers.SetMaxDamage(1);
+                modifiers.Knockback *= 0;
             }
         }
         public static float c = 1f / 255f;
@@ -538,37 +567,30 @@ namespace Redemption.NPCs.HM
         public Color borderColor = new(0 * c, 242 * c, 170 * c, 1f);
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
-            Texture2D glow = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Glow").Value;
-            Texture2D upper = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Upper_Calm").Value;
-            Texture2D upperGlow = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Upper_Calm_Glow").Value;
-            Texture2D upperA = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Upper_Angry").Value;
-            Texture2D upperAGlow = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Upper_Angry_Glow").Value;
-            Texture2D shieldBack = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Shield_B").Value;
-            Texture2D shieldFront = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Shield_F").Value;
             var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             Vector2 pos = NPC.Center + new Vector2(0, 3);
 
             if (AIState is not ActionState.Alert && AIState is not ActionState.Laser)
-                spriteBatch.Draw(shieldBack, pos - screenPos, null, NPC.GetAlpha(drawColor) * 0.5f, NPC.rotation, NPC.frame.Size() / 2 + new Vector2(NPC.spriteDirection == -1 ? 26 : -18, 6), NPC.scale, effects, 0);
+                spriteBatch.Draw(shieldBack.Value, pos - screenPos, null, NPC.GetAlpha(drawColor) * 0.5f, NPC.rotation, NPC.frame.Size() / 2 + new Vector2(NPC.spriteDirection == -1 ? 26 : -18, 6), NPC.scale, effects, 0);
 
             spriteBatch.Draw(TextureAssets.Npc[NPC.type].Value, pos - screenPos, NPC.frame, NPC.GetAlpha(drawColor), NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
-            spriteBatch.Draw(glow, pos - screenPos, NPC.frame, NPC.GetAlpha(Color.White), NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
+            spriteBatch.Draw(glow.Value, pos - screenPos, NPC.frame, NPC.GetAlpha(Color.White), NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
 
             if (AIState is not ActionState.Alert && AIState is not ActionState.Laser)
             {
-                int UpperHeight = upper.Height / 12;
+                int UpperHeight = upper.Value.Height / 12;
                 int UpperY = UpperHeight * NPC.frame.Y / 94;
-                Rectangle UpperRect = new(0, UpperY, upper.Width, UpperHeight);
-                spriteBatch.Draw(upper, pos - screenPos, UpperRect, NPC.GetAlpha(drawColor), NPC.rotation, NPC.frame.Size() / 2 + new Vector2(NPC.spriteDirection == -1 ? 4 : 10, 24), NPC.scale, effects, 0);
-                spriteBatch.Draw(upperGlow, pos - screenPos, UpperRect, NPC.GetAlpha(Color.White), NPC.rotation, NPC.frame.Size() / 2 + new Vector2(NPC.spriteDirection == -1 ? 4 : 10, 24), NPC.scale, effects, 0);
+                Rectangle UpperRect = new(0, UpperY, upper.Value.Width, UpperHeight);
+                spriteBatch.Draw(upper.Value, pos - screenPos, UpperRect, NPC.GetAlpha(drawColor), NPC.rotation, NPC.frame.Size() / 2 + new Vector2(NPC.spriteDirection == -1 ? 4 : 10, 24), NPC.scale, effects, 0);
+                spriteBatch.Draw(upperGlow.Value, pos - screenPos, UpperRect, NPC.GetAlpha(Color.White), NPC.rotation, NPC.frame.Size() / 2 + new Vector2(NPC.spriteDirection == -1 ? 4 : 10, 24), NPC.scale, effects, 0);
             }
             if (AIState is ActionState.Alert || AIState is ActionState.Laser)
             {
-                int UpperAHeight = upperA.Height / 12;
+                int UpperAHeight = upperA.Value.Height / 12;
                 int UpperAY = UpperAHeight * NPC.frame.Y / 94;
-                Rectangle UpperARect = new(0, UpperAY, upperA.Width, UpperAHeight);
-                spriteBatch.Draw(upperA, pos - screenPos, UpperARect, NPC.GetAlpha(drawColor), NPC.rotation, NPC.frame.Size() / 2 + new Vector2(NPC.spriteDirection == -1 ? 8 : 16, 22), NPC.scale, effects, 0);
-                spriteBatch.Draw(upperAGlow, pos - screenPos, UpperARect, NPC.GetAlpha(Color.White), NPC.rotation, NPC.frame.Size() / 2 + new Vector2(NPC.spriteDirection == -1 ? 8 : 16, 22), NPC.scale, effects, 0);
+                Rectangle UpperARect = new(0, UpperAY, upperA.Value.Width, UpperAHeight);
+                spriteBatch.Draw(upperA.Value, pos - screenPos, UpperARect, NPC.GetAlpha(drawColor), NPC.rotation, NPC.frame.Size() / 2 + new Vector2(NPC.spriteDirection == -1 ? 8 : 16, 22), NPC.scale, effects, 0);
+                spriteBatch.Draw(upperAGlow.Value, pos - screenPos, UpperARect, NPC.GetAlpha(Color.White), NPC.rotation, NPC.frame.Size() / 2 + new Vector2(NPC.spriteDirection == -1 ? 8 : 16, 22), NPC.scale, effects, 0);
 
                 Texture2D HexagonTexture = ModContent.Request<Texture2D>("Redemption/Empty", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
                 Effect ShieldEffect = ModContent.Request<Effect>("Redemption/Effects/Shield", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
@@ -580,33 +602,33 @@ namespace Redemption.NPCs.HM
 
                 spriteBatch.End();
                 ShieldEffect.Parameters["sinMult"].SetValue(10f);
-                ShieldEffect.Parameters["spriteRatio"].SetValue(new Vector2(shieldFront.Width / 2f / HexagonTexture.Width, shieldFront.Height / 2f / HexagonTexture.Height));
-                ShieldEffect.Parameters["conversion"].SetValue(new Vector2(1f / (shieldFront.Width / 2), 1f / (shieldFront.Height / 2)));
+                ShieldEffect.Parameters["spriteRatio"].SetValue(new Vector2(shieldFront.Value.Width / 2f / HexagonTexture.Width, shieldFront.Value.Height / 2f / HexagonTexture.Height));
+                ShieldEffect.Parameters["conversion"].SetValue(new Vector2(1f / (shieldFront.Value.Width / 2), 1f / (shieldFront.Value.Height / 2)));
                 ShieldEffect.Parameters["frameAmount"].SetValue(1f);
-                spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+                spriteBatch.BeginDefault(true);
                 ShieldEffect.CurrentTechnique.Passes[0].Apply();
 
-                spriteBatch.Draw(shieldFront, pos - screenPos, null, NPC.GetAlpha(drawColor) * 0.5f, NPC.rotation, NPC.frame.Size() / 2 + new Vector2(NPC.spriteDirection == -1 ? 30 : -24, 10), NPC.scale, effects, 0);
+                spriteBatch.Draw(shieldFront.Value, pos - screenPos, null, NPC.GetAlpha(drawColor) * 0.5f, NPC.rotation, NPC.frame.Size() / 2 + new Vector2(NPC.spriteDirection == -1 ? 30 : -24, 10), NPC.scale, effects, 0);
 
                 spriteBatch.End();
-                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+                spriteBatch.BeginDefault();
             }
             return false;
         }
 
-        public override bool? CanHitNPC(NPC target) => false;
+        public override bool CanHitNPC(NPC target) => false;
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => AIState == ActionState.Stomp && NPC.velocity.Length() > 0;
 
         public override void ModifyNPCLoot(NPCLoot npcLoot)
         {
             npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<CarbonMyofibre>(), 1, 8, 12));
             npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<Plating>(), 1, 4, 8));
-            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<Capacitator>(), 2, 2, 4));
+            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<Capacitor>(), 2, 2, 4));
             npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<AIChip>(), 2, 1, 1));
             npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<EnergyCell>(), 2, 1, 3));
             npcLoot.Add(ItemDropRule.Food(ModContent.ItemType<P0T4T0>(), 150));
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -635,12 +657,12 @@ namespace Redemption.NPCs.HM
         }
         public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
         {
+            bestiaryEntry.UIInfoProvider = new CustomCollectionInfoProvider(ContentSamples.NpcBestiaryCreditIdsByNpcNetIds[Type], false, 5);
             bestiaryEntry.Info.AddRange(new IBestiaryInfoElement[]
             {
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Biomes.Sky,
 
-                new FlavorTextBestiaryInfoElement(
-                    "The 4th Slayer Unit constructed, after Space Keeper. This unit uses newer shield technology compared to King Slayer's Prototype Multium vessel, and is capable of absorbing far greater impacts; in addition to the thick durable plating and cyber blade, this robot was built for war."),
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.SpacePaladin"))
             });
         }
     }

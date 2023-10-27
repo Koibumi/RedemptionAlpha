@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using Redemption.Globals;
 using Redemption.Projectiles.Misc;
 using Terraria;
 using Terraria.ID;
@@ -11,8 +12,9 @@ namespace Redemption.Projectiles.Ranged
         public override string Texture => "Redemption/Projectiles/Hostile/OozeBall_Proj";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Radioactive Bile");
+            // DisplayName.SetDefault("Radioactive Bile");
             Main.projFrames[Projectile.type] = 4;
+            ElementID.ProjPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -23,6 +25,7 @@ namespace Redemption.Projectiles.Ranged
             Projectile.friendly = true;
             Projectile.tileCollide = true;
             Projectile.ignoreWater = false;
+            Projectile.DamageType = DamageClass.Ranged;
             Projectile.alpha = 160;
             Projectile.timeLeft = 200;
         }
@@ -39,7 +42,7 @@ namespace Redemption.Projectiles.Ranged
             if (Main.rand.NextBool(4))
                 Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.ToxicBubble, Alpha: 100, Scale: 1);
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             if (Projectile.owner == Main.myPlayer)
                 Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center, Vector2.Zero, ModContent.ProjectileType<ToxicGas_Proj>(), Projectile.damage, 0, Projectile.owner, 1);

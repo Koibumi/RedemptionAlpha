@@ -6,6 +6,7 @@ using Terraria.ID;
 using Redemption.Base;
 using Terraria.Audio;
 using Terraria.GameContent;
+using Redemption.Globals;
 
 namespace Redemption.Items.Weapons.HM.Melee
 {
@@ -14,9 +15,10 @@ namespace Redemption.Items.Weapons.HM.Melee
         public override string Texture => "Redemption/Items/Weapons/HM/Melee/CyberChakram";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Cyber Chakram");
+            // DisplayName.SetDefault("Cyber Chakram");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 16;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjThunder[Type] = true;
         }
 
         public override void SetDefaults()
@@ -32,7 +34,7 @@ namespace Redemption.Items.Weapons.HM.Melee
             Projectile.extraUpdates = 1;
             Projectile.usesLocalNPCImmunity = true;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Projectile.localNPCImmunity[target.whoAmI] = 20;
             target.immune[Projectile.owner] = 0;
@@ -41,12 +43,20 @@ namespace Redemption.Items.Weapons.HM.Melee
         {
             Player p = Main.player[Projectile.owner];
             BaseAI.AIBoomerang(Projectile, ref Projectile.ai, p.position, p.width, p.height, true, 27f, 35, 1f, 0.6f, false);
-            Projectile.localAI[0]++;
-            if (Projectile.localAI[0] >= 10 && Projectile.owner == Main.myPlayer)
+            if (Projectile.localAI[0]++ % 10 == 0 && Projectile.owner == Main.myPlayer)
             {
-                Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center.X, Projectile.Center.Y, 0, 0, ModContent.ProjectileType<CyberChakram_Proj2>(), Projectile.damage, Projectile.knockBack, Main.myPlayer, Projectile.rotation);
-                Projectile.localAI[0] = 0;
+                Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center.X, Projectile.Center.Y, 0, 0, ModContent.ProjectileType<CyberChakram_Proj2>(), Projectile.damage, 0, Main.myPlayer, Projectile.rotation, Projectile.direction);
             }
+        }
+        public override bool TileCollideStyle(ref int width, ref int height, ref bool fallThrough, ref Vector2 hitboxCenterFrac)
+        {
+            width = height = 20;
+            return true;
+        }
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+        {
+            if (Projectile.localAI[0] >= 35)
+                modifiers.Knockback *= 0;
         }
         public override bool PreDraw(ref Color lightColor)
         {

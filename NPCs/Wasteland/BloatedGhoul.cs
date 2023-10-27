@@ -5,7 +5,6 @@ using Redemption.Buffs.Debuffs;
 using Redemption.Globals;
 using Redemption.Globals.NPC;
 using Redemption.Items.Accessories.HM;
-using Redemption.Items.Materials.PreHM;
 using Redemption.Items.Placeable.Banners;
 using Terraria;
 using Terraria.Audio;
@@ -19,9 +18,10 @@ using Redemption.BaseExtension;
 using Redemption.Items.Materials.HM;
 using Redemption.Items.Usable.Potions;
 using Redemption.Items.Weapons.HM.Ranged;
-using Redemption.Items.Armor.Vanity;
 using Redemption.Items.Armor.Vanity.Intruder;
 using Redemption.Projectiles.Hostile;
+using System.IO;
+using Terraria.Localization;
 
 namespace Redemption.NPCs.Wasteland
 {
@@ -44,26 +44,18 @@ namespace Redemption.NPCs.Wasteland
         public ref float AITimer => ref NPC.ai[1];
 
         public ref float TimerRand => ref NPC.ai[2];
-        public ref float Variant => ref NPC.ai[3];
         public override void SetStaticDefaults()
         {
             Main.npcFrameCount[NPC.type] = 10;
+            NPCID.Sets.ShimmerTransformToNPC[NPC.type] = NPCID.DesertGhoul;
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Infected);
 
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Poisoned,
-                    ModContent.BuffType<BileDebuff>(),
-                    ModContent.BuffType<GreenRashesDebuff>(),
-                    ModContent.BuffType<GlowingPustulesDebuff>(),
-                    ModContent.BuffType<FleshCrystalsDebuff>()
-                }
-            });
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0)
             {
                 Velocity = 1f
             };
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
+            ElementID.NPCPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -82,13 +74,20 @@ namespace Redemption.NPCs.Wasteland
             Banner = NPC.type;
             BannerItem = ModContent.ItemType<BloatedGhoulBanner>();
         }
-
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.WriteVector2(moveTo);
+        }
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            moveTo = reader.ReadVector2();
+        }
         private Vector2 moveTo;
         private int runCooldown;
         public override void OnSpawn(IEntitySource source)
         {
-            Variant = Main.rand.Next(2);
             TimerRand = Main.rand.Next(80, 120);
+            NPC.netUpdate = true;
         }
         public override void AI()
         {
@@ -97,7 +96,7 @@ namespace Redemption.NPCs.Wasteland
             NPC.TargetClosest();
             NPC.LookByVelocity();
 
-            if (Main.rand.NextBool(1000))
+            if (Main.rand.NextBool(1000) && !Main.dedServ)
                 SoundEngine.PlaySound(new("Terraria/Sounds/Zombie_" + Main.rand.Next(55, 57)), NPC.position);
 
             switch (AIState)
@@ -112,6 +111,7 @@ namespace Redemption.NPCs.Wasteland
                         AITimer = 0;
                         TimerRand = Main.rand.Next(120, 260);
                         AIState = ActionState.Wander;
+                        NPC.netUpdate = true;
                     }
 
                     SightCheck();
@@ -126,10 +126,11 @@ namespace Redemption.NPCs.Wasteland
                         AITimer = 0;
                         TimerRand = Main.rand.Next(80, 120);
                         AIState = ActionState.Idle;
+                        NPC.netUpdate = true;
                     }
 
-                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20);
-                    RedeHelper.HorizontallyMove(NPC, moveTo * 16, 0.4f, 1.3f, 16, 10, NPC.Center.Y > player.Center.Y);
+                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20, (moveTo.Y - 32) * 16);
+                    NPCHelper.HorizontallyMove(NPC, moveTo * 16, 0.4f, 1.3f, 16, 10, NPC.Center.Y > moveTo.Y * 16);
                     break;
 
                 case ActionState.Alert:
@@ -149,13 +150,14 @@ namespace Redemption.NPCs.Wasteland
                         NPC.velocity.X *= 0f;
                         AITimer = 0;
                         AIState = ActionState.Explode;
+                        NPC.netUpdate = true;
                         return;
                     }
 
                     NPC.DamageHostileAttackers(0, 5);
 
-                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20);
-                    RedeHelper.HorizontallyMove(NPC, globalNPC.attacker.Center, 0.17f, 4.5f * (NPC.RedemptionNPCBuff().rallied ? 1.2f : 1), 16, 10, NPC.Center.Y > globalNPC.attacker.Center.Y);
+                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20, globalNPC.attacker.Center.Y);
+                    NPCHelper.HorizontallyMove(NPC, globalNPC.attacker.Center, 0.17f, 4.5f * (NPC.RedemptionNPCBuff().rallied ? 1.2f : 1), 16, 10, NPC.Center.Y > globalNPC.attacker.Center.Y, globalNPC.attacker);
                     break;
 
                 case ActionState.Explode:
@@ -179,7 +181,7 @@ namespace Redemption.NPCs.Wasteland
                             Main.dust[dustIndex].velocity *= 10f;
                         }
                         for (int i = 0; i < 16; i++)
-                            NPC.Shoot(NPC.Center, ModContent.ProjectileType<OozeBall_Proj>(), NPC.damage, RedeHelper.SpreadUp(12), false, SoundID.Item, NPC.whoAmI);
+                            NPC.Shoot(NPC.Center, ModContent.ProjectileType<OozeBall_Proj>(), NPC.damage, RedeHelper.SpreadUp(12), NPC.whoAmI);
                         player.ApplyDamageToNPC(NPC, 9999, 0, 0, false);
                     }
                     break;
@@ -234,7 +236,7 @@ namespace Redemption.NPCs.Wasteland
             for (int i = 0; i < Main.maxNPCs; i++)
             {
                 NPC target = Main.npc[i];
-                if (!target.active || target.whoAmI == NPC.whoAmI || target.dontTakeDamage || target.type == NPCID.OldMan)
+                if (!target.active || target.whoAmI == NPC.whoAmI || target.dontTakeDamage || target.type == NPCID.OldMan || target.type == NPCID.TargetDummy)
                     continue;
 
                 if (target.lifeMax <= 5 || (!target.friendly && !NPCID.Sets.TakesDamageFromHostilesWithoutBeingFriendly[target.type]))
@@ -261,6 +263,7 @@ namespace Redemption.NPCs.Wasteland
                 moveTo = NPC.FindGround(20);
                 AITimer = 0;
                 AIState = ActionState.Alert;
+                NPC.netUpdate = true;
             }
             if (gotNPC != -1 && NPC.Sight(Main.npc[gotNPC], 800, true, true))
             {
@@ -269,6 +272,7 @@ namespace Redemption.NPCs.Wasteland
                 moveTo = NPC.FindGround(20);
                 AITimer = 0;
                 AIState = ActionState.Alert;
+                NPC.netUpdate = true;
             }
         }
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
@@ -278,12 +282,12 @@ namespace Redemption.NPCs.Wasteland
             return false;
         }
 
-        public override bool? CanHitNPC(NPC target) => AIState == ActionState.Alert ? null : false;
+        public override bool CanHitNPC(NPC target) => AIState == ActionState.Alert;
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => AIState == ActionState.Alert;
 
         public override void ModifyNPCLoot(NPCLoot npcLoot)
         {
-            npcLoot.Add(ItemDropRule.ByCondition(new Conditions.BeatAnyMechBoss(), ModContent.ItemType<XenomiteShard>(), 4, 4, 8));
+            npcLoot.Add(ItemDropRule.ByCondition(new Conditions.BeatAnyMechBoss(), ModContent.ItemType<Xenomite>(), 4, 2, 4));
             npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<ToxicBile>(), 4, 1, 3));
             npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<GasMask>(), 20));
             npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<DoubleRifle>(), 100));
@@ -295,12 +299,12 @@ namespace Redemption.NPCs.Wasteland
                 npcLoot.Add(dropRule);
             }
         }
-        public override void ModifyHitPlayer(Player target, ref int damage, ref bool crit)
+        public override void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers)
         {
             if (Main.rand.NextBool(2) || Main.expertMode)
                 target.AddBuff(ModContent.BuffType<GreenRashesDebuff>(), Main.rand.Next(200, 1200));
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -328,8 +332,7 @@ namespace Redemption.NPCs.Wasteland
         {
             bestiaryEntry.Info.AddRange(new IBestiaryInfoElement[]
             {
-                new FlavorTextBestiaryInfoElement(
-                    "Ghouls irradiated by radioactive particles that have been disfigured by rapid, volatile cell growth.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.BloatedGhoul"))
             });
         }
     }

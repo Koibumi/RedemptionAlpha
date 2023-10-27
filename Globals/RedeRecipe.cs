@@ -1,9 +1,11 @@
 using Redemption.Items.Accessories.HM;
+using Redemption.Items.Armor.Vanity;
 using Redemption.Items.Critters;
 using Redemption.Items.Materials.PostML;
 using Redemption.Items.Materials.PreHM;
 using Redemption.Items.Placeable.Plants;
 using Redemption.Items.Placeable.Tiles;
+using Redemption.Items.Usable.Potions;
 using Redemption.Items.Weapons.PreHM.Ranged;
 using Terraria;
 using Terraria.ID;
@@ -55,6 +57,11 @@ namespace Redemption.Globals
 
             PlantRecipeGroup = new RecipeGroup(() => $"{Language.GetTextValue("LegacyMisc.37")} {Lang.GetItemNameValue(ItemID.Daybloom)}", ItemID.Daybloom, ItemID.Waterleaf, ItemID.Blinkroot, ItemID.Deathweed, ItemID.Fireblossom, ItemID.Moonglow, ItemID.Shiverthorn, ModContent.ItemType<Nightshade>());
             RecipeGroup.RegisterGroup("Redemption:Plants", PlantRecipeGroup);
+
+            RecipeGroup.RegisterGroup("Fruit", new RecipeGroup(null, ModContent.ItemType<Olives>(), ModContent.ItemType<Avocado>()));
+            RecipeGroup.RegisterGroup("Sand", new RecipeGroup(null, ModContent.ItemType<IrradiatedSand>(), ModContent.ItemType<IrradiatedHardenedSand>()));
+            RecipeGroup.RegisterGroup("Snails", new RecipeGroup(null, ModContent.ItemType<JohnSnailItem>()));
+            RecipeGroup.RegisterGroup("Wood", new RecipeGroup(null, ModContent.ItemType<ElderWood>(), ModContent.ItemType<PetrifiedWood>()));
         }
         public override void PostAddRecipes()
         {
@@ -63,11 +70,16 @@ namespace Redemption.Globals
                 Recipe recipe = Main.recipe[i];
 
                 if (recipe.HasResult(ItemID.Zenith))
-                    recipe.AddIngredient<GildedStar>(10);
+                    recipe.AddIngredient<LifeFragment>(10);
             }
         }
         public override void AddRecipes()
         {
+            Recipe.Create(ItemID.WizardHat)
+                .AddCustomShimmerResult(ModContent.ItemType<DruidHat>())
+                .Register()
+                .DisableRecipe();
+
             Recipe.Create(ItemID.GreenDye)
                 .AddIngredient<TreeBugShell>()
                 .AddTile(TileID.DyeVat)
@@ -76,6 +88,11 @@ namespace Redemption.Globals
             Recipe.Create(ItemID.CyanDye)
                 .AddIngredient<CoastScarabShell>()
                 .AddTile(TileID.DyeVat)
+                .Register();
+            
+            Recipe.Create(ItemID.Escargot)
+                .AddIngredient<JohnSnailItem>()
+                .AddTile(TileID.CookingPots)
                 .Register();
 
             Recipe.Create(ItemID.RottenEgg, 15)
@@ -109,6 +126,48 @@ namespace Redemption.Globals
                 .AddTile(TileID.Bottles)
                 .Register();
 
+            Recipe.Create(ItemID.SlimeStaff)
+                .AddIngredient<ElderWood>(12)
+                .AddIngredient(ItemID.Gel, 25)
+                .AddTile(TileID.Anvils)
+                .Register();
+
+            Recipe.Create(ItemID.WoodenArrow, 25)
+                .AddIngredient<ElderWood>()
+                .AddRecipeGroup(GathicStoneRecipeGroup)
+                .AddTile(TileID.WorkBenches)
+                .Register();
+
+            Recipe.Create(ItemID.ThrowingKnife, 33)
+                .AddIngredient<GraveSteelAlloy>()
+                .AddRecipeGroup(RecipeGroupID.Wood)
+                .AddTile(TileID.Anvils)
+                .Register();
+
+            Recipe.Create(ItemID.ChainKnife)
+                .AddIngredient<GraveSteelAlloy>(9)
+                .AddIngredient(ItemID.Chain, 3)
+                .AddTile(TileID.Anvils)
+                .Register();
+
+            Recipe.Create(ItemID.AncientChisel)
+                .AddIngredient<GraveSteelAlloy>(4)
+                .AddIngredient<ElderWood>(20)
+                .AddTile(TileID.Anvils)
+                .Register();
+
+            Recipe.Create(ItemID.Marrow)
+                .AddIngredient(ItemID.Bone, 20)
+                .AddIngredient<GraveSteelAlloy>(10)
+                .AddTile(TileID.MythrilAnvil)
+                .Register();
+
+            Recipe.Create(ItemID.HerbBag)
+                .AddIngredient(ItemID.Leather, 4)
+                .AddIngredient<PlantMatter>(20)
+                .AddTile(TileID.WorkBenches)
+                .Register();
+
             // Living Furniture
             Recipe.Create(ItemID.LivingLoom)
                 .AddIngredient(ModContent.ItemType<LivingTwig>(), 10)
@@ -118,8 +177,18 @@ namespace Redemption.Globals
                 .AddIngredient(ModContent.ItemType<LivingTwig>(), 12)
                 .AddTile(TileID.WorkBenches)
                 .Register();
+            Recipe.Create(ItemID.LivingMahoganyWand)
+                .AddIngredient(ModContent.ItemType<LivingTwig>(), 12)
+                .AddIngredient(ItemID.RichMahogany, 6)
+                .AddTile(TileID.WorkBenches)
+                .Register();
             Recipe.Create(ItemID.LeafWand)
                 .AddIngredient(ModContent.ItemType<LivingTwig>(), 12)
+                .AddTile(TileID.WorkBenches)
+                .Register();
+            Recipe.Create(ItemID.LivingMahoganyLeafWand)
+                .AddIngredient(ModContent.ItemType<LivingTwig>(), 12)
+                .AddIngredient(ItemID.RichMahogany, 6)
                 .AddTile(TileID.WorkBenches)
                 .Register();
             Recipe.Create(ItemID.LivingLeafWall, 4)
@@ -203,7 +272,7 @@ namespace Redemption.Globals
                 .Register();
             Recipe.Create(ItemID.LivingWoodClock)
                 .AddIngredient(ModContent.ItemType<LivingTwig>(), 10)
-                .AddRecipeGroup("IronBar", 3)
+                .AddRecipeGroup(RecipeGroupID.IronBar, 3)
                 .AddIngredient(ItemID.Glass, 6)
                 .AddTile(TileID.WorkBenches)
                 .Register();

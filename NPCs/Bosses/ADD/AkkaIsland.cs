@@ -4,6 +4,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria.GameContent;
+using Redemption.Globals;
 
 namespace Redemption.NPCs.Bosses.ADD
 {
@@ -11,7 +12,7 @@ namespace Redemption.NPCs.Bosses.ADD
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Floating Island");
+            // DisplayName.SetDefault("Floating Island");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 5;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
         }
@@ -59,7 +60,7 @@ namespace Redemption.NPCs.Bosses.ADD
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Island Summoner");
+            // DisplayName.SetDefault("Island Summoner");
         }
         public override void SetDefaults()
         {
@@ -97,7 +98,8 @@ namespace Redemption.NPCs.Bosses.ADD
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Floating Island");
+            // DisplayName.SetDefault("Floating Island");
+            ElementID.ProjEarth[Type] = true;
         }
         public override void SetDefaults()
         {

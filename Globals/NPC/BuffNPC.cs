@@ -17,6 +17,7 @@ using Redemption.BaseExtension;
 using Redemption.Particles;
 using ParticleLibrary;
 using Redemption.Globals.Player;
+using Redemption.Projectiles.Magic;
 
 namespace Redemption.Globals.NPC
 {
@@ -54,6 +55,9 @@ namespace Redemption.Globals.NPC
         public bool holyFire;
         public bool ukonArrow;
         public bool bInfection;
+        public bool roosterBoost;
+        public bool contagionShard;
+        public bool soaked;
 
         public override void ResetEffects(Terraria.NPC npc)
         {
@@ -80,6 +84,9 @@ namespace Redemption.Globals.NPC
             holyFire = false;
             ukonArrow = false;
             bInfection = false;
+            roosterBoost = false;
+            contagionShard = false;
+            soaked = false;
 
             if (!npc.HasBuff(ModContent.BuffType<InfestedDebuff>()))
             {
@@ -99,69 +106,98 @@ namespace Redemption.Globals.NPC
         }
 
         #region Debuff Immunities
-        public static void AddDebuffImmunity(int npcType, int[] array)
+        public enum NPCDebuffImmuneType : byte
         {
-            if (!NPCID.Sets.DebuffImmunitySets.TryGetValue(npcType, out var entry) || entry?.SpecificallyImmuneTo is null)
-                return;
-
-            int[] array2 = NPCID.Sets.DebuffImmunitySets[npcType].SpecificallyImmuneTo;
-            NPCID.Sets.DebuffImmunitySets[npcType] = new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = array2.Concat(array).ToArray()
-            };
+            Demon,
+            Cold,
+            Inorganic,
+            Infected,
+            NoBlood,
+            Hot
         }
-
+        public static void NPCTypeImmunity(int Type, NPCDebuffImmuneType npcImmuneType)
+        {
+            switch (npcImmuneType)
+            {
+                case NPCDebuffImmuneType.Demon:
+                    NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.OnFire] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Poisoned] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.ShadowFlame] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[Type][ModContent.BuffType<InfestedDebuff>()] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[Type][ModContent.BuffType<DragonblazeDebuff>()] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[Type][ModContent.BuffType<MoonflareDebuff>()] = true;
+                    break;
+                case NPCDebuffImmuneType.Cold:
+                    NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Chilled] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Frostburn] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[Type][ModContent.BuffType<PureChillDebuff>()] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[Type][ModContent.BuffType<IceFrozen>()] = true;
+                    break;
+                case NPCDebuffImmuneType.Hot:
+                    NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.OnFire] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.CursedInferno] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Frostburn] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.ShadowFlame] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[Type][ModContent.BuffType<DragonblazeDebuff>()] = true;
+                    break;
+                case NPCDebuffImmuneType.Inorganic:
+                    NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Bleeding] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.BloodButcherer] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Poisoned] = true;
+                    break;
+                case NPCDebuffImmuneType.Infected:
+                    NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Poisoned] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[Type][ModContent.BuffType<BileDebuff>()] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[Type][ModContent.BuffType<GreenRashesDebuff>()] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[Type][ModContent.BuffType<GlowingPustulesDebuff>()] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[Type][ModContent.BuffType<FleshCrystalsDebuff>()] = true;
+                    break;
+                case NPCDebuffImmuneType.NoBlood:
+                    NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Bleeding] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.BloodButcherer] = true;
+                    break;
+            }
+        }
         public override void SetStaticDefaults()
         {
             for (int i = 0; i < NPCLoader.NPCCount; i++)
             {
                 if (NPCLists.Demon.Contains(i))
                 {
-                    AddDebuffImmunity(i, new int[] {
-                    ModContent.BuffType<InfestedDebuff>(),
-                    ModContent.BuffType<DragonblazeDebuff>(),
-                    ModContent.BuffType<MoonflareDebuff>() });
+                    NPCID.Sets.SpecificDebuffImmunity[i][ModContent.BuffType<InfestedDebuff>()] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[i][ModContent.BuffType<DragonblazeDebuff>()] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[i][ModContent.BuffType<MoonflareDebuff>()] = true;
                 }
                 if (NPCLists.Cold.Contains(i))
                 {
-                    AddDebuffImmunity(i, new int[] {
-                    ModContent.BuffType<PureChillDebuff>(),
-                    ModContent.BuffType<IceFrozen>() });
+                    NPCID.Sets.SpecificDebuffImmunity[i][ModContent.BuffType<PureChillDebuff>()] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[i][ModContent.BuffType<IceFrozen>()] = true;
                 }
                 if (NPCLists.Plantlike.Contains(i))
                 {
-                    AddDebuffImmunity(i, new int[] {
-                    ModContent.BuffType<NecroticGougeDebuff>(),
-                    ModContent.BuffType<DirtyWoundDebuff>(),
-                    ModContent.BuffType<InfestedDebuff>() });
+                    NPCID.Sets.SpecificDebuffImmunity[i][BuffID.Bleeding] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[i][BuffID.BloodButcherer] = true;
                 }
                 if (NPCLists.Dragonlike.Contains(i))
                 {
-                    AddDebuffImmunity(i, new int[] {
-                    ModContent.BuffType<DragonblazeDebuff>() });
+                    NPCID.Sets.SpecificDebuffImmunity[i][ModContent.BuffType<DragonblazeDebuff>()] = true;
                 }
                 if (NPCLists.Inorganic.Contains(i))
                 {
-                    AddDebuffImmunity(i, new int[] {
-                    ModContent.BuffType<InfestedDebuff>(),
-                    ModContent.BuffType<NecroticGougeDebuff>(),
-                    ModContent.BuffType<ViralityDebuff>(),
-                    ModContent.BuffType<DirtyWoundDebuff>() });
+                    NPCID.Sets.SpecificDebuffImmunity[i][BuffID.Bleeding] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[i][BuffID.BloodButcherer] = true;
                 }
                 if (NPCLists.Infected.Contains(i))
                 {
-                    AddDebuffImmunity(i, new int[] {
-                    ModContent.BuffType<BileDebuff>(),
-                    ModContent.BuffType<GreenRashesDebuff>(),
-                    ModContent.BuffType<GlowingPustulesDebuff>(),
-                    ModContent.BuffType<FleshCrystalsDebuff>() });
+                    NPCID.Sets.SpecificDebuffImmunity[i][ModContent.BuffType<BileDebuff>()] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[i][ModContent.BuffType<GreenRashesDebuff>()] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[i][ModContent.BuffType<GlowingPustulesDebuff>()] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[i][ModContent.BuffType<FleshCrystalsDebuff>()] = true;
                 }
                 if (NPCLists.IsSlime.Contains(i))
                 {
-                    AddDebuffImmunity(i, new int[] {
-                    ModContent.BuffType<InfestedDebuff>(),
-                    ModContent.BuffType<NecroticGougeDebuff>(),
-                    ModContent.BuffType<DirtyWoundDebuff>() });
+                    NPCID.Sets.SpecificDebuffImmunity[i][BuffID.Bleeding] = true;
+                    NPCID.Sets.SpecificDebuffImmunity[i][BuffID.BloodButcherer] = true;
                 }
             }
         }
@@ -273,14 +309,14 @@ namespace Redemption.Globals.NPC
                 if (npc.lifeRegen > 0)
                     npc.lifeRegen = 0;
 
-                npc.lifeRegen -= 5;
+                npc.lifeRegen -= 10;
             }
             if (electrified)
             {
                 if (npc.lifeRegen > 0)
                     npc.lifeRegen = 0;
 
-                npc.lifeRegen -= (int)(npc.velocity.Length() * 20);
+                npc.lifeRegen -= (int)(npc.velocity.Length() * 10);
 
                 if (damage < 6)
                     damage = 6;
@@ -303,7 +339,7 @@ namespace Redemption.Globals.NPC
                 if (npc.lifeRegen > 0)
                     npc.lifeRegen = 0;
 
-                npc.lifeRegen -= 400;
+                npc.lifeRegen -= 200;
                 if (damage < 10)
                     damage = 10;
             }
@@ -331,82 +367,96 @@ namespace Redemption.Globals.NPC
                 if (damage < 20)
                     damage = 20;
             }
+            if (contagionShard)
+            {
+                if (npc.lifeRegen > 0)
+                    npc.lifeRegen = 0;
+
+                int shardCount = 0;
+                for (int i = 0; i < 1000; i++)
+                {
+                    Projectile p = Main.projectile[i];
+                    if (p.active && p.type == ModContent.ProjectileType<ContagionShard_Proj>() && p.ai[0] == 1f && p.ai[1] == npc.whoAmI)
+                        shardCount++;
+                }
+                npc.lifeRegen -= shardCount * 8;
+                if (damage < shardCount * 8)
+                    damage = shardCount * 8;
+            }
         }
-        public override void ModifyHitByItem(Terraria.NPC npc, Terraria.Player player, Item item, ref int damage, ref float knockback, ref bool crit)
+        public override void ModifyHitByItem(Terraria.NPC npc, Terraria.Player player, Item item, ref Terraria.NPC.HitModifiers modifiers)
         {
-            if (stomachAcid)
-                player.GetArmorPenetration(DamageClass.Generic) += 8;
-            if (bileDebuff)
-                player.GetArmorPenetration(DamageClass.Generic) += 15;
-            if (infected)
-                player.GetArmorPenetration(DamageClass.Generic) += 20;
             if (incisored)
-                player.GetArmorPenetration(DamageClass.Generic) += (player.GetModPlayer<RitualistPlayer>().SpiritLevel + 1) * 5;
-            if (badtime)
-                player.GetArmorPenetration(DamageClass.Generic) += 99;
+                modifiers.ArmorPenetration += (player.GetModPlayer<RitualistPlayer>().SpiritLevel + 1) * 5;
+            if (soaked && item.HasElement(ElementID.Ice))
+                modifiers.FinalDamage *= 1.15f;
         }
-        public override void ModifyHitByProjectile(Terraria.NPC npc, Projectile projectile, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
+        public override void ModifyHitByProjectile(Terraria.NPC npc, Projectile projectile, ref Terraria.NPC.HitModifiers modifiers)
         {
-            Terraria.Player player = Main.player[projectile.owner];
-            if (stomachAcid)
-                player.GetArmorPenetration(DamageClass.Generic) += 8;
-            if (bileDebuff)
-                player.GetArmorPenetration(DamageClass.Generic) += 15;
-            if (infected)
-                player.GetArmorPenetration(DamageClass.Generic) += 20;
             if (incisored)
-                player.GetArmorPenetration(DamageClass.Generic) += (player.GetModPlayer<RitualistPlayer>().SpiritLevel + 1) * 5;
-            if (badtime)
-                player.GetArmorPenetration(DamageClass.Generic) += 99;
+                modifiers.ArmorPenetration += (Main.player[projectile.owner].GetModPlayer<RitualistPlayer>().SpiritLevel + 1) * 5;
+            if (soaked && projectile.HasElement(ElementID.Ice))
+                modifiers.FinalDamage *= 1.15f;
         }
-        public override bool StrikeNPC(Terraria.NPC npc, ref double damage, int defense, ref float knockback, int hitDirection, ref bool crit)
+        public override void ModifyIncomingHit(Terraria.NPC npc, ref Terraria.NPC.HitModifiers modifiers)
         {
+            if (roosterBoost && Main.expertMode)
+                modifiers.Knockback *= .8f;
+            if (stomachAcid)
+                modifiers.Defense.Flat -= 8;
+            if (bileDebuff)
+                modifiers.Defense.Flat -= 15;
             if (infected)
-                damage *= 1.2;
+                modifiers.Defense.Flat -= 20;
+            if (badtime)
+                modifiers.Defense.Flat -= 99;
+            if (infected)
+                modifiers.FinalDamage *= 1.2f;
             if (infested)
             {
-                if (npc.defense > 0)
-                    npc.defense -= infestedTime / 120;
+                if (modifiers.Defense.Flat > 0)
+                    modifiers.Defense.Flat -= infestedTime / 120;
             }
             if (rallied)
-                damage *= 0.85;
+                modifiers.FinalDamage *= 0.85f;
+            if (roosterBoost && Main.expertMode)
+                modifiers.FinalDamage *= 0.9f;
             if (stoneskin)
-                damage *= 0.75;
+                modifiers.FinalDamage *= 0.75f;
             if (brokenArmor)
-                damage += npc.defense / 2;
+                modifiers.Defense *= .5f;
             if (sandDust)
-                damage += npc.defense / 6;
-            return true;
+                modifiers.Defense *= .75f;
         }
-        public override void ModifyHitPlayer(Terraria.NPC npc, Terraria.Player target, ref int damage, ref bool crit)
+        public override void ModifyHitPlayer(Terraria.NPC npc, Terraria.Player target, ref Terraria.Player.HurtModifiers modifiers)
         {
-            if (rallied)
-                damage = (int)(damage * 1.15f);
+            if (rallied || roosterBoost)
+                modifiers.IncomingDamageMultiplier *= 1.15f;
             if (dragonblaze)
-                damage = (int)(damage * 0.85f);
+                modifiers.IncomingDamageMultiplier *= .85f;
             if (disarmed)
-                damage = (int)(damage * 0.2f);
+                modifiers.IncomingDamageMultiplier /= 3;
         }
-        public override void ModifyHitNPC(Terraria.NPC npc, Terraria.NPC target, ref int damage, ref float knockback, ref bool crit)
+        public override void ModifyHitNPC(Terraria.NPC npc, Terraria.NPC target, ref Terraria.NPC.HitModifiers modifiers)
         {
-            if (rallied)
-                damage = (int)(damage * 1.15f);
+            if (rallied || roosterBoost)
+                modifiers.FinalDamage *= 1.15f;
             if (dragonblaze)
-                damage = (int)(damage * 0.85f);
+                modifiers.FinalDamage *= .85f;
             if (disarmed)
-                damage = (int)(damage * 0.2f);
+                modifiers.FinalDamage /= 3;
         }
         public override void DrawEffects(Terraria.NPC npc, ref Color drawColor)
         {
             if (infected)
-                drawColor = new Color(32, 158, 88);
+                drawColor = Color.Lerp(drawColor, new Color(32, 158, 88), 0.2f);
             if (infested)
-                drawColor = new Color(197, 219, 171);
-            if (rallied)
-                drawColor = new Color(200, 150, 150);
+                drawColor = Color.Lerp(drawColor, new Color(197, 219, 171), 0.2f);
+            if (rallied || roosterBoost)
+                drawColor = Color.Lerp(drawColor, new Color(200, 150, 150), 0.2f);
             if (pureChill)
             {
-                drawColor = new Color(180, 220, 220);
+                drawColor = Color.Lerp(drawColor, new Color(180, 220, 220), 0.3f);
                 if (Main.rand.NextBool(14))
                 {
                     int sparkle = Dust.NewDust(new Vector2(npc.position.X, npc.position.Y), npc.width, npc.height, ModContent.DustType<SnowflakeDust>(), newColor: Color.White);
@@ -435,7 +485,7 @@ namespace Redemption.Globals.NPC
             }
             if (spiderSwarmed)
             {
-                if (Main.rand.NextBool(10)&& npc.alpha < 200)
+                if (Main.rand.NextBool(10) && npc.alpha < 200)
                 {
                     int dust = Dust.NewDust(npc.position, npc.width, npc.height, ModContent.DustType<SpiderSwarmerDust>(), npc.velocity.X * 0.4f, npc.velocity.Y * 0.4f);
                     Main.dust[dust].noGravity = true;
@@ -443,10 +493,10 @@ namespace Redemption.Globals.NPC
             }
             if (dragonblaze)
             {
-                drawColor = new Color(220, 150, 150);
+                drawColor = Color.Lerp(drawColor, new Color(220, 150, 150), 0.5f);
                 if (Main.rand.NextBool(5) && !Main.gamePaused)
                 {
-                    ParticleManager.NewParticle(RedeHelper.RandAreaInEntity(npc), RedeHelper.SpreadUp(1), new EmberParticle(), Color.OrangeRed, 1);
+                    ParticleManager.NewParticle(npc.RandAreaInEntity(), RedeHelper.SpreadUp(1), new EmberParticle(), Color.OrangeRed, 1);
                 }
             }
             if (iceFrozen)
@@ -461,7 +511,7 @@ namespace Redemption.Globals.NPC
             }
             if (blackHeart)
             {
-                if (Main.rand.NextBool(3)&& npc.alpha < 200)
+                if (Main.rand.NextBool(3) && npc.alpha < 200)
                 {
                     int dust = Dust.NewDust(npc.position, npc.width, npc.height, ModContent.DustType<VoidFlame>(), npc.velocity.X * 0.4f, npc.velocity.Y * 0.4f);
                     Main.dust[dust].noGravity = true;
@@ -484,9 +534,10 @@ namespace Redemption.Globals.NPC
             }
             if (electrified)
             {
-                if (Main.rand.NextBool(5) && !Main.gamePaused)
+                if (Main.rand.NextBool(10) && !Main.gamePaused)
                 {
-                    DustHelper.DrawParticleElectricity(new Vector2(npc.position.X, npc.position.Y + Main.rand.Next(0, npc.height)), new Vector2(npc.TopRight.X, npc.TopRight.Y + Main.rand.Next(0, npc.height)), new LightningParticle(), 1f, 10, 0.2f);
+                    DustHelper.DrawParticleElectricity<LightningParticle>(new Vector2(npc.position.X, npc.position.Y + Main.rand.Next(0, npc.height)), new Vector2(npc.TopRight.X, npc.TopRight.Y + Main.rand.Next(0, npc.height)), .5f, 10, 0.2f);
+                    DustHelper.DrawParticleElectricity<LightningParticle>(new Vector2(npc.TopRight.X, npc.TopRight.Y + Main.rand.Next(0, npc.height)), new Vector2(npc.position.X, npc.position.Y + Main.rand.Next(0, npc.height)), .5f, 10, 0.2f);
                 }
             }
             if (stomachAcid)
@@ -498,7 +549,13 @@ namespace Redemption.Globals.NPC
             if (holyFire)
             {
                 if (Main.rand.NextBool(4) && !Main.gamePaused)
-                    ParticleManager.NewParticle(RedeHelper.RandAreaInEntity(npc), new Vector2(0, -1), new GlowParticle2(), Color.LightGoldenrodYellow, 1, .45f, Main.rand.Next(50, 60));
+                    ParticleManager.NewParticle(npc.RandAreaInEntity(), new Vector2(0, -1), new GlowParticle2(), Color.LightGoldenrodYellow, 1, .45f, Main.rand.Next(50, 60));
+            }
+            if (soaked)
+            {
+                drawColor = Color.Lerp(drawColor, new Color(100, 100, 255), 0.5f);
+                if (Main.rand.NextBool(3))
+                    Dust.NewDust(npc.position - new Vector2(2f, 2f), npc.width + 4, npc.height + 4, DustID.Water, npc.velocity.X * 0.4f, npc.velocity.Y * 0.4f, Scale: 2);
             }
         }
 
@@ -596,12 +653,21 @@ namespace Redemption.Globals.NPC
                     npc.velocity.Y *= 0.94f;
                 npc.velocity.X *= 0.94f;
             }
+            if (soaked && npc.knockBackResist > 0 && !npc.boss)
+            {
+                if (npc.noGravity)
+                    npc.velocity.Y *= 0.96f;
+                if (!npc.noTileCollide)
+                    npc.velocity.Y += 0.04f;
+
+                npc.velocity.X *= 0.96f;
+            }
         }
-        public override void HitEffect(Terraria.NPC npc, int hitDirection, double damage)
+        public override void HitEffect(Terraria.NPC npc, Terraria.NPC.HitInfo hit)
         {
             if (npc.life <= 0 && necroticGouge && npc.lifeMax > 5)
             {
-                SoundEngine.PlaySound(SoundID.NPCDeath19, npc.position);
+                SoundEngine.PlaySound(SoundID.NPCDeath19);
                 for (int i = 0; i < 20; i++)
                 {
                     int dustIndex4 = Dust.NewDust(new Vector2(npc.position.X, npc.position.Y), npc.width, npc.height, DustID.Blood, Scale: 3f);
@@ -613,9 +679,9 @@ namespace Redemption.Globals.NPC
                         Projectile.NewProjectile(npc.GetSource_FromAI(), npc.Center, RedeHelper.SpreadUp(14), ModContent.ProjectileType<Blood_Proj>(), npc.damage, 0, Main.myPlayer);
                 }
             }
-            if (iceFrozen)
+            if (iceFrozen && hit.Damage > 1)
             {
-                SoundEngine.PlaySound(SoundID.DD2_WitherBeastCrystalImpact, npc.position);
+                SoundEngine.PlaySound(SoundID.DD2_WitherBeastCrystalImpact);
                 Dust.NewDust(new Vector2(npc.position.X, npc.position.Y), npc.width, npc.height, DustID.Ice, Scale: 1);
             }
         }

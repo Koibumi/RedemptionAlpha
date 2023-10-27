@@ -1,8 +1,11 @@
 using Microsoft.Xna.Framework;
+using Redemption.Globals;
+using Redemption.Projectiles.Melee;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.Items.Weapons.PostML.Melee
@@ -11,16 +14,16 @@ namespace Redemption.Items.Weapons.PostML.Melee
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Automated Hacksaw");
-            Tooltip.SetDefault("Right-click to change attack modes");
-            SacrificeTotal = 1;
+            // DisplayName.SetDefault("Automated Hacksaw");
+            // Tooltip.SetDefault("Right-click to change attack modes");
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
         {
             // Common Properties
-            Item.width = 50;
-            Item.height = 50;
+            Item.width = 54;
+            Item.height = 82;
             Item.rare = ItemRarityID.Purple;
             Item.value = Item.sellPrice(0, 7, 50);
 
@@ -32,7 +35,7 @@ namespace Redemption.Items.Weapons.PostML.Melee
             Item.autoReuse = false;
 
             // Weapon Properties
-            Item.damage = 130;
+            Item.damage = 160;
             Item.knockBack = 4;
             Item.noUseGraphic = true;
             Item.DamageType = DamageClass.Melee;
@@ -73,13 +76,13 @@ namespace Redemption.Items.Weapons.PostML.Melee
                 switch (AttackMode)
                 {
                     case 0:
-                        CombatText.NewText(player.getRect(), Color.LightCyan, "Attack Mode 1", true, false);
+                        CombatText.NewText(player.getRect(), Color.LightCyan, Language.GetTextValue("Mods.Redemption.Items.Hacksaw.Mode1"), true, false);
                         break;
                     case 1:
-                        CombatText.NewText(player.getRect(), Color.LightCyan, "Attack Mode 2", true, false);
+                        CombatText.NewText(player.getRect(), Color.LightCyan, Language.GetTextValue("Mods.Redemption.Items.Hacksaw.Mode2"), true, false);
                         break;
                     case 2:
-                        CombatText.NewText(player.getRect(), Color.LightCyan, "Attack Mode 3", true, false);
+                        CombatText.NewText(player.getRect(), Color.LightCyan, Language.GetTextValue("Mods.Redemption.Items.Hacksaw.Mode3"), true, false);
                         break;
                 }
             }
@@ -104,16 +107,20 @@ namespace Redemption.Items.Weapons.PostML.Melee
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
             string shotType = "";
+            if (AttackMode is 1)
+                Item.ExtraItemShoot(ModContent.ProjectileType<Hacksaw_Heat_Proj>());
+            else
+                Item.ExtraItemShoot();
             switch (AttackMode)
             {
                 case 0:
-                    shotType = "Attack Mode 1: Swings the hacksaw in a circle around the user";
+                    shotType = Language.GetTextValue("Mods.Redemption.Items.Hacksaw.AttackMode1");
                     break;
                 case 1:
-                    shotType = "Attack Mode 2: Revves up the blade, causing it to overheat and firing a powerful heat blast";
+                    shotType = Language.GetTextValue("Mods.Redemption.Items.Hacksaw.AttackMode2.1") + ElementID.FireS + Language.GetTextValue("Mods.Redemption.Items.Hacksaw.AttackMode2.2");
                     break;
                 case 2:
-                    shotType = "Attack Mode 3: Acts like a normal chainsaw, doing increasing damage over the time spent damaging a target";
+                    shotType = Language.GetTextValue("Mods.Redemption.Items.Hacksaw.AttackMode3");
                     break;
             }
             TooltipLine line = new(Mod, "ShotName", shotType)
@@ -123,8 +130,7 @@ namespace Redemption.Items.Weapons.PostML.Melee
             tooltips.Add(line);
             if (Main.keyState.PressingShift())
             {
-                TooltipLine line2 = new(Mod, "Lore",
-                    "\"Alright, who's dumb enough to confuse a chainsaw and a hacksaw, seriously guys.\"")
+                TooltipLine line2 = new(Mod, "Lore", Language.GetTextValue("Mods.Redemption.Items.Hacksaw.Lore"))
                 {
                     OverrideColor = Color.LightGray
                 };
@@ -132,7 +138,7 @@ namespace Redemption.Items.Weapons.PostML.Melee
             }
             else
             {
-                TooltipLine line2 = new(Mod, "HoldShift", "There's a sticky note attached [Hold Shift to Read]")
+                TooltipLine line2 = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.Items.Hacksaw.Viewer"))
                 {
                     OverrideColor = Color.Gray,
                 };

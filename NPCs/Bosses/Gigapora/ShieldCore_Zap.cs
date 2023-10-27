@@ -16,7 +16,7 @@ namespace Redemption.NPCs.Bosses.Gigapora
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Dualcast");
+            // DisplayName.SetDefault("Dualcast");
         }
         public override void SetDefaults()
         {
@@ -27,7 +27,7 @@ namespace Redemption.NPCs.Bosses.Gigapora
             Projectile.tileCollide = false;
             Projectile.timeLeft = 360;
         }
-        public override bool CanHitPlayer(Player target) => Projectile.ai[1] >= 40;
+        public override bool CanHitPlayer(Player target) => Projectile.ai[1] >= 60;
         private bool Flare;
         private int FlareTimer;
         public override void AI()
@@ -36,7 +36,7 @@ namespace Redemption.NPCs.Bosses.Gigapora
             if (!host.active || host.type != ModContent.NPCType<Gigapora_ShieldCore>())
                 Projectile.Kill();
 
-            if (Projectile.ai[1]++ < 40)
+            if (Projectile.ai[1]++ < 60)
             {
                 for (int k = 0; k < 2; k++)
                 {
@@ -51,12 +51,12 @@ namespace Redemption.NPCs.Bosses.Gigapora
                     dust2.velocity = dust2.position.DirectionTo(Projectile.Center) * 6f;
                 }
             }
-            if (Projectile.ai[1] == 40)
+            if (Projectile.ai[1] == 60)
             {
                 if (!Main.dedServ)
                     SoundEngine.PlaySound(CustomSounds.Zap2, Projectile.position);
-                DustHelper.DrawParticleElectricity(host.Center, Projectile.Center, new LightningParticle(), 2f, 20, 0.1f, 2);
-                DustHelper.DrawParticleElectricity(host.Center, Projectile.Center, new LightningParticle(), 2f, 20, 0.1f, 2);
+                DustHelper.DrawParticleElectricity<LightningParticle>(host.Center, Projectile.Center, 2f, 20, 0.1f, 2);
+                DustHelper.DrawParticleElectricity<LightningParticle>(host.Center, Projectile.Center, 2f, 20, 0.1f, 2);
                 Flare = true;
             }
             if (Flare)
@@ -69,7 +69,7 @@ namespace Redemption.NPCs.Bosses.Gigapora
         public override void PostDraw(Color lightColor)
         {
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginAdditive();
 
             Texture2D flare = ModContent.Request<Texture2D>("Redemption/Textures/WhiteFlare").Value;
             Rectangle rect = new(0, 0, flare.Width, flare.Height);
@@ -82,7 +82,7 @@ namespace Redemption.NPCs.Bosses.Gigapora
                 Main.spriteBatch.Draw(flare, position, new Rectangle?(rect), colour * 1f, 0, origin, 2f, SpriteEffects.None, 0);
             }
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginDefault();
         }
     }
 }

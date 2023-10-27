@@ -12,9 +12,10 @@ namespace Redemption.NPCs.Bosses.Keeper
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Blood Wave");
+            // DisplayName.SetDefault("Blood Wave");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 4;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjBlood[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -56,7 +57,7 @@ namespace Redemption.NPCs.Bosses.Keeper
             return false;
         }
 
-        public override void OnHitPlayer(Player target, int damage, bool crit)
+        public override void OnHitPlayer(Player target, Player.HurtInfo info)
         {
             target.AddBuff(BuffID.Bleeding, 260);
 

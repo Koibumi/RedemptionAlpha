@@ -5,7 +5,9 @@ using Redemption.Items.Materials.PostML;
 using Redemption.Items.Usable.Potions;
 using Terraria;
 using Terraria.DataStructures;
+using Terraria.GameContent.ObjectInteractions;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 
@@ -18,6 +20,9 @@ namespace Redemption.Tiles.Furniture.Lab
             Main.tileFrameImportant[Type] = true;
             Main.tileLavaDeath[Type] = false;
             Main.tileNoAttach[Type] = true;
+            TileID.Sets.FramesOnKillWall[Type] = true;
+            TileID.Sets.HasOutlines[Type] = true;
+            TileID.Sets.DisableSmartCursor[Type] = true;
             TileObjectData.newTile.Width = 2;
             TileObjectData.newTile.Height = 2;
             TileObjectData.newTile.CoordinateHeights = new int[] { 16, 16 };
@@ -29,9 +34,15 @@ namespace Redemption.Tiles.Furniture.Lab
             DustType = ModContent.DustType<LabPlatingDust>();
             MinPick = 300;
             MineResist = 8f;
-            ModTranslation name = CreateMapEntryName();
-            name.SetDefault("Laboratory Cabinet");
+            LocalizedText name = CreateMapEntryName();
+            // name.SetDefault("Laboratory Cabinet");
             AddMapEntry(new Color(189, 191, 200), name);
+        }
+        public override bool HasSmartInteract(int i, int j, SmartInteractScanSettings settings)
+        {
+            int left = i - Main.tile[i, j].TileFrameX / 18 % 2;
+            int top = j - Main.tile[i, j].TileFrameY / 18 % 2;
+            return Main.tile[left, top].TileFrameX == 0;
         }
         public override void MouseOver(int i, int j)
         {
@@ -56,7 +67,7 @@ namespace Redemption.Tiles.Furniture.Lab
                     player.QuickSpawnItem(new EntitySource_TileInteraction(player, i, j), ItemID.AdhesiveBandage);
                 if (Main.rand.NextBool(20))
                     player.QuickSpawnItem(new EntitySource_TileInteraction(player, i, j), ItemID.Vitamins);
-                if (Main.rand.NextBool(66666))
+                if (Main.rand.NextBool(666))
                     player.QuickSpawnItem(new EntitySource_TileInteraction(player, i, j), ModContent.ItemType<Panacea>());
             }
             for (int x = left; x < left + 2; x++)
@@ -73,11 +84,11 @@ namespace Redemption.Tiles.Furniture.Lab
     }
     public class LabCabinet : PlaceholderTile
     {
-        public override string Texture => "Redemption/Placeholder";
-        public override void SetStaticDefaults()
+        public override string Texture => Redemption.PLACEHOLDER_TEXTURE;
+        public override void SetSafeStaticDefaults()
         {
-            DisplayName.SetDefault("Laboratory Cabinet");
-            Tooltip.SetDefault("Gives Radiation Pills");
+            // DisplayName.SetDefault("Laboratory Cabinet");
+            // Tooltip.SetDefault("Gives Radiation Pills");
         }
 
         public override void SetDefaults()

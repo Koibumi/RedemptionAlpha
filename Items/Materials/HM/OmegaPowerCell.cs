@@ -14,13 +14,13 @@ namespace Redemption.Items.Materials.HM
 		{
 			Main.RegisterItemAnimation(Item.type, new DrawAnimationVertical(4, 4));
             ItemID.Sets.AnimatesAsSoul[Item.type] = true;
-            SacrificeTotal = 25;
+            Item.ResearchUnlockCount = 25;
         }
 		public override void SetDefaults()
 		{
 			Item.width = 18;
 			Item.height = 40;
-			Item.maxStack = 9999;
+			Item.maxStack = Item.CommonMaxStack;
 			Item.value = Item.sellPrice(0, 0, 20, 0);
 			Item.rare = ItemRarityID.Red;
         }
@@ -31,7 +31,7 @@ namespace Redemption.Items.Materials.HM
         public override bool PreDrawInWorld(SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI)
         {
             Texture2D texture = TextureAssets.Item[Item.type].Value;
-            Texture2D textureGlow = ModContent.Request<Texture2D>(Item.ModItem.Texture + "_Glow").Value;
+            Texture2D textureGlow = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
             Rectangle frame;
             if (Main.itemAnimations[Item.type] != null)
                 frame = Main.itemAnimations[Item.type].GetFrame(texture, Main.itemFrameCounter[whoAmI]);

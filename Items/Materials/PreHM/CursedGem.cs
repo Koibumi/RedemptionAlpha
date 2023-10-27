@@ -4,6 +4,7 @@ using Terraria.ModLoader;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.Base;
+using Redemption.Items.Usable;
 
 namespace Redemption.Items.Materials.PreHM
 {
@@ -11,9 +12,9 @@ namespace Redemption.Items.Materials.PreHM
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("'A gem... or an eye?'");
-
-            SacrificeTotal = 1;
+            // Tooltip.SetDefault("'A gem... or an eye?'");
+            ItemID.Sets.ShimmerTransformToItem[Type] = ModContent.ItemType<ChaliceFragments>();
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()

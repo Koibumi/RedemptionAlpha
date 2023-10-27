@@ -22,6 +22,8 @@ namespace Redemption.Projectiles.Melee
         public override void SetStaticDefaults()
         {
             ProjectileID.Sets.CultistIsResistantTo[Projectile.type] = true;
+            ElementID.ProjShadow[Type] = true;
+            ElementID.ProjCelestial[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -53,7 +55,7 @@ namespace Redemption.Projectiles.Melee
                 if (Main.rand.NextBool(30) && Main.myPlayer == Projectile.owner)
                 {
                     SoundEngine.PlaySound(SoundID.Item9 with { Volume = .5f }, Projectile.position);
-                    Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, RedeHelper.PolarVector(8, Main.rand.NextFloat(0, MathHelper.TwoPi)), ModContent.ProjectileType<NebulaSpark>(), Projectile.damage / 2, 1, player.whoAmI);
+                    Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, RedeHelper.PolarVector(8, RedeHelper.RandomRotation()), ModContent.ProjectileType<NebulaSpark>(), Projectile.damage / 2, 1, player.whoAmI);
                 }
                 Vector2 move = Vector2.Zero;
                 float distance = 900f;
@@ -99,7 +101,7 @@ namespace Redemption.Projectiles.Melee
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
             return false;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             for (int i = 0; i < 5; i++)
                 ParticleManager.NewParticle(Projectile.Center, RedeHelper.Spread(6), new RainbowParticle(), Color.White, 0.3f);
@@ -111,6 +113,8 @@ namespace Redemption.Projectiles.Melee
         public override void SetStaticDefaults()
         {
             ProjectileID.Sets.CultistIsResistantTo[Projectile.type] = true;
+            ElementID.ProjShadow[Type] = true;
+            ElementID.ProjCelestial[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -181,7 +185,7 @@ namespace Redemption.Projectiles.Melee
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
             return false;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             Dust dust = Dust.NewDustPerfect(Projectile.Center, ModContent.DustType<GlowDust>(), Vector2.Zero, 1);
             dust.noGravity = true;

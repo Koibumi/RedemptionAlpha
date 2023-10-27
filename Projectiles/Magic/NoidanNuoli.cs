@@ -3,6 +3,7 @@ using Terraria.ModLoader;
 using Microsoft.Xna.Framework;
 using Redemption.Dusts;
 using Redemption.Base;
+using Redemption.Globals;
 
 namespace Redemption.Projectiles.Magic
 {
@@ -10,7 +11,8 @@ namespace Redemption.Projectiles.Magic
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Noidan Nuoli");
+            // DisplayName.SetDefault("Noidan Nuoli");
+            ElementID.ProjArcane[Type] = true;
         }
 
         public override void SetDefaults()
@@ -37,7 +39,7 @@ namespace Redemption.Projectiles.Magic
                 dust.noGravity = true;
             }
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             int dustType = ModContent.DustType<NoidanSauvaDust>();
             int pieCut = 16;

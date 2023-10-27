@@ -16,6 +16,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Redemption.BaseExtension;
 using Terraria.DataStructures;
+using Terraria.Localization;
 
 namespace Redemption.NPCs.Critters
 {
@@ -57,6 +58,7 @@ namespace Redemption.NPCs.Critters
         public override void SetStaticDefaults()
         {
             Main.npcFrameCount[Type] = 21;
+            NPCID.Sets.ShimmerTransformToNPC[NPC.type] = ModContent.NPCType<LongChicken>();
             NPCID.Sets.CountsAsCritter[Type] = true;
             NPCID.Sets.DontDoHardmodeScaling[Type] = true;
             NPCID.Sets.TakesDamageFromHostilesWithoutBeingFriendly[Type] = true;
@@ -91,21 +93,21 @@ namespace Redemption.NPCs.Critters
             npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<ChickenEgg>(), 2, 1, 2));
             npcLoot.Add(ItemDropRule.ByCondition(new OnFireCondition(), ModContent.ItemType<FriedChicken>()));
         }
-        public override void OnHitByItem(Player player, Item item, int damage, float knockback, bool crit)
+        public override void OnHitByItem(Player player, Item item, NPC.HitInfo hit, int damageDone)
         {
             if (NPC.life <= 0)
             {
-                if (ItemLists.Fire.Contains(item.type))
+                if (item.HasElement(ElementID.Fire))
                     Item.NewItem(NPC.GetSource_Loot(), NPC.getRect(), ModContent.ItemType<FriedChicken>());
                 else if (NPC.FindBuffIndex(BuffID.OnFire) != -1 || NPC.FindBuffIndex(BuffID.OnFire3) != -1)
                     Item.NewItem(NPC.GetSource_Loot(), NPC.getRect(), ModContent.ItemType<FriedChicken>());
             }
         }
-        public override void OnHitByProjectile(Projectile projectile, int damage, float knockback, bool crit)
+        public override void OnHitByProjectile(Projectile projectile, NPC.HitInfo hit, int damageDone)
         {
             if (NPC.life <= 0)
             {
-                if (ProjectileLists.Fire.Contains(projectile.type))
+                if (projectile.HasElement(ElementID.Fire))
                     Item.NewItem(NPC.GetSource_Loot(), NPC.getRect(), ModContent.ItemType<FriedChicken>());
                 else if (NPC.FindBuffIndex(BuffID.OnFire) != -1 || NPC.FindBuffIndex(BuffID.OnFire3) != -1)
                     Item.NewItem(NPC.GetSource_Loot(), NPC.getRect(), ModContent.ItemType<FriedChicken>());
@@ -182,6 +184,13 @@ namespace Redemption.NPCs.Critters
                     if (NPC.velocity.Y == 0)
                         NPC.velocity.X = 0;
 
+                    if (NPC.frame.Y > 20 * 28)
+                    {
+                        NPC.frame.Y = 0;
+                        AIState = ActionState.Idle;
+                        NPC.netUpdate = true;
+                    }
+
                     SightCheck();
                     break;
 
@@ -229,7 +238,7 @@ namespace Redemption.NPCs.Critters
                         AIState = ActionState.Idle;
                     }
 
-                    RedeHelper.HorizontallyMove(NPC, moveTo * 16, 0.2f, 1, 6, 6, false);
+                    NPCHelper.HorizontallyMove(NPC, moveTo * 16, 0.2f, 1, 6, 6, false);
                     break;
 
                 case ActionState.Alert:
@@ -259,8 +268,7 @@ namespace Redemption.NPCs.Critters
                     if (Main.rand.NextBool(20) && NPC.velocity.Length() >= 2)
                         Dust.NewDust(NPC.position, NPC.width, NPC.height, FeatherType);
 
-                    RedeHelper.HorizontallyMove(NPC, new Vector2(globalNPC.attacker.Center.X < NPC.Center.X ? NPC.Center.X + 100
-                        : NPC.Center.X - 100, NPC.Center.Y), 0.2f, 2.5f, 8, 8, NPC.Center.Y > globalNPC.attacker.Center.Y);
+                    NPCHelper.HorizontallyMove(NPC, new Vector2(NPC.Center.X + (100 * NPC.RightOfDir(globalNPC.attacker)), NPC.Center.Y), 0.2f, 2.5f, 8, 8, NPC.Center.Y > globalNPC.attacker.Center.Y, globalNPC.attacker);
                     break;
             }
             NPC.alpha = 0;
@@ -281,83 +289,76 @@ namespace Redemption.NPCs.Critters
         public override void FindFrame(int frameHeight)
         {
             if (Main.netMode != NetmodeID.Server)
-            {
                 NPC.frame.Width = TextureAssets.Npc[NPC.type].Width() / 4;
-                NPC.frame.X = ChickType switch
+            NPC.frame.X = ChickType switch
+            {
+                ChickenType.Red => NPC.frame.Width,
+                ChickenType.Leghorn => NPC.frame.Width * 2,
+                ChickenType.Black => NPC.frame.Width * 3,
+                _ => 0,
+            };
+
+            if (AIState is ActionState.Peck)
+            {
+                NPC.rotation = 0;
+
+                if (NPC.frame.Y < 14 * frameHeight)
+                    NPC.frame.Y = 14 * frameHeight;
+
+                NPC.frameCounter++;
+                if (NPC.frameCounter >= 5)
                 {
-                    ChickenType.Red => NPC.frame.Width,
-                    ChickenType.Leghorn => NPC.frame.Width * 2,
-                    ChickenType.Black => NPC.frame.Width * 3,
-                    _ => 0,
-                };
-
-                if (AIState is ActionState.Peck)
-                {
-                    NPC.rotation = 0;
-
-                    if (NPC.frame.Y < 14 * frameHeight)
-                        NPC.frame.Y = 14 * frameHeight;
-
-                    NPC.frameCounter++;
-                    if (NPC.frameCounter >= 5)
-                    {
-                        NPC.frameCounter = 0;
-                        NPC.frame.Y += frameHeight;
-                        if (NPC.frame.Y > 20 * frameHeight)
-                        {
-                            NPC.frame.Y = 0;
-                            AIState = ActionState.Idle;
-                        }
-                    }
-                    return;
+                    NPC.frameCounter = 0;
+                    NPC.frame.Y += frameHeight;
+                    if (NPC.frame.Y > 20 * frameHeight)
+                        NPC.frame.Y = 20 * frameHeight;
                 }
-                if (AIState is ActionState.Sit)
+                return;
+            }
+            if (AIState is ActionState.Sit)
+            {
+                NPC.rotation = 0;
+
+                if (NPC.frame.Y < 9 * frameHeight)
+                    NPC.frame.Y = 9 * frameHeight;
+
+                NPC.frameCounter++;
+                if (NPC.frameCounter >= 10)
                 {
-                    NPC.rotation = 0;
-
-                    if (NPC.frame.Y < 9 * frameHeight)
-                        NPC.frame.Y = 9 * frameHeight;
-
-                    NPC.frameCounter++;
-                    if (NPC.frameCounter >= 10)
-                    {
-                        NPC.frameCounter = 0;
-                        NPC.frame.Y += frameHeight;
-                        if (NPC.frame.Y > 13 * frameHeight)
-                        {
-                            NPC.frame.Y = 13 * frameHeight;
-                        }
-                    }
-                    return;
+                    NPC.frameCounter = 0;
+                    NPC.frame.Y += frameHeight;
+                    if (NPC.frame.Y > 13 * frameHeight)
+                        NPC.frame.Y = 13 * frameHeight;
                 }
+                return;
+            }
 
-                if (NPC.collideY || NPC.velocity.Y == 0)
+            if (NPC.collideY || NPC.velocity.Y == 0)
+            {
+                NPC.rotation = 0;
+                if (NPC.velocity.X == 0)
                 {
-                    NPC.rotation = 0;
-                    if (NPC.velocity.X == 0)
-                    {
-                        NPC.frame.Y = 0;
-                    }
-                    else
-                    {
-                        if (NPC.frame.Y < 1 * frameHeight)
-                            NPC.frame.Y = 1 * frameHeight;
-
-                        NPC.frameCounter += NPC.velocity.X * 0.75f;
-                        if (NPC.frameCounter is >= 5 or <= -5)
-                        {
-                            NPC.frameCounter = 0;
-                            NPC.frame.Y += frameHeight;
-                            if (NPC.frame.Y > 8 * frameHeight)
-                                NPC.frame.Y = 1 * frameHeight;
-                        }
-                    }
+                    NPC.frame.Y = 0;
                 }
                 else
                 {
-                    NPC.rotation = NPC.velocity.X * 0.05f;
-                    NPC.frame.Y = 2 * frameHeight;
+                    if (NPC.frame.Y < 1 * frameHeight)
+                        NPC.frame.Y = 1 * frameHeight;
+
+                    NPC.frameCounter += NPC.velocity.X * 0.75f;
+                    if (NPC.frameCounter is >= 5 or <= -5)
+                    {
+                        NPC.frameCounter = 0;
+                        NPC.frame.Y += frameHeight;
+                        if (NPC.frame.Y > 8 * frameHeight)
+                            NPC.frame.Y = 1 * frameHeight;
+                    }
                 }
+            }
+            else
+            {
+                NPC.rotation = NPC.velocity.X * 0.05f;
+                NPC.frame.Y = 2 * frameHeight;
             }
         }
 
@@ -396,12 +397,11 @@ namespace Redemption.NPCs.Critters
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Biomes.Surface,
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Times.DayTime,
 
-                new FlavorTextBestiaryInfoElement(
-                    "These chickens somehow found their way through the portal from the mainland. Being true to their name, they will flee at the sight of danger. They are most comfortable on hay, and will even lay eggs while sitting on it!")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.Chicken"))
             });
         }
 
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (AIState is not ActionState.Alert)
             {

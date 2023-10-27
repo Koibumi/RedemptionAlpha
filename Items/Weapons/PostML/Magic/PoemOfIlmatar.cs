@@ -1,6 +1,4 @@
 using Microsoft.Xna.Framework;
-using Redemption.Globals;
-using Redemption.Items.Materials.PostML;
 using Redemption.Projectiles.Magic;
 using Redemption.Rarities;
 using Terraria;
@@ -13,14 +11,14 @@ namespace Redemption.Items.Weapons.PostML.Magic
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Poem of Ilmatar");
-            Tooltip.SetDefault("Hold left-click to create a tornado that picks up enemies and juggles them");
-            SacrificeTotal = 1;
+            // DisplayName.SetDefault("Poem of Ilmatar");
+            // Tooltip.SetDefault("Hold left-click to create a tornado that picks up enemies and juggles them");
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
         {
-            Item.damage = 90;
+            Item.damage = 140;
             Item.DamageType = DamageClass.Magic;
             Item.mana = 40;
             Item.width = 26;

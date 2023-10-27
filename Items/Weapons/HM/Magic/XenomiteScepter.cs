@@ -15,11 +15,11 @@ namespace Redemption.Items.Weapons.HM.Magic
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Helix Scepter");
-            Tooltip.SetDefault("Casts infectious helix bolts\n" +
-                "Every consecutive shot increases the velocity of the bolts");
+            // DisplayName.SetDefault("Helix Scepter");
+            /* Tooltip.SetDefault("Casts infectious helix bolts\n" +
+                "Every consecutive shot increases the velocity of the bolts"); */
             Item.staff[Item.type] = true;
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -42,7 +42,7 @@ namespace Redemption.Items.Weapons.HM.Magic
             Item.shoot = ModContent.ProjectileType<XenomiteScepter_Proj>();
             Item.shootSpeed = 5f;
             if (!Main.dedServ)
-                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Item.ModItem.Texture + "_Glow").Value;
+                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
         }
         private int CastCount;
         public override void HoldItem(Player player)
@@ -72,8 +72,9 @@ namespace Redemption.Items.Weapons.HM.Magic
         public override void AddRecipes()
         {
             CreateRecipe()
-                .AddIngredient(ModContent.ItemType<XenomiteItem>(), 10)
-                .AddIngredient(ModContent.ItemType<ToxicBile>(), 6)
+                .AddIngredient(ModContent.ItemType<ContagionSpreader>())
+                .AddIngredient(ModContent.ItemType<Xenomite>(), 6)
+                .AddIngredient(ModContent.ItemType<ToxicBile>(), 7)
                 .AddTile(TileID.MythrilAnvil)
                 .Register();
         }

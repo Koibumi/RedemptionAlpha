@@ -2,7 +2,6 @@ using Microsoft.Xna.Framework;
 using Redemption.Globals.Player;
 using Redemption.Items.Materials.HM;
 using Redemption.Items.Materials.PostML;
-using Redemption.Items.Weapons.HM.Ammo;
 using Redemption.Projectiles.Ranged;
 using Redemption.Tiles.Furniture.Lab;
 using Terraria;
@@ -17,12 +16,12 @@ namespace Redemption.Items.Weapons.PostML.Ranged
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Hold left-click to fire blasts of electrified laser beams, which gradually increase in accuracy\n" +
+            /* Tooltip.SetDefault("Hold left-click to fire blasts of electrified laser beams, which gradually increase in accuracy\n" +
                 "Once it is 100% accurate, it will fire a large beam that deals heavy damage\n" +
                 "(5[i:" + ModContent.ItemType<EnergyPack>() + "]) Right-click to fire a precision shot that can penetrate surfaces and lingers, but has a 5 second cooldown\n" +
-                "Requires an Energy Pack to be in your inventory");
+                "Requires an Energy Pack to be in your inventory"); */
             ItemID.Sets.SkipsInitialUseSound[Item.type] = true;
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -74,7 +73,7 @@ namespace Redemption.Items.Weapons.PostML.Ranged
         {
             CreateRecipe()
                 .AddIngredient(ModContent.ItemType<XeniumAlloy>(), 14)
-                .AddIngredient(ModContent.ItemType<Capacitator>(), 2)
+                .AddIngredient(ModContent.ItemType<Capacitor>(), 2)
                 .AddIngredient(ModContent.ItemType<CarbonMyofibre>(), 6)
                 .AddTile(ModContent.TileType<XeniumRefineryTile>())
                 .Register();

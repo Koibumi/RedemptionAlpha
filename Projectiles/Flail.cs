@@ -49,7 +49,7 @@ namespace Redemption.Projectiles
 
 			SetStats(ref throwTime, ref throwSpeed, ref recoverDistance, ref recoverDistance2, ref attackCooldown);
 			float meleeSpeed = player.GetAttackSpeed(DamageClass.Melee);
-			float num18 = 1f / meleeSpeed;
+			float num18 = 1f * meleeSpeed;
 			throwSpeed *= num18;
 			num11 *= num18;
 			num12 *= num18;
@@ -268,15 +268,15 @@ namespace Redemption.Projectiles
         {
 
         }
-		public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
+		public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
 			if ( Projectile.ai[0] == 0f)
 			{
-                damage = (int)(damage * 1.2f);
+                modifiers.FinalDamage *= 1.2f;
 			}
 			if (Projectile.ai[0] == 1f || Projectile.ai[0] == 2f)
 			{
-                damage *= 2;
+                modifiers.FinalDamage *= 2;
 			}
 		}
 

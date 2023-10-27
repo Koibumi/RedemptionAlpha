@@ -14,7 +14,7 @@ namespace Redemption.NPCs.Bosses.KSIII
         public override string Texture => "Redemption/Textures/StaticBall";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Core Surge");
+            // DisplayName.SetDefault("Core Surge");
             Main.projFrames[Projectile.type] = 4;
         }
         public override void SetDefaults()
@@ -45,8 +45,8 @@ namespace Redemption.NPCs.Bosses.KSIII
             }
             if (Projectile.alpha < 200 && Main.rand.NextBool(3))
             {
-                DustHelper.DrawParticleElectricity(Projectile.Center, Projectile.Center + RedeHelper.PolarVector(280, Main.rand.NextFloat(0, MathHelper.TwoPi)), new LightningParticle(), 2f, 20, 0.1f);
-                DustHelper.DrawParticleElectricity(Projectile.Center, Projectile.Center + RedeHelper.PolarVector(280, Main.rand.NextFloat(0, MathHelper.TwoPi)), new LightningParticle(), 2f, 20, 0.1f);
+                DustHelper.DrawParticleElectricity<LightningParticle>(Projectile.Center, Projectile.Center + RedeHelper.PolarVector(280, RedeHelper.RandomRotation()), 2f, 20, 0.1f);
+                DustHelper.DrawParticleElectricity<LightningParticle>(Projectile.Center, Projectile.Center + RedeHelper.PolarVector(280, RedeHelper.RandomRotation()), 2f, 20, 0.1f);
             }
 
             Projectile.alpha += 10;
@@ -72,12 +72,12 @@ namespace Redemption.NPCs.Bosses.KSIII
             var effects = Projectile.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginAdditive();
 
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, new Rectangle?(rect), Projectile.GetAlpha(Color.LightCyan), Projectile.rotation, drawOrigin, Projectile.scale, effects, 0);
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginDefault();
             return false;
         }
     }
@@ -86,7 +86,7 @@ namespace Redemption.NPCs.Bosses.KSIII
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Core Surge");
+            // DisplayName.SetDefault("Core Surge");
         }
         public override void SetDefaults()
         {

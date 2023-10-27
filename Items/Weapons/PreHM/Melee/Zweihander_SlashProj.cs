@@ -14,7 +14,7 @@ namespace Redemption.Items.Weapons.PreHM.Melee
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Zweihander");
+            // DisplayName.SetDefault("Zweihander");
             Main.projFrames[Projectile.type] = 10;
         }
         public override bool ShouldUpdatePosition() => false;
@@ -27,18 +27,18 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             Projectile.penetrate = -1;
         }
 
-        public override bool? CanCutTiles() => false;
-
+        public override bool? CanCutTiles() => Projectile.frame is 4;
+        public override bool? CanHitNPC(NPC target) => Projectile.frame is 4 ? null : false;
         public float SwingSpeed;
         int directionLock = 0;
+        private bool parried;
         public override void AI()
         {
             Player player = Main.player[Projectile.owner];
             player.heldProj = Projectile.whoAmI;
+            Projectile.Redemption().swordHitbox = new((int)(Projectile.spriteDirection == -1 ? Projectile.Center.X - 76 : Projectile.Center.X), (int)(Projectile.Center.Y - 70), 76, 136);
 
             SwingSpeed = SetSwingSpeed(30);
-
-            Rectangle projHitbox = new((int)(Projectile.spriteDirection == -1 ? Projectile.Center.X - 70 : Projectile.Center.X), (int)(Projectile.Center.Y - 70), 70, 136);
 
             if (player.noItems || player.CCed || player.dead || !player.active)
                 Projectile.Kill();
@@ -79,10 +79,13 @@ namespace Redemption.Items.Weapons.PreHM.Melee
                                 if (!target.active || target.whoAmI == Projectile.whoAmI || !target.hostile)
                                     continue;
 
+                                if (RedeProjectile.SwordClashFriendly(Projectile, target, player, ref parried, 4))
+                                    continue;
+
                                 if (target.damage > 100 / 4 || Projectile.alpha > 0 || target.width + target.height > Projectile.width + Projectile.height)
                                     continue;
 
-                                if (target.velocity.Length() == 0 || !Projectile.Hitbox.Intersects(target.Hitbox) || target.alpha > 0 || target.minion || ProjectileID.Sets.CultistIsResistantTo[target.type] || target.Redemption().ParryBlacklist || Main.projPet[target.type])
+                                if (target.velocity.Length() == 0 || !Projectile.Redemption().swordHitbox.Intersects(target.Hitbox) || target.alpha > 0 || target.ProjBlockBlacklist(true))
                                     continue;
 
                                 SoundEngine.PlaySound(SoundID.Tink, Projectile.position);
@@ -92,7 +95,7 @@ namespace Redemption.Items.Weapons.PreHM.Melee
                                     target.hostile = false;
                                     target.friendly = true;
                                 }
-                                target.damage *= 4;
+                                target.Redemption().ReflectDamageIncrease = 4;
                                 target.velocity.X = -target.velocity.X * 0.8f;
                             }
                         }
@@ -110,19 +113,23 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             player.itemTime = 2;
             player.itemAnimation = 2;
         }
-
-        public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
+        public override void ModifyDamageHitbox(ref Rectangle hitbox)
+        {
+            hitbox = Projectile.Redemption().swordHitbox;
+        }
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
             Player player = Main.player[Projectile.owner];
             float tipBonus;
             tipBonus = player.Distance(target.Center) / 3;
             tipBonus = MathHelper.Clamp(tipBonus, 0, 20);
 
-            damage += (int)tipBonus;
-
-            RedeProjectile.Decapitation(target, ref damage, ref crit);
+            modifiers.FlatBonusDamage += (int)tipBonus;
         }
-
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            RedeProjectile.Decapitation(target, ref damageDone, ref hit.Crit);
+        }
         public override bool PreDraw(ref Color lightColor)
         {
             Player player = Main.player[Projectile.owner];
@@ -147,12 +154,6 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             if (Projectile.frame >= 3 && Projectile.frame <= 6)
                 Main.EntitySpriteDraw(slash, Projectile.Center - Main.screenPosition - new Vector2(11 * player.direction, -192 - offset) + Vector2.UnitY * Projectile.gfxOffY, new Rectangle?(rect2), Projectile.GetAlpha(Color.White), Projectile.rotation, drawOrigin2, Projectile.scale, effects, 0);
             return false;
-        }
-
-        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
-        {
-            projHitbox = new((int)(Projectile.spriteDirection == -1 ? Projectile.Center.X - 70 : Projectile.Center.X), (int)(Projectile.Center.Y - 70), 70, 136);
-            return Projectile.frame is 4 && projHitbox.Intersects(targetHitbox);
         }
     }
 }

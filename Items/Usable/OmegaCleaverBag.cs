@@ -18,21 +18,21 @@ namespace Redemption.Items.Usable
 	{
 		public override void SetStaticDefaults()
 		{
-			DisplayName.SetDefault("Treasure Box (Omega Cleaver)");
-			Tooltip.SetDefault("{$CommonItemTooltip.RightClickToOpen}");
+			// DisplayName.SetDefault("Treasure Box (Omega Cleaver)");
+			// Tooltip.SetDefault("{$CommonItemTooltip.RightClickToOpen}");
             ItemID.Sets.BossBag[Type] = true;
-            SacrificeTotal = 3;
+            Item.ResearchUnlockCount = 3;
         }
 		public override void SetDefaults()
 		{
-			Item.maxStack = 9999;
+			Item.maxStack = Item.CommonMaxStack;
 			Item.consumable = true;
 			Item.width = 24;
 			Item.height = 24;
 			Item.rare = ItemRarityID.Expert;
 			Item.expert = true;
             if (!Main.dedServ)
-                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Item.ModItem.Texture + "_Glow").Value;
+                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
         }
 		public override bool CanRightClick() => true;
         public override void RightClick(Player player)
@@ -46,7 +46,7 @@ namespace Redemption.Items.Usable
         }
         public override void ModifyItemLoot(ItemLoot itemLoot)
         {
-            itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<SwordHeadband>(), 7));
+            itemLoot.Add(ItemDropRule.NotScalingWithLuck(ModContent.ItemType<SwordHeadband>(), 7));
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<GonkPet>(), 10));
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<CorruptedXenomite>(), 1, 4, 8));
             itemLoot.Add(ItemDropRule.Common(ModContent.ItemType<BrokenBlade>()));

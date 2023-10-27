@@ -10,8 +10,9 @@ namespace Redemption.Items.Placeable.Tiles
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Laboratory Panel");
-            SacrificeTotal = 100;
+            // DisplayName.SetDefault("Laboratory Panel");
+            ItemID.Sets.ShimmerTransformToItem[Type] = ModContent.ItemType<LabPlatingUnsafe2>();
+            Item.ResearchUnlockCount = 100;
         }
 
         public override void SetDefaults()
@@ -19,7 +20,7 @@ namespace Redemption.Items.Placeable.Tiles
             Item.DefaultToPlaceableTile(ModContent.TileType<LabPlatingTile>(), 0);
             Item.width = 16;
             Item.height = 16;
-            Item.maxStack = 9999;
+            Item.maxStack = Item.CommonMaxStack;
             Item.value = Item.buyPrice(0, 0, 2, 0);
             Item.rare = ItemRarityID.LightPurple;
         }
@@ -34,9 +35,8 @@ namespace Redemption.Items.Placeable.Tiles
                 .AddIngredient(ModContent.ItemType<LabPlatingWall>(), 4)
                 .AddTile(TileID.WorkBenches)
                 .Register();
-            CreateRecipe(2)
+            CreateRecipe()
                .AddIngredient(ModContent.ItemType<LabPlatform>(), 2)
-               .AddTile(TileID.WorkBenches)
                .Register();
         }
     }

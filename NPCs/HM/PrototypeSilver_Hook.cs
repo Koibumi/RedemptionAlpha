@@ -13,7 +13,7 @@ namespace Redemption.NPCs.HM
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Prototype Silver");
+            // DisplayName.SetDefault("Prototype Silver");
         }
         public override void SetDefaults()
         {
@@ -26,13 +26,14 @@ namespace Redemption.NPCs.HM
             Projectile.ignoreWater = true;
             Projectile.Redemption().TechnicallyMelee = true;
             Projectile.Redemption().ParryBlacklist = true;
+            Projectile.Redemption().friendlyHostile = true;
         }
         public override bool? CanHitNPC(NPC target)
         {
             NPC host = Main.npc[(int)Projectile.ai[0]];
             return target == host.Redemption().attacker ? null : false;
         }
-        public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection) => damage *= 4;
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers) => modifiers.FinalDamage *= 4;
         public override void AI()
         {
             NPC host = Main.npc[(int)Projectile.ai[0]];
@@ -90,8 +91,8 @@ namespace Redemption.NPCs.HM
             NPC host = Main.npc[(int)Projectile.ai[0]];
             Texture2D ballTexture = TextureAssets.Projectile[Projectile.type].Value;
             Vector2 anchorPos = Projectile.Center;
-            Texture2D chainTexture = ModContent.Request<Texture2D>(Projectile.ModProjectile.Texture + "_Chain").Value;
-            Texture2D endTexture = ModContent.Request<Texture2D>(Projectile.ModProjectile.Texture + "_End").Value;
+            Texture2D chainTexture = ModContent.Request<Texture2D>(Texture + "_Chain").Value;
+            Texture2D endTexture = ModContent.Request<Texture2D>(Texture + "_End").Value;
             Vector2 HeadPos = host.Center + new Vector2(-11 * host.spriteDirection, -9);
             Vector2 HeadPosStatic = host.Center + new Vector2(-11 * host.spriteDirection, -9);
             Rectangle sourceRectangle = new(0, 0, chainTexture.Width, chainTexture.Height);

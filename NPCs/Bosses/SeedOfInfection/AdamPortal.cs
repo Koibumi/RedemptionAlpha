@@ -18,7 +18,7 @@ namespace Redemption.NPCs.Bosses.SeedOfInfection
         public override string Texture => "Redemption/Textures/PortalTex";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Portal to Another World (no way...)");
+            // DisplayName.SetDefault("Portal to Another World (no way...)");
         }
         public override void SetDefaults()
         {
@@ -114,14 +114,19 @@ namespace Redemption.NPCs.Bosses.SeedOfInfection
             int shader = GameShaders.Armor.GetShaderIdFromItemId(ItemID.NegativeDye);
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
-            GameShaders.Armor.ApplySecondary(shader, Main.player[Main.myPlayer], null);
+            Main.spriteBatch.BeginAdditive(true);
+            GameShaders.Armor.ApplySecondary(shader, Main.LocalPlayer, null);
 
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, Projectile.GetAlpha(Color.LightGreen) * 0.6f, -Projectile.rotation, drawOrigin, Projectile.scale * 1.7f, SpriteEffects.None, 0);
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, Projectile.GetAlpha(Color.LightGreen), Projectile.rotation, drawOrigin, Projectile.scale, SpriteEffects.None, 0);
 
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.BeginDefault();
+
+            Texture2D extra = ModContent.Request<Texture2D>("Redemption/Textures/SpiritPortalTex").Value;
+            Main.EntitySpriteDraw(extra, Projectile.Center - Main.screenPosition, null, Color.LightGreen * Projectile.Opacity * .4f, -Projectile.rotation * 1.5f, new Vector2(extra.Width / 2, extra.Height / 2), Projectile.scale, 0, 0);
+            Main.EntitySpriteDraw(extra, Projectile.Center - Main.screenPosition, null, Color.LightGreen * Projectile.Opacity * .2f, -Projectile.rotation * 2f, new Vector2(extra.Width / 2, extra.Height / 2), Projectile.scale * .7f, 0, 0);
+            Main.EntitySpriteDraw(extra, Projectile.Center - Main.screenPosition, null, Color.LightGreen * Projectile.Opacity * .1f, -Projectile.rotation * 2.5f, new Vector2(extra.Width / 2, extra.Height / 2), Projectile.scale * .5f, 0, 0);
             return false;
         }
     }

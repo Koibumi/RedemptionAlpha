@@ -4,11 +4,9 @@ using Terraria;
 using Terraria.DataStructures;
 using Terraria.Enums;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
-using Redemption.UI;
-using Redemption.Items;
-using Redemption.Globals;
 
 namespace Redemption.Tiles.Furniture.Misc
 {
@@ -39,13 +37,12 @@ namespace Redemption.Tiles.Furniture.Misc
             DustType = DustID.Lead;
             MinPick = 50;
             MineResist = 5f;
-
+            RegisterItemDrop(ModContent.ItemType<NozaCage>());
             HitSound = SoundID.Tink;
-            ModTranslation name = CreateMapEntryName();
-            name.SetDefault("Cage");
+            LocalizedText name = CreateMapEntryName();
+            // name.SetDefault("Cage");
             AddMapEntry(new Color(116, 121, 144), name);
         }
-        public override void KillMultiTile(int i, int j, int frameX, int frameY) => Item.NewItem(new EntitySource_TileBreak(i, j), new Vector2(i, j) * 16f, ModContent.ItemType<NozaCage>());
         public override void NumDust(int i, int j, bool fail, ref int num) => num = fail ? 1 : 3;
         public override bool CanExplode(int i, int j) => true;
     }

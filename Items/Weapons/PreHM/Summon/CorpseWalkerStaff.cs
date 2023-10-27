@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Terraria.DataStructures;
 using Redemption.Buffs.Minions;
 using Redemption.Projectiles.Minions;
+using Redemption.Globals;
 
 namespace Redemption.Items.Weapons.PreHM.Summon
 {
@@ -12,9 +13,9 @@ namespace Redemption.Items.Weapons.PreHM.Summon
 	{
 		public override void SetStaticDefaults()
 		{
-			DisplayName.SetDefault("Corpse-Walker Staff");
-			Tooltip.SetDefault("Summons a Corpse-Walker Skull to fight for you");
-			SacrificeTotal = 1;
+			// DisplayName.SetDefault("Corpse-Walker Staff");
+			// Tooltip.SetDefault("Summons a Corpse-Walker Skull to fight for you");
+			Item.ResearchUnlockCount = 1;
 
 			ItemID.Sets.GamepadWholeScreenUseRange[Item.type] = true;
 			ItemID.Sets.LockOnIgnoresCollision[Item.type] = true;
@@ -37,7 +38,8 @@ namespace Redemption.Items.Weapons.PreHM.Summon
 			Item.autoReuse = false;
 			Item.buffType = ModContent.BuffType<CorpseSkullBuff>();
 			Item.shoot = ModContent.ProjectileType<CorpseWalkerSkull>();
-			Item.mana = 5;
+            Item.ExtraItemShoot(ModContent.ProjectileType<CorpseWalkerSkull_Proj>());
+            Item.mana = 5;
 		}
 		public override void ModifyShootStats(Player player, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
 		{

@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Redemption.Tiles.Tiles;
 using System;
 using Terraria;
+using Terraria.GameContent.Metadata;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -21,6 +22,7 @@ namespace Redemption.Tiles.Plants
 			HitSound = SoundID.Grass;
             DustType = DustID.Ash;
 
+			TileMaterials.SetForTileId(Type, TileMaterials._materialsByName["Plant"]);
             AddMapEntry(new Color(73, 74, 89));
 		}
 
@@ -90,7 +92,7 @@ namespace Redemption.Tiles.Plants
 			Color col = Lighting.GetColor(i, j, Color.White); 
 			Vector2 zero = Main.drawToScreen ? Vector2.Zero : new Vector2(Main.offScreenRange, Main.offScreenRange);
 
-			spriteBatch.Draw(ModContent.Request<Texture2D>("Redemption/Tiles/Plants/CorruptWastelandVine").Value, drawPos + zero - new Vector2(xOff, 0), realSource, new Color(col.R, col.G, col.B, 255), 0f, new Vector2(0, 0), 1f, SpriteEffects.None, 0f);
+			spriteBatch.Draw(ModContent.Request<Texture2D>(Texture).Value, drawPos + zero - new Vector2(xOff, 0), realSource, new Color(col.R, col.G, col.B, 255), 0f, new Vector2(0, 0), 1f, SpriteEffects.None, 0f);
             return false;
         }
 		public float GetOffset(int i, int j, int frameX, float sOffset = 0f)

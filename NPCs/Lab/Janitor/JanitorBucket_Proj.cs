@@ -11,7 +11,7 @@ namespace Redemption.NPCs.Lab.Janitor
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Bucket");
+            // DisplayName.SetDefault("Bucket");
         }
         public override void SetDefaults()
         {
@@ -53,7 +53,7 @@ namespace Redemption.NPCs.Lab.Janitor
             Projectile.velocity.X *= 0.7f;
             return false;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             for (int i = 0; i < 8; i++)
             {
@@ -67,7 +67,8 @@ namespace Redemption.NPCs.Lab.Janitor
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Water");
+            // DisplayName.SetDefault("Water");
+            ElementID.ProjWater[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -89,7 +90,7 @@ namespace Redemption.NPCs.Lab.Janitor
             if (Projectile.localAI[0]++ >= 10)
                 Projectile.friendly = true;
         }
-        public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection) => target.AddBuff(BuffID.Wet, 180);
-        public override void ModifyHitPlayer(Player target, ref int damage, ref bool crit) => target.AddBuff(BuffID.Wet, 180);
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers) => target.AddBuff(BuffID.Wet, 180);
+        public override void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers) => target.AddBuff(BuffID.Wet, 180);
     }
 }

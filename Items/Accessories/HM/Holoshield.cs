@@ -15,11 +15,11 @@ namespace Redemption.Items.Accessories.HM
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("6% damage reduction"
+            /* Tooltip.SetDefault("6% damage reduction"
                 + "\nDouble tap a direction to dash" +
                 "\nDashing into projectiles will reflect them" +
-                "\nCan't reflect projectiles exceeding 200 damage");
-            SacrificeTotal = 1;
+                "\nCan't reflect projectiles exceeding 200 damage"); */
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -30,8 +30,8 @@ namespace Redemption.Items.Accessories.HM
             Item.width = 22;
             Item.height = 26;
             Item.value = Item.sellPrice(0, 5, 0, 0);
-            Item.canBePlacedInVanityRegardlessOfConditions = true;
-            Item.rare = ItemRarityID.Lime;
+            Item.hasVanityEffects = true;
+            Item.rare = ItemRarityID.Pink;
             Item.accessory = true;
             Item.defense = 2;
         }
@@ -101,7 +101,7 @@ namespace Redemption.Items.Accessories.HM
 
             if (DashTimer > 0)
             {
-                Player.eocDash = DashTimer;
+                Player.eocDash = DashTimer - 1;
                 Player.armorEffectDrawShadowEOCShield = true;
 
                 if (ShieldHit < 0 && DashTimer > 15)
@@ -110,7 +110,7 @@ namespace Redemption.Items.Accessories.HM
                     for (int i = 0; i < Main.maxNPCs; i++)
                     {
                         NPC npc = Main.npc[i];
-                        if (!npc.active || npc.dontTakeDamage || npc.friendly)
+                        if (!npc.active || npc.dontTakeDamage || npc.friendly || NPCLoader.CanBeHitByItem(npc, Player, new Item(ModContent.ItemType<Holoshield>())) == false)
                             continue;
 
                         if (!hitbox.Intersects(npc.Hitbox) || !npc.noTileCollide && !Collision.CanHit(Player.position, Player.width, Player.height, npc.position, npc.width, npc.height))
@@ -119,7 +119,7 @@ namespace Redemption.Items.Accessories.HM
                         if ((npc.CountsAsACritter || npc.lifeMax <= 5) && Player.dontHurtCritters)
                             continue;
 
-                        float damage = 20 * Player.GetDamage(DamageClass.Melee).Multiplicative;
+                        float damage = 20 * Player.GetDamage(DamageClass.Melee).Additive;
                         float knockback = 8;
                         bool crit = false;
 
@@ -147,6 +147,7 @@ namespace Redemption.Items.Accessories.HM
                         Player.velocity.X = -Player.velocity.X;
                         Player.velocity.Y = -4f;
                         ShieldHit = 1;
+                        DashTimer = 0;
                     }
                     for (int i = 0; i < Main.maxProjectiles; i++)
                     {
@@ -170,17 +171,17 @@ namespace Redemption.Items.Accessories.HM
                         Player.velocity.X = -Player.velocity.X;
                         Player.velocity.Y = -4f;
                         ShieldHit = 1;
+                        DashTimer = 0;
                     }
                 }
-
                 DashTimer--;
             }
         }
-        public override bool PreHurt(bool pvp, bool quiet, ref int damage, ref int hitDirection, ref bool crit, ref bool customDamage, ref bool playSound, ref bool genGore, ref PlayerDeathReason damageSource, ref int cooldownCounter)
+        public override bool ImmuneTo(PlayerDeathReason damageSource, int cooldownCounter, bool dodgeable)
         {
-            if ((damageSource.SourceNPCIndex >= 0 || (damageSource.SourceProjectileIndex >= 0 && damage < 200)) && ShieldHit < 0 && DashTimer > 15)
-                return false;
-            return true;
+            if ((damageSource.SourceNPCIndex >= 0 || (damageSource.SourceProjectileLocalIndex >= 0 && Main.projectile[damageSource.SourceProjectileLocalIndex].damage < 200)) && ShieldHit < 0 && DashTimer > 15)
+                return true;
+            return false;
         }
         private bool CanUseDash()
         {

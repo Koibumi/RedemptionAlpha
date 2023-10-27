@@ -11,7 +11,7 @@ namespace Redemption.NPCs.Lab.Janitor
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Mop");
+            // DisplayName.SetDefault("Mop");
         }
         public override void SetDefaults()
         {
@@ -62,7 +62,7 @@ namespace Redemption.NPCs.Lab.Janitor
             else
                 return true;
         }
-        public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
             if (target.type == ModContent.NPCType<JanitorBot>() && target.ai[0] != 4 && target.ai[0] != 5)
             {
@@ -73,7 +73,7 @@ namespace Redemption.NPCs.Lab.Janitor
                 target.RedemptionGuard().GuardBreakCheck(target, DustID.Electric, CustomSounds.GuardBreak, 10, 1, 1000);
             }
         }
-        public override void Kill(int timeleft)
+        public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(SoundID.Dig, Projectile.position);
             for (int i = 0; i < 8; i++)

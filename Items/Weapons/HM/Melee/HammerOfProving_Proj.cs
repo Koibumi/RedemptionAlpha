@@ -18,7 +18,7 @@ namespace Redemption.Items.Weapons.HM.Melee
         public float[] oldrot = new float[4];
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Hammer of Proving");
+            // DisplayName.SetDefault("Hammer of Proving");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 4;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
         }
@@ -45,10 +45,6 @@ namespace Redemption.Items.Weapons.HM.Melee
 
         public override void AI()
         {
-            for (int k = Projectile.oldPos.Length - 1; k > 0; k--)
-                oldrot[k] = oldrot[k - 1];
-            oldrot[0] = Projectile.rotation;
-
             Player player = Main.player[Projectile.owner];
             if (player.noItems || player.CCed || player.dead || !player.active)
                 Projectile.Kill();
@@ -86,7 +82,7 @@ namespace Redemption.Items.Weapons.HM.Melee
 
                         if (Projectile.ai[0] >= 126 * SwingSpeed)
                         {
-                            player.velocity.Y += 1;
+                            player.velocity.Y += 2;
                             Point tileBelow = new Vector2(Projectile.Center.X, Projectile.Bottom.Y).ToTileCoordinates();
                             Point tileBelow2 = new Vector2(player.Center.X, player.Bottom.Y).ToTileCoordinates();
                             Tile tile = Framing.GetTileSafely(tileBelow.X, tileBelow.Y);
@@ -137,15 +133,18 @@ namespace Redemption.Items.Weapons.HM.Melee
             }
             else
                 player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, (player.Center - Projectile.Center).ToRotation() + MathHelper.PiOver2);
+            for (int k = Projectile.oldPos.Length - 1; k > 0; k--)
+                oldrot[k] = oldrot[k - 1];
+            oldrot[0] = Projectile.rotation;
         }
 
-        public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
             Player player = Main.player[Projectile.owner];
             if (player.velocity.Y > 0)
-                damage = (int)(damage * ((player.velocity.Y / 8) + 1));
+                modifiers.FinalDamage *= ((player.velocity.Y / 8) + 1);
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Player player = Main.player[Projectile.owner];
             if (player.velocity.Y >= 20 && target.knockBackResist > 0)

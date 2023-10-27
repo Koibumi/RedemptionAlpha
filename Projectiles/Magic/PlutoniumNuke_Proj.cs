@@ -7,20 +7,22 @@ using Redemption.Globals;
 using Redemption.Base;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria.GameContent;
+using Redemption.NPCs.Lab.MACE;
 
 namespace Redemption.Projectiles.Magic
 {
     public class PlutoniumNuke_Proj : ModProjectile
-	{
+    {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Plutonium Nuke");
+            // DisplayName.SetDefault("Plutonium Nuke");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 6;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjExplosive[Type] = true;
         }
 
         public override void SetDefaults()
-		{
+        {
             Projectile.width = 22;
             Projectile.height = 22;
             Projectile.aiStyle = -1;
@@ -30,7 +32,7 @@ namespace Redemption.Projectiles.Magic
             Projectile.penetrate = 1;
             Projectile.tileCollide = false;
             Projectile.timeLeft = 280;
-		}
+        }
 
         public override void AI()
         {
@@ -55,29 +57,33 @@ namespace Redemption.Projectiles.Magic
             dust20.fadeIn = 0.5f;
             dust20.noGravity = true;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(CustomSounds.MissileExplosion, Projectile.position);
             if (Projectile.owner == Main.myPlayer)
-            for (int i = 0; i < 10; i++)
             {
-                int proj = Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center.X, Projectile.Center.Y, -8 + Main.rand.Next(0, 17), -3 + Main.rand.Next(-11, 0), ProjectileID.DD2BetsyFireball, Projectile.damage / 5, 3, Main.myPlayer);
-                Main.projectile[proj].hostile = false;
-                Main.projectile[proj].friendly = true;
-                Main.projectile[proj].netUpdate2 = true;
+                for (int i = 0; i < 10; i++)
+                {
+                    SoundEngine.PlaySound(SoundID.DD2_BetsyFireballShot, Projectile.position);
+                    int proj = Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center.X, Projectile.Center.Y, -8 + Main.rand.Next(0, 17), -3 + Main.rand.Next(-11, 0), ModContent.ProjectileType<MACE_Miniblast>(), Projectile.damage / 5, 3, Main.myPlayer, 1);
+                    Main.projectile[proj].timeLeft = 300;
+                    Main.projectile[proj].hostile = false;
+                    Main.projectile[proj].friendly = true;
+                    Main.projectile[proj].netUpdate = true;
+                }
             }
             RedeDraw.SpawnExplosion(Projectile.Center, Color.LightCyan, scale: 2);
             for (int i = 0; i < Main.maxNPCs; i++)
             {
                 NPC target = Main.npc[i];
-                if (!target.active || target.dontTakeDamage)
+                if (!target.active || target.dontTakeDamage || target.friendly)
                     continue;
 
                 if (target.immune[Projectile.whoAmI] > 0 || Projectile.DistanceSQ(target.Center) > 140 * 140)
                     continue;
 
                 target.immune[Projectile.whoAmI] = 20;
-                int hitDirection = Projectile.Center.X > target.Center.X ? -1 : 1;
+                int hitDirection = target.RightOfDir(Projectile);
                 BaseAI.DamageNPC(target, Projectile.damage, Projectile.knockBack, hitDirection, Projectile, crit: Projectile.HeldItemCrit());
             }
         }
@@ -99,7 +105,7 @@ namespace Redemption.Projectiles.Magic
             Main.EntitySpriteDraw(glow, Projectile.Center - Main.screenPosition, null, Projectile.GetAlpha(Color.White), Projectile.rotation, drawOrigin, Projectile.scale, effects, 0);
             return false;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.immune[Projectile.whoAmI] = 20;
         }

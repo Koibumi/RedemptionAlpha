@@ -5,16 +5,38 @@ using Terraria.ModLoader;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.Globals;
 using Terraria.GameContent;
-using Terraria.DataStructures;
-using Redemption.Buffs.Debuffs;
-using Redemption.Buffs.NPCBuffs;
 using Redemption.BaseExtension;
 using Terraria.Audio;
+using ReLogic.Content;
+using Redemption.Globals.NPC;
 
 namespace Redemption.NPCs.Bosses.Gigapora
 {
     public class Porakone : ModNPC
     {
+        private static Asset<Texture2D> glowMask;
+        private static Asset<Texture2D> boosterAni;
+        private static Asset<Texture2D> boosterGlow;
+        private static Asset<Texture2D> poraAni;
+        private static Asset<Texture2D> poraGlow;
+        public override void Load()
+        {
+            if (Main.dedServ)
+                return;
+            glowMask = ModContent.Request<Texture2D>(Texture + "_Glow");
+            boosterAni = ModContent.Request<Texture2D>(Texture + "_Booster");
+            boosterGlow = ModContent.Request<Texture2D>(Texture + "_Booster_Glow");
+            poraAni = ModContent.Request<Texture2D>("Redemption/NPCs/Bosses/Gigapora/Porakone");
+            poraGlow = ModContent.Request<Texture2D>("Redemption/NPCs/Bosses/Gigapora/Porakone_Glow");
+        }
+        public override void Unload()
+        {
+            glowMask = null;
+            boosterAni = null;
+            boosterGlow = null;
+            poraAni = null;
+            poraGlow = null;
+        }
         public override string Texture => "Redemption/NPCs/Bosses/Cleaver/Wielder";
         public enum ActionState
         {
@@ -31,25 +53,14 @@ namespace Redemption.NPCs.Bosses.Gigapora
         public float[] oldrot = new float[5];
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Wielder Bot");
+            // DisplayName.SetDefault("Wielder Bot");
             Main.npcFrameCount[NPC.type] = 19;
 
             NPCID.Sets.MPAllowedEnemies[Type] = true;
             NPCID.Sets.BossBestiaryPriority.Add(Type);
 
-            NPCDebuffImmunityData debuffData = new()
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Confused,
-                    BuffID.Poisoned,
-                    BuffID.Venom,
-                    ModContent.BuffType<InfestedDebuff>(),
-                    ModContent.BuffType<NecroticGougeDebuff>(),
-                    ModContent.BuffType<ViralityDebuff>(),
-                    ModContent.BuffType<DirtyWoundDebuff>()
-                }
-            };
-            NPCID.Sets.DebuffImmunitySets.Add(Type, debuffData);
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Inorganic);
+            NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Confused] = true;
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0)
             {
@@ -87,7 +98,8 @@ namespace Redemption.NPCs.Bosses.Gigapora
         public int boosterFrame;
         public override void AI()
         {
-            DespawnHandler();
+            if (NPC.DespawnHandler())
+                return;
             Player player = Main.player[NPC.target];
 
             if (NPC.target < 0 || NPC.target == 255 || player.dead || !player.active)
@@ -96,12 +108,11 @@ namespace Redemption.NPCs.Bosses.Gigapora
             if (!player.active || player.dead)
                 return;
 
-            player.RedemptionScreen().ScreenFocusPosition = NPC.Center;
             switch (AIState)
             {
                 case ActionState.Begin:
                     {
-                        player.RedemptionScreen().lockScreen = true;
+                        ScreenPlayer.CutsceneLock(player, NPC, ScreenPlayer.CutscenePriority.Medium, 1200, 2400, 0);
                         if (AITimer++ == 0)
                         {
                             aniType = 1;
@@ -129,7 +140,7 @@ namespace Redemption.NPCs.Bosses.Gigapora
                     }
                     break;
                 case ActionState.Intro:
-                    player.RedemptionScreen().lockScreen = true;
+                    ScreenPlayer.CutsceneLock(player, NPC, ScreenPlayer.CutscenePriority.Medium, 1200, 2400, 0);
                     if (AITimer++ == 60)
                     {
                         if (!Main.dedServ)
@@ -176,6 +187,14 @@ namespace Redemption.NPCs.Bosses.Gigapora
                     }
                     break;
             }
+            if (NPC.ai[1] != 2)
+            {
+                int dustIndex = Dust.NewDust(new Vector2(NPC.position.X + 3, NPC.position.Y + 16), 10, 2, DustID.LifeDrain, 0, 0, 0, default, 1f);
+                Main.dust[dustIndex].noGravity = true;
+                Dust dust = Main.dust[dustIndex];
+                dust.velocity.Y = 3;
+                dust.velocity.X = 0;
+            }
         }
 
         public override void FindFrame(int frameHeight)
@@ -209,53 +228,26 @@ namespace Redemption.NPCs.Bosses.Gigapora
             }
             if (boosterFrame >= 4)
                 boosterFrame = 0;
-
-            if (NPC.ai[1] != 2)
-            {
-                int dustIndex = Dust.NewDust(new Vector2(NPC.position.X + 3, NPC.position.Y + 16), 10, 2, DustID.LifeDrain, 0, 0, 0, default, 1f);
-                Main.dust[dustIndex].noGravity = true;
-                Dust dust = Main.dust[dustIndex];
-                dust.velocity.Y = 3;
-                dust.velocity.X = 0;
-            }
-        }
-
-        private void DespawnHandler()
-        {
-            Player player = Main.player[NPC.target];
-            if (!player.active || player.dead)
-            {
-                NPC.velocity *= 0.96f;
-                NPC.velocity.Y -= 1;
-                if (NPC.timeLeft > 10)
-                    NPC.timeLeft = 10;
-                return;
-            }
         }
 
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
             Texture2D texture = TextureAssets.Npc[NPC.type].Value;
-            Texture2D glowMask = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Glow").Value;
-            Texture2D boosterAni = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Booster").Value;
-            Texture2D boosterGlow = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Booster_Glow").Value;
-            Texture2D poraAni = ModContent.Request<Texture2D>("Redemption/NPCs/Bosses/Gigapora/Porakone").Value;
-            Texture2D poraGlow = ModContent.Request<Texture2D>("Redemption/NPCs/Bosses/Gigapora/Porakone_Glow").Value;
             var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
-            int num214 = boosterAni.Height / 4;
+            int num214 = boosterAni.Value.Height / 4;
             int y6 = num214 * boosterFrame;
-            spriteBatch.Draw(boosterAni, NPC.Center - screenPos, new Rectangle?(new Rectangle(0, y6, boosterAni.Width, num214)), drawColor, NPC.rotation, new Vector2(boosterAni.Width / 2f, num214 / 2f), NPC.scale, effects, 0);
-            spriteBatch.Draw(boosterGlow, NPC.Center - screenPos, new Rectangle?(new Rectangle(0, y6, boosterAni.Width, num214)), RedeColor.RedPulse, NPC.rotation, new Vector2(boosterAni.Width / 2f, num214 / 2f), NPC.scale, effects, 0);
+            spriteBatch.Draw(boosterAni.Value, NPC.Center - screenPos, new Rectangle?(new Rectangle(0, y6, boosterAni.Value.Width, num214)), drawColor, NPC.rotation, new Vector2(boosterAni.Value.Width / 2f, num214 / 2f), NPC.scale, effects, 0);
+            spriteBatch.Draw(boosterGlow.Value, NPC.Center - screenPos, new Rectangle?(new Rectangle(0, y6, boosterAni.Value.Width, num214)), RedeColor.RedPulse, NPC.rotation, new Vector2(boosterAni.Value.Width / 2f, num214 / 2f), NPC.scale, effects, 0);
 
             if (aniType == 2)
             {
-                spriteBatch.Draw(poraAni, NPC.Center - new Vector2(-18 * NPC.spriteDirection, 9) - screenPos, null, drawColor, NPC.rotation, new Vector2(poraAni.Width / 2f, poraAni.Height / 2f), NPC.scale, effects, 0);
-                spriteBatch.Draw(poraGlow, NPC.Center - new Vector2(-18 * NPC.spriteDirection, 9) - screenPos, null, RedeColor.RedPulse, NPC.rotation, new Vector2(poraAni.Width / 2f, poraAni.Height / 2f), NPC.scale, effects, 0);
+                spriteBatch.Draw(poraAni.Value, NPC.Center - new Vector2(-18 * NPC.spriteDirection, 9) - screenPos, null, drawColor, NPC.rotation, new Vector2(poraAni.Value.Width / 2f, poraAni.Value.Height / 2f), NPC.scale, effects, 0);
+                spriteBatch.Draw(poraGlow.Value, NPC.Center - new Vector2(-18 * NPC.spriteDirection, 9) - screenPos, null, RedeColor.RedPulse, NPC.rotation, new Vector2(poraAni.Value.Width / 2f, poraAni.Value.Height / 2f), NPC.scale, effects, 0);
             }
             else
             {
                 spriteBatch.Draw(texture, NPC.Center - screenPos, NPC.frame, drawColor, NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
-                spriteBatch.Draw(glowMask, NPC.Center - screenPos, NPC.frame, RedeColor.RedPulse, NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
+                spriteBatch.Draw(glowMask.Value, NPC.Center - screenPos, NPC.frame, RedeColor.RedPulse, NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
             }
             return false;
         }

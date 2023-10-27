@@ -3,6 +3,7 @@ using Redemption.Tiles.Tiles;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.Enums;
+using Terraria.GameContent.Metadata;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
@@ -33,6 +34,7 @@ namespace Redemption.Tiles.Plants
             TileObjectData.addTile(Type);
             DustType = ModContent.DustType<VoidFlame>();
             HitSound = SoundID.Grass;
+            TileMaterials.SetForTileId(Type, TileMaterials._materialsByName["Plant"]);
         }
         public override void NumDust(int i, int j, bool fail, ref int num)
         {
@@ -119,37 +121,40 @@ namespace Redemption.Tiles.Plants
     }
     public class NooserootSmallItem : PlaceholderTile
     {
-        public override string Texture => "Redemption/Placeholder";
-        public override void SetStaticDefaults()
+        public override string Texture => Redemption.PLACEHOLDER_TEXTURE;
+        public override void SetSafeStaticDefaults()
         {
-            DisplayName.SetDefault("Small Nooseroot");
+            // DisplayName.SetDefault("Small Nooseroot");
         }
         public override void SetDefaults()
         {
+            base.SetDefaults();
             Item.createTile = ModContent.TileType<Nooseroot_Small>();
         }
     }
     public class NooserootMediumItem : PlaceholderTile
     {
-        public override string Texture => "Redemption/Placeholder";
-        public override void SetStaticDefaults()
+        public override string Texture => Redemption.PLACEHOLDER_TEXTURE;
+        public override void SetSafeStaticDefaults()
         {
-            DisplayName.SetDefault("Medium Nooseroot");
+            // DisplayName.SetDefault("Medium Nooseroot");
         }
         public override void SetDefaults()
         {
+            base.SetDefaults();
             Item.createTile = ModContent.TileType<Nooseroot_Medium>();
         }
     }
     public class NooserootLargeItem : PlaceholderTile
     {
-        public override string Texture => "Redemption/Placeholder";
-        public override void SetStaticDefaults()
+        public override string Texture => Redemption.PLACEHOLDER_TEXTURE;
+        public override void SetSafeStaticDefaults()
         {
-            DisplayName.SetDefault("Large Nooseroot");
+            // DisplayName.SetDefault("Large Nooseroot");
         }
         public override void SetDefaults()
         {
+            base.SetDefaults();
             Item.createTile = ModContent.TileType<Nooseroot_Large>();
         }
     }

@@ -9,8 +9,8 @@ namespace Redemption.Items.Weapons.PreHM.Ammo
 	{
 		public override void SetStaticDefaults()
 		{
-			DisplayName.SetDefault("Xenomite Bullet");
-			Tooltip.SetDefault("Infects hit enemies");
+			// DisplayName.SetDefault("Xenomite Bullet");
+			// Tooltip.SetDefault("Infects hit enemies");
 		}
 		public override void SetDefaults()
 		{
@@ -18,11 +18,11 @@ namespace Redemption.Items.Weapons.PreHM.Ammo
 			Item.DamageType = DamageClass.Ranged;
 			Item.width = 12;
 			Item.height = 12;
-			Item.maxStack = 9999;
+			Item.maxStack = Item.CommonMaxStack;
 			Item.consumable = true;
 			Item.knockBack = 2f;
 			Item.value = 1;
-			Item.rare = ItemRarityID.Lime;
+			Item.rare = ItemRarityID.Green;
 			Item.shoot = ModContent.ProjectileType<XenomiteBulletProj>();
 			Item.shootSpeed = 4f;
 			Item.ammo = AmmoID.Bullet;

@@ -22,6 +22,7 @@ using Terraria.Utilities;
 using Redemption.BaseExtension;
 using Redemption.Base;
 using Terraria.DataStructures;
+using Terraria.Localization;
 
 namespace Redemption.NPCs.PreHM
 {
@@ -44,12 +45,12 @@ namespace Redemption.NPCs.PreHM
 
         public override void SetSafeStaticDefaults()
         {
-            DisplayName.SetDefault("Corpse-Walker Priest");
+            // DisplayName.SetDefault("Corpse-Walker Priest");
             Main.npcFrameCount[NPC.type] = 15;
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0);
-
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
+            ElementID.NPCHoly[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -66,8 +67,9 @@ namespace Redemption.NPCs.PreHM
             NPC.aiStyle = -1;
             Banner = NPC.type;
             BannerItem = ModContent.ItemType<CorpseWalkerPriestBanner>();
+            NPC.GetGlobalNPC<ElementalNPC>().OverrideMultiplier[ElementID.Holy] *= .5f;
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -93,7 +95,6 @@ namespace Redemption.NPCs.PreHM
             }
         }
 
-        private Vector2 moveTo;
         private int runCooldown;
         public override void OnSpawn(IEntitySource source)
         {
@@ -101,6 +102,7 @@ namespace Redemption.NPCs.PreHM
             SetStats();
 
             TimerRand = Main.rand.Next(80, 280);
+            NPC.netUpdate = true;
         }
         public override void AI()
         {
@@ -125,6 +127,7 @@ namespace Redemption.NPCs.PreHM
                         AITimer = 0;
                         TimerRand = Main.rand.Next(120, 260);
                         AIState = ActionState.Wander;
+                        NPC.netUpdate = true;
                     }
 
                     SightCheck();
@@ -140,11 +143,12 @@ namespace Redemption.NPCs.PreHM
                         AITimer = 0;
                         TimerRand = Main.rand.Next(80, 280);
                         AIState = ActionState.Idle;
+                        NPC.netUpdate = true;
                     }
                     BaseAI.AttemptOpenDoor(NPC, ref doorVars[0], ref doorVars[1], ref doorVars[2], 80, interactDoorStyle: HasEyes ? 2 : 0);
 
-                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20);
-                    RedeHelper.HorizontallyMove(NPC, moveTo * 16, 0.4f, 1 * SpeedMultiplier, 12, 8, NPC.Center.Y > player.Center.Y);
+                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20, (moveTo.Y - 32) * 16);
+                    NPCHelper.HorizontallyMove(NPC, moveTo * 16, 0.4f, 1 * SpeedMultiplier, 12, 8, NPC.Center.Y > moveTo.Y * 16);
                     break;
 
                 case ActionState.Alert:
@@ -175,12 +179,13 @@ namespace Redemption.NPCs.PreHM
 
                         AITimer = 0;
                         AIState = ActionState.Cast;
+                        NPC.netUpdate = true;
                     }
 
-                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20);
-                    RedeHelper.HorizontallyMove(NPC, NPC.life < NPC.lifeMax / 3 && !AttackerIsUndead() ?
-                        new Vector2(globalNPC.attacker.Center.X < NPC.Center.X ? NPC.Center.X + 100 : NPC.Center.X - 100, NPC.Center.Y) : globalNPC.attacker.Center,
-                        0.2f, 2.2f * SpeedMultiplier * (NPC.RedemptionNPCBuff().rallied ? 1.2f : 1), 12, 8, NPC.Center.Y > globalNPC.attacker.Center.Y);
+                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20, globalNPC.attacker.Center.Y);
+                    NPCHelper.HorizontallyMove(NPC, NPC.life < NPC.lifeMax / 3 && !AttackerIsUndead() ?
+                        new Vector2(NPC.Center.X + (100 * NPC.RightOfDir(globalNPC.attacker)), NPC.Center.Y) : globalNPC.attacker.Center,
+                        0.2f, 2.2f * SpeedMultiplier * (NPC.RedemptionNPCBuff().rallied ? 1.2f : 1), 12, 8, NPC.Center.Y > globalNPC.attacker.Center.Y, globalNPC.attacker);
 
                     break;
 
@@ -215,8 +220,7 @@ namespace Redemption.NPCs.PreHM
                     {
                         Flare = true;
                         FlareTimer = 0;
-                        NPC.Shoot(new Vector2(NPC.Center.X + (22 * NPC.spriteDirection), NPC.Center.Y), ModContent.ProjectileType<CorpseWalkerBolt>(), NPC.damage,
-                            RedeHelper.PolarVector(8, (globalNPC.attacker.Center - NPC.Center).ToRotation() + Main.rand.NextFloat(-0.1f, 0.1f)), true, SoundID.Item125, NPC.whoAmI, globalNPC.attacker is NPC ? globalNPC.attacker.whoAmI : -1);
+                        NPC.Shoot(new Vector2(NPC.Center.X + (22 * NPC.spriteDirection), NPC.Center.Y), ModContent.ProjectileType<CorpseWalkerBolt>(), NPC.damage, RedeHelper.PolarVector(8, (globalNPC.attacker.Center - NPC.Center).ToRotation() + Main.rand.NextFloat(-0.1f, 0.1f)), SoundID.Item125, NPC.whoAmI, globalNPC.attacker is NPC ? globalNPC.attacker.whoAmI : -1);
                     }
                     if (AITimer >= 76)
                     {
@@ -224,12 +228,6 @@ namespace Redemption.NPCs.PreHM
                     }
                     break;
             }
-        }
-        public override bool? CanFallThroughPlatforms() => NPC.Redemption().fallDownPlatform;
-        private bool Flare;
-        private float FlareTimer;
-        public override void FindFrame(int frameHeight)
-        {
             if (Flare)
             {
                 FlareTimer += 2;
@@ -239,6 +237,12 @@ namespace Redemption.NPCs.PreHM
                     FlareTimer = 0;
                 }
             }
+        }
+        public override bool? CanFallThroughPlatforms() => NPC.Redemption().fallDownPlatform;
+        private bool Flare;
+        private float FlareTimer;
+        public override void FindFrame(int frameHeight)
+        {
             if (AIState is ActionState.Cast)
             {
                 NPC.frameCounter++;
@@ -295,7 +299,7 @@ namespace Redemption.NPCs.PreHM
             for (int i = 0; i < Main.maxNPCs; i++)
             {
                 NPC target = Main.npc[i];
-                if (!target.active || target.whoAmI == NPC.whoAmI || target.dontTakeDamage || target.type == NPCID.OldMan)
+                if (!target.active || target.whoAmI == NPC.whoAmI || target.dontTakeDamage || target.type == NPCID.OldMan || target.type == NPCID.TargetDummy)
                     continue;
 
                 if (friendly)
@@ -331,6 +335,7 @@ namespace Redemption.NPCs.PreHM
                 globalNPC.attacker = Main.npc[gotNPC];
                 AITimer = 0;
                 AIState = ActionState.Alert;
+                NPC.netUpdate = true;
             }
             if (Personality != PersonalityState.Calm)
             {
@@ -357,6 +362,7 @@ namespace Redemption.NPCs.PreHM
                     AITimer = 0;
                     AIState = ActionState.Alert;
                 }
+                NPC.netUpdate = true;
             }
         }
 
@@ -370,6 +376,7 @@ namespace Redemption.NPCs.PreHM
             Personality = choice;
             if (Main.rand.NextBool(3))
                 HasEyes = true;
+            NPC.netUpdate = true;
         }
         public override void SetStats()
         {
@@ -401,10 +408,11 @@ namespace Redemption.NPCs.PreHM
             }
             else
                 VisionRange = 200 + VisionIncrease;
+            NPC.netUpdate = true;
         }
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
-            Texture2D glow = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Glow").Value;
+            Texture2D glow = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
             var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
             spriteBatch.Draw(TextureAssets.Npc[NPC.type].Value, NPC.Center - screenPos, NPC.frame, drawColor, NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
@@ -422,7 +430,7 @@ namespace Redemption.NPCs.PreHM
                 RedeDraw.DrawEyeFlare(spriteBatch, ref FlareTimer, position, Color.Yellow, NPC.rotation);
             }
         }
-        public override bool? CanHitNPC(NPC target) => false;
+        public override bool CanHitNPC(NPC target) => false;
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => false;
         public override void OnKill()
         {
@@ -435,7 +443,7 @@ namespace Redemption.NPCs.PreHM
         {
             npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<CorpseWalkerStaff>(), 12));
             npcLoot.Add(ItemDropRule.Food(ItemID.MilkCarton, 150));
-            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<CorpseWalkerSkullVanity>(), 50));
+            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<CorpseWalkerSkullVanity>(), 100));
             npcLoot.Add(ItemDropRule.ByCondition(new LostSoulCondition(), ModContent.ItemType<LostSoul>(), 2));
         }
         public override float SpawnChance(NPCSpawnInfo spawnInfo)
@@ -455,8 +463,7 @@ namespace Redemption.NPCs.PreHM
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Biomes.Desert,
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Biomes.UndergroundDesert,
 
-                new FlavorTextBestiaryInfoElement(
-                    "Dried up skeletons that take the role of a cleric, they shoot golden sparks that can heal other undead... And damage humans.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.CorpseWalkerPriest"))
             });
         }
     }

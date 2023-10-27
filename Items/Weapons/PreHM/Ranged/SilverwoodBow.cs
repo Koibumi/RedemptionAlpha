@@ -1,9 +1,11 @@
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria;
+using Terraria.Localization;
 using Microsoft.Xna.Framework;
 using Redemption.Projectiles.Ranged;
 using System.Collections.Generic;
+using Redemption.Items.Weapons.PreHM.Melee;
 
 namespace Redemption.Items.Weapons.PreHM.Ranged
 {
@@ -11,17 +13,18 @@ namespace Redemption.Items.Weapons.PreHM.Ranged
 	{
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Daerel's Silverwood Bow");
-            Tooltip.SetDefault("20% chance not to consume ammo"
-                + "\nShoots silverwood arrows that stick onto enemies, draining their life");
-            SacrificeTotal = 1;
+            // DisplayName.SetDefault("Daerel's Silverwood Bow");
+            /* Tooltip.SetDefault("20% chance not to consume ammo"
+                + "\nShoots silverwood arrows that stick onto enemies, draining their life"); */
+            ItemID.Sets.ShimmerTransformToItem[Type] = ModContent.ItemType<SwordSlicer>();
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
         {
             // Common Properties
             Item.width = 36;
-            Item.height = 58;
+            Item.height = 60;
             Item.rare = ItemRarityID.Orange;
             Item.value = Item.buyPrice(gold: 25);
 
@@ -59,9 +62,7 @@ namespace Redemption.Items.Weapons.PreHM.Ranged
         {
             if (Main.keyState.PressingShift())
             {
-                TooltipLine line = new(Mod, "Lore",
-                    "'Given to Daerel by Syllessa, a half-Forest Nymph, during training. The wood is beyond ancient,\n" +
-                    "and the string is made from a golden flexible thread. It is capable of shooting arrows at high velocities.'")
+                TooltipLine line = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.Items.SilverwoodBow.Lore"))
                 {
                     OverrideColor = Color.LightGray
                 };
@@ -69,7 +70,7 @@ namespace Redemption.Items.Weapons.PreHM.Ranged
             }
             else
             {
-                TooltipLine line = new(Mod, "HoldShift", "Hold [Shift] to view lore")
+                TooltipLine line = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.SpecialTooltips.Viewer"))
                 {
                     OverrideColor = Color.Gray,
                 };

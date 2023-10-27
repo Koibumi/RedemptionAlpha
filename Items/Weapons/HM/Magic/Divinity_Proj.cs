@@ -11,8 +11,9 @@ using Redemption.Base;
 using Terraria.GameContent;
 using Redemption.Particles;
 using ParticleLibrary;
-using Redemption.Effects.PrimitiveTrails;
 using Redemption.Projectiles.Magic;
+using Redemption.Effects;
+using System.Collections.Generic;
 
 namespace Redemption.Items.Weapons.HM.Magic
 {
@@ -21,7 +22,7 @@ namespace Redemption.Items.Weapons.HM.Magic
         public override string Texture => "Redemption/Items/Weapons/HM/Magic/Divinity";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Divinity");
+            // DisplayName.SetDefault("Divinity");
         }
         public override void SetDefaults()
         {
@@ -103,7 +104,9 @@ namespace Redemption.Items.Weapons.HM.Magic
         public override string Texture => "Redemption/Textures/Sun";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Sun");
+            // DisplayName.SetDefault("Sun");
+            ElementID.ProjFire[Type] = true;
+            ElementID.ProjHoly[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -118,9 +121,11 @@ namespace Redemption.Items.Weapons.HM.Magic
             Projectile.timeLeft = 600;
             Projectile.alpha = 255;
             Projectile.scale = 0.1f;
+            Projectile.extraUpdates = 1;
         }
         private float godrayFade;
         public Vector2 mark;
+        private int charged;
         public override void AI()
         {
             Projectile.width = Projectile.height = (int)(40 * Projectile.scale);
@@ -155,7 +160,9 @@ namespace Redemption.Items.Weapons.HM.Magic
                             Projectile.Kill();
                             Projectile.netUpdate = true;
                         }
-                        if (Projectile.localAI[0]++ % 9 == 0)
+                        if (Projectile.DistanceSQ(player.Center) > 300 * 300)
+                            Projectile.Move(player.Center - new Vector2(0, 100), 2, 20);
+                        if (Projectile.localAI[0]++ % 14 == 0 && Projectile.scale < 3)
                         {
                             int mana = player.inventory[player.selectedItem].mana;
                             if (BasePlayer.ReduceMana(player, mana / 10))
@@ -166,7 +173,19 @@ namespace Redemption.Items.Weapons.HM.Magic
                         }
                         if (Projectile.scale >= 1.1f && !RedeHelper.AnyProjectiles(ModContent.ProjectileType<Divinity_Crosshair>()))
                         {
+                            if (charged == 0)
+                            {
+                                RedeDraw.SpawnExplosion(Projectile.Center, Color.White, shakeAmount: 0, scale: 2, noDust: true, tex: ModContent.Request<Texture2D>("Redemption/Textures/HolyGlow2").Value);
+                                SoundEngine.PlaySound(CustomSounds.NebSound2 with { Pitch = .2f, Volume = .5f }, Projectile.position);
+                                charged = 1;
+                            }
                             Projectile.NewProjectile(Projectile.GetSource_FromAI(), Main.MouseWorld, Vector2.Zero, ModContent.ProjectileType<Divinity_Crosshair>(), 0, 0, player.whoAmI, Projectile.whoAmI);
+                        }
+                        if (Projectile.scale >= 3 && charged < 2)
+                        {
+                            RedeDraw.SpawnExplosion(Projectile.Center, Color.White, shakeAmount: 0, scale: 5, noDust: true, tex: ModContent.Request<Texture2D>("Redemption/Textures/HolyGlow2").Value);
+                            SoundEngine.PlaySound(CustomSounds.NebSound2 with { Volume = .5f }, Projectile.position);
+                            charged = 2;
                         }
                         if (!player.channel)
                         {
@@ -193,13 +212,13 @@ namespace Redemption.Items.Weapons.HM.Magic
                         if (Projectile.DistanceSQ(mark) < 10 * 10)
                             Projectile.Kill();
                         else
-                            Projectile.Move(mark, 20, 1);
+                            Projectile.Move(mark, 34, 1);
                         break;
                 }
             }
             Projectile.scale = MathHelper.Min(Projectile.scale, 3);
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             Projectile staff = Main.projectile[(int)Projectile.ai[0]];
             Player player = Main.player[staff.owner];
@@ -222,7 +241,7 @@ namespace Redemption.Items.Weapons.HM.Magic
                     continue;
 
                 target.immune[Projectile.whoAmI] = 20;
-                int hitDirection = Projectile.Center.X > target.Center.X ? -1 : 1;
+                int hitDirection = target.RightOfDir(Projectile);
                 BaseAI.DamageNPC(target, (int)(Projectile.damage * (Projectile.scale * 1.5f)), 7, hitDirection, Projectile, crit: Projectile.HeldItemCrit());
                 BaseAI.DamageNPC(target, (int)(Projectile.damage * (Projectile.scale * 1.25f)), 4, hitDirection, Projectile, crit: Projectile.HeldItemCrit());
                 target.AddBuff(BuffID.OnFire3, 600);
@@ -241,11 +260,13 @@ namespace Redemption.Items.Weapons.HM.Magic
                 }
             }
         }
-        public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
-            damage = (int)(damage * Projectile.scale);
+            modifiers.FinalDamage *= Projectile.scale;
+            if (Projectile.ai[1] != 2)
+                modifiers.FinalDamage /= 4;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.OnFire3, 600);
         }
@@ -285,9 +306,15 @@ namespace Redemption.Items.Weapons.HM.Magic
             return false;
         }
     }
-    public class Divinity_Ball : ModProjectile, ITrailProjectile
+    public class Divinity_Ball : ModProjectile
     {
         public override string Texture => "Redemption/Textures/WhiteOrb";
+        public override void SetStaticDefaults()
+        {
+            // DisplayName.SetDefault("Divinity Charge");
+            ElementID.ProjFire[Type] = true;
+            ElementID.ProjHoly[Type] = true;
+        }
         public override void SetDefaults()
         {
             Projectile.width = 22;
@@ -297,13 +324,20 @@ namespace Redemption.Items.Weapons.HM.Magic
             Projectile.tileCollide = false;
             Projectile.penetrate = -1;
             Projectile.timeLeft = 180;
+            Projectile.DamageType = DamageClass.Magic;
             Projectile.scale = Main.rand.NextFloat(0.4f, 0.6f);
         }
-        public void DoTrailCreation(TrailManager tManager)
-        {
-            tManager.CreateTrail(Projectile, new GradientTrail(new Color(252, 243, 201), Color.White), new RoundCap(), new ArrowGlowPosition(), 10f, 90f);
-        }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+
+        private readonly int NUMPOINTS = 20;
+        public Color baseColor = new(252, 243, 201);
+        public Color endColor = Color.White;
+        private List<Vector2> cache;
+        private List<Vector2> cache2;
+        private DanTrail trail;
+        private DanTrail trail2;
+        private float thickness = 2f;
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.OnFire3, 400);
         }
@@ -321,9 +355,31 @@ namespace Redemption.Items.Weapons.HM.Magic
                 sun.scale += 0.02f;
                 Projectile.Kill();
             }
+            if (Main.netMode != NetmodeID.Server)
+            {
+                TrailHelper.ManageBasicCaches(ref cache, ref cache2, NUMPOINTS, Projectile.Center + Projectile.velocity);
+                TrailHelper.ManageBasicTrail(ref cache, ref cache2, ref trail, ref trail2, NUMPOINTS, Projectile.Center + Projectile.velocity, baseColor, endColor, baseColor, thickness);
+            }
         }
         public override bool PreDraw(ref Color lightColor)
         {
+            Main.spriteBatch.End();
+            Effect effect = Terraria.Graphics.Effects.Filters.Scene["MoR:GlowTrailShader"]?.GetShader().Shader;
+
+            Matrix world = Matrix.CreateTranslation(-Main.screenPosition.Vec3());
+            Matrix view = Main.GameViewMatrix.ZoomMatrix;
+            Matrix projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, -1, 1);
+
+            effect.Parameters["transformMatrix"].SetValue(world * view * projection);
+            effect.Parameters["sampleTexture"].SetValue(ModContent.Request<Texture2D>("Redemption/Textures/Trails/GlowTrail").Value);
+            effect.Parameters["time"].SetValue(Main.GameUpdateCount * 0.05f);
+            effect.Parameters["repeats"].SetValue(1f);
+
+            trail?.Render(effect);
+            trail2?.Render(effect);
+
+            Main.spriteBatch.Begin(default, default, default, default, default, default, Main.GameViewMatrix.ZoomMatrix);
+
             Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
             Vector2 drawOrigin = new(texture.Width / 2, texture.Height / 2);
 
@@ -336,7 +392,7 @@ namespace Redemption.Items.Weapons.HM.Magic
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
             return false;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             for (int i = 0; i < 8; i++)
             {

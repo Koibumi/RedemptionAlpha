@@ -27,7 +27,7 @@ namespace Redemption.Tiles.Tiles
             Main.tileMerge[ModContent.TileType<IrradiatedHardenedSandTile>()][Type] = true;
             Main.tileBlendAll[Type] = true;
             Main.tileSand[Type] = true;
-            TileID.Sets.TouchDamageSands[Type] = 15;
+            TileID.Sets.Suffocate[Type] = true;
             TileID.Sets.isDesertBiomeSand[Type] = true;
             TileID.Sets.Conversion.Sand[Type] = true;
             TileID.Sets.ForAdvancedCollision.ForSandshark[Type] = true;
@@ -36,7 +36,15 @@ namespace Redemption.Tiles.Tiles
             Main.tileBlockLight[Type] = true;
             AddMapEntry(new Color(132, 127, 111));
             DustType = DustID.Ash;
-            ItemDrop = ModContent.ItemType<IrradiatedSand>();
+        }
+        public override void FloorVisuals(Player player)
+        {
+            if (player.velocity.X != 0f && Main.rand.NextBool(20))
+            {
+                Dust dust = Dust.NewDustDirect(player.Bottom, 0, 0, DustType, 0f, -Main.rand.NextFloat(2f));
+                dust.noGravity = true;
+                dust.fadeIn = 1f;
+            }
         }
         public override void KillTile(int i, int j, ref bool fail, ref bool effectOnly, ref bool noItem)
         {
@@ -126,7 +134,7 @@ namespace Redemption.Tiles.Tiles
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Irradiated Sand Ball");
+            // DisplayName.SetDefault("Irradiated Sand Ball");
             ProjectileID.Sets.ForcePlateDetection[Projectile.type] = true;
         }
 
@@ -196,7 +204,7 @@ namespace Redemption.Tiles.Tiles
             return false;
         }
 
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             if (Projectile.owner == Main.myPlayer && !Projectile.noDropItem)
             {

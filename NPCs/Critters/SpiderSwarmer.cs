@@ -10,6 +10,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Redemption.BaseExtension;
 using Terraria.DataStructures;
+using Terraria.Localization;
 
 namespace Redemption.NPCs.Critters
 {
@@ -36,6 +37,7 @@ namespace Redemption.NPCs.Critters
         public override void SetStaticDefaults()
         {
             Main.npcFrameCount[Type] = 3;
+            NPCID.Sets.ShimmerTransformToNPC[NPC.type] = NPCID.Shimmerfly;
             NPCID.Sets.CountsAsCritter[Type] = true;
             NPCID.Sets.DontDoHardmodeScaling[Type] = true;
             NPCID.Sets.TakesDamageFromHostilesWithoutBeingFriendly[Type] = true;
@@ -66,13 +68,13 @@ namespace Redemption.NPCs.Critters
         }
 
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => AIState is ActionState.Aggressive && !target.dontHurtCritters;
-        public override bool? CanHitNPC(NPC target) => false;
-        public override void ModifyHitPlayer(Player target, ref int damage, ref bool crit) => target.noKnockback = true;
-        public override void OnHitPlayer(Player target, int damage, bool crit)
+        public override bool CanHitNPC(NPC target) => false;
+        public override void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers) => target.noKnockback = true;
+        public override void OnHitPlayer(Player target, Player.HurtInfo hurtInfo)
         {
             target.AddBuff(ModContent.BuffType<SpiderSwarmedDebuff>(), 120);
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit)
         {
             target.AddBuff(ModContent.BuffType<SpiderSwarmedDebuff>(), 120);
         }
@@ -129,9 +131,7 @@ namespace Redemption.NPCs.Critters
 
                     if (RedeHelper.ClosestNPC(ref npcTarget, 100, NPC.Center) && npcTarget.damage > 0)
                     {
-                        RedeHelper.HorizontallyMove(NPC,
-                            new Vector2(npcTarget.Center.X < NPC.Center.X ? NPC.Center.X + 50 : NPC.Center.X - 50,
-                                NPC.Center.Y), 0.5f, 3f, 4, 4, false);
+                        NPCHelper.HorizontallyMove(NPC, new Vector2(npcTarget.Center.X < NPC.Center.X ? NPC.Center.X + 50 : NPC.Center.X - 50, NPC.Center.Y), 0.5f, 3f, 4, 4, false);
                         return;
                     }
 
@@ -144,7 +144,7 @@ namespace Redemption.NPCs.Critters
                         AIState = ActionState.Idle;
                     }
 
-                    RedeHelper.HorizontallyMove(NPC, moveTo * 16, 0.5f, 3f, 6, 6, false);
+                    NPCHelper.HorizontallyMove(NPC, moveTo * 16, 0.5f, 3f, 6, 6, false);
                     break;
 
                 case ActionState.Hop:
@@ -180,7 +180,7 @@ namespace Redemption.NPCs.Critters
                         runCooldown--;
 
                     NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20);
-                    RedeHelper.HorizontallyMove(NPC, globalNPC.attacker.Center, 0.5f, 3f, 6, 6, NPC.Center.Y > globalNPC.attacker.Center.Y);
+                    NPCHelper.HorizontallyMove(NPC, globalNPC.attacker.Center, 0.5f, 3f, 6, 6, NPC.Center.Y > globalNPC.attacker.Center.Y, globalNPC.attacker);
                     break;
             }
         }
@@ -193,7 +193,7 @@ namespace Redemption.NPCs.Critters
             for (int i = 0; i < Main.maxNPCs; i++)
             {
                 NPC target = Main.npc[i];
-                if (!target.active || target.whoAmI == NPC.whoAmI || target.dontTakeDamage || target.type == NPCID.OldMan)
+                if (!target.active || target.whoAmI == NPC.whoAmI || target.dontTakeDamage || target.type == NPCID.OldMan || target.type == NPCID.TargetDummy)
                     continue;
 
                 if (target.lifeMax <= 5 || target.type == NPC.type)
@@ -291,11 +291,11 @@ namespace Redemption.NPCs.Critters
             {
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Biomes.Caverns,
 
-                new FlavorTextBestiaryInfoElement("Lives in dark caverns or basements. These on their own are harmless, but if you see a swarm of them, prepare for a thousand bite marks.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.Spiderswarmer"))
             });
         }
 
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             for (int i = 0; i < 4; i++)
                 Dust.NewDust(NPC.position + NPC.velocity, NPC.width, NPC.height, DustID.GreenBlood, NPC.velocity.X * 0.5f,

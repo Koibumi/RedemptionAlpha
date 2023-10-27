@@ -1,10 +1,10 @@
 using Microsoft.Xna.Framework;
 using Redemption.Items.Materials.PreHM;
-using Redemption.Projectiles.Melee;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.Items.Weapons.HM.Melee
@@ -13,13 +13,15 @@ namespace Redemption.Items.Weapons.HM.Melee
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Blind Justice, Demon's Terror");
-            Tooltip.SetDefault("Hold left-click to charge a Radiance Spin Slash\n" +
-                "Right-click to shoot a spectral scythe, dealing Arcane damage\n" +
-                "Deals double damage against demonic enemies");
+            // DisplayName.SetDefault("Blind Justice, Demon's Terror");
+            /* Tooltip.SetDefault("Hold left-click to charge a Radiance Spin Slash\n" +
+                "Right-click the moment you're about to be hit by a physical attack (contact damage or weapon) to perform a parry, granting immunity frames\n" +
+                "Contact damage parries will not take effect if the enemy is stationary or moving twice as slow as you\n" +
+                "After a successful parry, left-click to counter with an instant Radiance Spin Slash\n" +
+                "Deals double damage against demonic enemies"); */
 
             ItemID.Sets.SkipsInitialUseSound[Item.type] = true;
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -50,22 +52,6 @@ namespace Redemption.Items.Weapons.HM.Melee
             Item.shoot = ModContent.ProjectileType<BlindJustice_Proj>();
         }
         public override bool AltFunctionUse(Player player) => true;
-        public override bool CanUseItem(Player player)
-        {
-            if (player.altFunctionUse == 2)
-            {
-                Item.useStyle = ItemUseStyleID.Swing;
-                Item.noMelee = false;
-                Item.noUseGraphic = false;
-            }
-            else
-            {
-                Item.useStyle = ItemUseStyleID.Shoot;
-                Item.noMelee = true;
-                Item.noUseGraphic = true;
-            }
-            return true;
-        }
         public override void AddRecipes()
         {
             CreateRecipe()
@@ -79,9 +65,8 @@ namespace Redemption.Items.Weapons.HM.Melee
         {
             if (player.altFunctionUse == 2)
             {
-                SoundEngine.PlaySound(SoundID.Item71, player.position);
-                damage = (int)(damage * 0.75f);
-                type = ModContent.ProjectileType<SpectralScythe_Proj>();
+                SoundEngine.PlaySound(SoundID.DD2_MonkStaffSwing, player.position);
+                type = ModContent.ProjectileType<BlindJustice_Proj2>();
             }
             else
                 type = ModContent.ProjectileType<BlindJustice_Proj>();
@@ -90,10 +75,7 @@ namespace Redemption.Items.Weapons.HM.Melee
         {
             if (Main.keyState.PressingShift())
             {
-                TooltipLine line = new(Mod, "Lore",
-                    "'Elegant and holy, this weapon was owned by Eymen - a well-renowned member of the High Templars.\n" +
-                    "He imbued the blade with part of his permanent soul to keep it holy far past his own death.\n" +
-                    "Eymen treated his weapon like his own flesh, and used it to smite numerous demons of high calibre.'")
+                TooltipLine line = new(Mod, "Lore", Language.GetTextValue("Mods.Redemption.Items.BlindJustice.Lore"))
                 {
                     OverrideColor = Color.LightGray
                 };
@@ -101,7 +83,7 @@ namespace Redemption.Items.Weapons.HM.Melee
             }
             else
             {
-                TooltipLine line = new(Mod, "HoldShift", "Hold [Shift] to view lore")
+                TooltipLine line = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.SpecialTooltips.Viewer"))
                 {
                     OverrideColor = Color.Gray,
                 };

@@ -12,10 +12,11 @@ namespace Redemption.Projectiles.Ranged
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Spirit Shard");
+            // DisplayName.SetDefault("Spirit Shard");
             ProjectileID.Sets.CultistIsResistantTo[Projectile.type] = true;
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 4;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjArcane[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -27,6 +28,7 @@ namespace Redemption.Projectiles.Ranged
             Projectile.penetrate = 1;
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.timeLeft = 180;
+            Projectile.arrow = true;
         }
         NPC target;
         public override void AI()
@@ -60,7 +62,7 @@ namespace Redemption.Projectiles.Ranged
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, color, Projectile.rotation, drawOrigin, Projectile.scale, effects, 0);
             return false;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             for (int i = 0; i < 8; i++)
             {

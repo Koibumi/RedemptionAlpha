@@ -15,7 +15,7 @@ namespace Redemption.Projectiles.Ranged
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("D.A.N Laser");
+            // DisplayName.SetDefault("D.A.N Laser");
         }
         public override void SetDefaults()
         {
@@ -72,15 +72,15 @@ namespace Redemption.Projectiles.Ranged
                     if (numtries >= 20)
                         break;
 
-                    int p = Projectile.NewProjectile(Projectile.GetSource_FromAI(), origin, new Vector2(0, -6), ProjectileID.GeyserTrap, Projectile.damage / 5, Projectile.knockBack, player.whoAmI);
+                    int p = Projectile.NewProjectile(Projectile.GetSource_FromAI(), origin, new Vector2(0, -6), ProjectileID.GeyserTrap, Projectile.damage / 6, Projectile.knockBack, player.whoAmI);
                     Main.projectile[p].hostile = false;
                     Main.projectile[p].friendly = true;
-                    Main.projectile[p].netUpdate2 = true;
+                    Main.projectile[p].netUpdate = true;
                 }
             }
             return true;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             if (Projectile.ai[1] == 1)
             {

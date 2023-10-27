@@ -1,9 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Redemption.Base;
 using Redemption.Buffs.Pets;
 using Redemption.Globals;
-using System;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.ID;
@@ -17,6 +15,8 @@ namespace Redemption.Projectiles.Pets
         {
             Main.projFrames[Projectile.type] = 16;
             Main.projPet[Projectile.type] = true;
+            ProjectileID.Sets.CharacterPreviewAnimations[Projectile.type] = ProjectileID.Sets.SimpleLoop(1, 9, 5)
+                .WithOffset(2, 0).WithSpriteDirection(-1);
         }
 
         public override void SetDefaults()

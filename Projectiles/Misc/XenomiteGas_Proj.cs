@@ -4,6 +4,7 @@ using Terraria;
 using Terraria.GameContent;
 using Terraria.ModLoader;
 using Redemption.Buffs.Debuffs;
+using Redemption.Globals;
 
 namespace Redemption.Projectiles.Misc
 {
@@ -12,7 +13,9 @@ namespace Redemption.Projectiles.Misc
         public override string Texture => "Redemption/Textures/IceMist";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Bile Gas");
+            // DisplayName.SetDefault("Bile Gas");
+            ElementID.ProjWind[Type] = true;
+            ElementID.ProjPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -26,7 +29,7 @@ namespace Redemption.Projectiles.Misc
             Projectile.alpha = 255;
             Projectile.timeLeft = 600;
             Projectile.scale = Main.rand.NextFloat(1, 1.5f);
-            Projectile.rotation = Main.rand.NextFloat(0, MathHelper.TwoPi);
+            Projectile.rotation = RedeHelper.RandomRotation();
             Projectile.usesLocalNPCImmunity = true;
         }
         public override void AI()
@@ -63,7 +66,7 @@ namespace Redemption.Projectiles.Misc
                 }
             }
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Projectile.localNPCImmunity[target.whoAmI] = 30;
             target.immune[Projectile.owner] = 0;

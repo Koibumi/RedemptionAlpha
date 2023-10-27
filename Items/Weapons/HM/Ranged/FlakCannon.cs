@@ -15,17 +15,17 @@ namespace Redemption.Items.Weapons.HM.Ranged
 	{
 		public override void SetStaticDefaults()
 		{
-            Tooltip.SetDefault("Uses grenades as ammo, sticky and bouncy grenades included\n" +
+            /* Tooltip.SetDefault("Uses grenades as ammo, sticky and bouncy grenades included\n" +
                 "Fires flak grenades that penetrate through defense\n" +
                 "\nHolding left-click will charge a stream of grenades with no additional ammo consumption\n" +
-                "'Quite the unreal bang bang and boom boom'");
+                "'Quite the unreal bang bang and boom boom'"); */
             ItemID.Sets.SkipsInitialUseSound[Item.type] = true;
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
         {
-            Item.damage = 65;
+            Item.damage = 60;
             Item.DamageType = DamageClass.Ranged;
             Item.width = 92;
             Item.height = 50;
@@ -103,11 +103,10 @@ namespace Redemption.Items.Weapons.HM.Ranged
         public override void AddRecipes()
         {
             CreateRecipe()
-                .AddIngredient(ItemID.Shotgun)
-                .AddIngredient(ItemID.PhoenixBlaster)
                 .AddIngredient(ItemID.HellstoneBar, 10)
                 .AddIngredient(ItemID.HallowedBar, 10)
                 .AddIngredient(ItemID.ExplosivePowder, 15)
+                .AddIngredient(ItemID.SoulofMight, 10)
                 .AddIngredient(ItemID.IllegalGunParts)
                 .AddTile(TileID.Hellforge)
                 .Register();

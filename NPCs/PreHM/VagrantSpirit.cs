@@ -15,6 +15,9 @@ using Terraria.GameContent.ItemDropRules;
 using Terraria.GameContent.Bestiary;
 using Redemption.Items.Usable.Potions;
 using Redemption.BaseExtension;
+using Redemption.Globals.NPC;
+using Terraria.Localization;
+using System;
 
 namespace Redemption.NPCs.PreHM
 {
@@ -43,10 +46,7 @@ namespace Redemption.NPCs.PreHM
             NPCID.Sets.TrailCacheLength[NPC.type] = 10;
             NPCID.Sets.TrailingMode[NPC.type] = 1;
 
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                ImmuneToAllBuffsThatAreNotWhips = true
-            });
+            NPCID.Sets.ImmuneToRegularBuffs[Type] = true;
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0)
             {
@@ -54,6 +54,7 @@ namespace Redemption.NPCs.PreHM
             };
 
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
+            ElementID.NPCArcane[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -75,7 +76,7 @@ namespace Redemption.NPCs.PreHM
             Banner = NPC.type;
             BannerItem = ModContent.ItemType<VagrantSpiritBanner>();
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -96,6 +97,7 @@ namespace Redemption.NPCs.PreHM
         public override void OnSpawn(IEntitySource source)
         {
             TimerRand = Main.rand.Next(180, 420);
+            NPC.netUpdate = true;
         }
         public override void AI()
         {
@@ -109,24 +111,7 @@ namespace Redemption.NPCs.PreHM
             NPC.TargetClosest();
             NPC.LookByVelocity();
 
-            if (NPC.ai[3] == 0)
-            {
-                NPC.velocity.Y += 0.03f;
-                if (NPC.velocity.Y > .7f)
-                {
-                    NPC.ai[3] = 1;
-                    NPC.netUpdate = true;
-                }
-            }
-            else if (NPC.ai[3] == 1)
-            {
-                NPC.velocity.Y -= 0.03f;
-                if (NPC.velocity.Y < -.7f)
-                {
-                    NPC.ai[3] = 0;
-                    NPC.netUpdate = true;
-                }
-            }
+            NPC.position.Y += (float)Math.Sin(NPC.localAI[0]++ / 40);
 
             switch (AIState)
             {
@@ -148,6 +133,7 @@ namespace Redemption.NPCs.PreHM
                         AITimer = 0;
                         TimerRand = Main.rand.Next(180, 420);
                         AIState = ActionState.Vanish;
+                        NPC.netUpdate = true;
                     }
                     break;
 
@@ -156,9 +142,8 @@ namespace Redemption.NPCs.PreHM
                     if (NPC.alpha >= 255)
                     {
                         if (((player.ZoneOverworldHeight || player.ZoneSkyHeight) && !Main.LocalPlayer.RedemptionAbility().SpiritwalkerActive) || vanishCounter > 4)
-                        {
                             NPC.active = false;
-                        }
+
                         vanishCounter++;
                         NPC.position = new Vector2(player.Center.X + (600 * NPC.spriteDirection), player.Center.Y + Main.rand.Next(-400, 401));
                         NPC.LookAtEntity(player);
@@ -169,10 +154,8 @@ namespace Redemption.NPCs.PreHM
             }
         }
 
-        public override bool CanHitPlayer(Player target, ref int cooldownSlot)
-        {
-            return NPC.alpha < 150;
-        }
+        public override bool CanHitPlayer(Player target, ref int cooldownSlot) => NPC.alpha < 150;
+        public override void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers) => target.noKnockback = true;
 
         public override void FindFrame(int frameHeight)
         {
@@ -188,15 +171,8 @@ namespace Redemption.NPCs.PreHM
             }
         }
 
-        public override bool? CanBeHitByItem(Player player, Item item)
-        {
-            return player.RedemptionAbility().SpiritwalkerActive || ItemLists.Arcane.Contains(item.type) || ItemLists.Celestial.Contains(item.type) || ItemLists.Holy.Contains(item.type) || ItemLists.Psychic.Contains(item.type) || RedeConfigClient.Instance.ElementDisable ? null : false;
-        }
-        public override bool? CanBeHitByProjectile(Projectile projectile)
-        {
-            Player player = Main.player[projectile.owner];
-            return player.RedemptionAbility().SpiritwalkerActive || ProjectileLists.Arcane.Contains(projectile.type) || ProjectileLists.Celestial.Contains(projectile.type) || ProjectileLists.Holy.Contains(projectile.type) || ProjectileLists.Psychic.Contains(projectile.type) || RedeConfigClient.Instance.ElementDisable;
-        }
+        public override bool? CanBeHitByItem(Player player, Item item) => RedeHelper.CanHitSpiritCheck(player, item);
+        public override bool? CanBeHitByProjectile(Projectile projectile) => RedeHelper.CanHitSpiritCheck(projectile);
 
         public override void OnKill()
         {
@@ -209,25 +185,25 @@ namespace Redemption.NPCs.PreHM
         }
         public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
         {
+            bestiaryEntry.UIInfoProvider = new CustomCollectionInfoProvider(ContentSamples.NpcBestiaryCreditIdsByNpcNetIds[Type], false, 25);
             bestiaryEntry.Info.AddRange(new IBestiaryInfoElement[]
             {
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Biomes.Caverns,
 
-                new FlavorTextBestiaryInfoElement(
-                    "Souls without a compatible vessel to infuse with, trapped within the spirit realm for so long they seeped out and are now slightly visible to the naked eye. They shall roam the caverns for eternity.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.VagrantSpirit"))
             });
         }
 
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
-            Texture2D Glow = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Glow").Value;
-            Texture2D Trail = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Trail").Value;
+            Texture2D Glow = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
+            Texture2D Trail = ModContent.Request<Texture2D>(Texture + "_Trail").Value;
             var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
             if (!NPC.IsABestiaryIconDummy)
             {
                 spriteBatch.End();
-                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+                spriteBatch.BeginAdditive();
 
                 for (int i = 0; i < NPCID.Sets.TrailCacheLength[NPC.type]; i++)
                 {
@@ -236,7 +212,7 @@ namespace Redemption.NPCs.PreHM
                 }
 
                 spriteBatch.End();
-                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
             }
 
             spriteBatch.Draw(TextureAssets.Npc[NPC.type].Value, NPC.Center - screenPos, NPC.frame, NPC.GetAlpha(drawColor), NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
@@ -256,21 +232,21 @@ namespace Redemption.NPCs.PreHM
                 Vector2 drawOrigin = new(LightGlow.Width / 2, LightGlow.Height / 2);
 
                 Main.spriteBatch.End();
-                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+                Main.spriteBatch.BeginAdditive();
 
                 spriteBatch.Draw(LightGlow, position1, new Rectangle?(rect), NPC.GetAlpha(color) * 1.5f, MathHelper.PiOver2, drawOrigin, scale, SpriteEffects.None, 0);
                 spriteBatch.Draw(LightGlow, position2, new Rectangle?(rect), NPC.GetAlpha(color) * 1.5f, MathHelper.PiOver2, drawOrigin, scale, SpriteEffects.None, 0);
 
                 Main.spriteBatch.End();
-                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+                Main.spriteBatch.BeginDefault();
             }
         }
         public override float SpawnChance(NPCSpawnInfo spawnInfo)
         {
             if (spawnInfo.Player.RedemptionAbility().SpiritwalkerActive && !spawnInfo.Player.ZoneTowerNebula && !spawnInfo.Player.ZoneTowerSolar && !spawnInfo.Player.ZoneTowerStardust && !spawnInfo.Player.ZoneTowerVortex)
-                return 1f;
+                return 0.6f;
 
-            return SpawnCondition.Cavern.Chance * 0.01f;
+            return SpawnCondition.Cavern.Chance * 0.007f;
         }
     }
 }

@@ -11,6 +11,8 @@ using Redemption.Items.Materials.PostML;
 using Redemption.Rarities;
 using Redemption.Globals;
 using Terraria.Audio;
+using Redemption.WorldGeneration.Soulless;
+using SubworldLibrary;
 
 namespace Redemption.Items.Usable.Summons
 {
@@ -18,12 +20,12 @@ namespace Redemption.Items.Usable.Summons
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Galaxy Stone");
-            Tooltip.SetDefault("Summons the Angel of the Cosmos"
+            // DisplayName.SetDefault("Galaxy Stone");
+            /* Tooltip.SetDefault("Summons the Angel of the Cosmos"
                 + "\nOnly usable at night"
-                + "\nNot consumable");
+                + "\nNot consumable"); */
             Main.RegisterItemAnimation(Item.type, new DrawAnimationVertical(4, 8));
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
             ItemID.Sets.SortingPriorityBossSpawns[Type] = 13;
         }
 
@@ -42,18 +44,18 @@ namespace Redemption.Items.Usable.Summons
         }
         public override bool CanUseItem(Player player)
         {
-            return !Main.dayTime && !NPC.AnyNPCs(ModContent.NPCType<Nebuleus>()) && !NPC.AnyNPCs(ModContent.NPCType<Nebuleus2>()) && !NPC.AnyNPCs(ModContent.NPCType<Nebuleus_Clone>()) && !NPC.AnyNPCs(ModContent.NPCType<Nebuleus2_Clone>());
+            return !SubworldSystem.IsActive<SoullessSub>() && !Main.dayTime && !NPC.AnyNPCs(ModContent.NPCType<Nebuleus>()) && !NPC.AnyNPCs(ModContent.NPCType<Nebuleus2>()) && !NPC.AnyNPCs(ModContent.NPCType<Nebuleus_Clone>()) && !NPC.AnyNPCs(ModContent.NPCType<Nebuleus2_Clone>()) && !NPC.AnyNPCs(ModContent.NPCType<Neb_Start>());
         }
         public override bool AltFunctionUse(Player player)
         {
-            return RedeBossDowned.nebDeath > 5 || RedeBossDowned.downedNebuleus;
+            return RedeBossDowned.nebDeath > 5;
         }
         public override bool? UseItem(Player player)
         {
             if (player.whoAmI == Main.myPlayer)
             {
                 int type = ModContent.NPCType<Neb_Start>();
-                if ((RedeBossDowned.nebDeath > 5 || RedeBossDowned.downedNebuleus) && player.altFunctionUse == 2)
+                if (RedeBossDowned.nebDeath > 5 && player.altFunctionUse == 2)
                 {
                     if (!Main.dedServ)
                         SoundEngine.PlaySound(CustomSounds.Teleport2, player.position);
@@ -65,7 +67,7 @@ namespace Redemption.Items.Usable.Summons
                         if (Main.netMode != NetmodeID.MultiplayerClient)
                             NPC.NewNPC(new EntitySource_BossSpawn(player), (int)player.position.X + 200, (int)player.position.Y - 200, type);
                         else
-                            NetMessage.SendData(MessageID.SpawnBoss, number: player.whoAmI, number2: type);
+                            NetMessage.SendData(MessageID.SpawnBossUseLicenseStartEvent, number: player.whoAmI, number2: type);
                     }
                     else
                     {
@@ -75,7 +77,7 @@ namespace Redemption.Items.Usable.Summons
                         if (Main.netMode != NetmodeID.MultiplayerClient)
                             NPC.NewNPC(new EntitySource_BossSpawn(player), (int)player.position.X + 200, (int)player.position.Y - 200, type);
                         else
-                            NetMessage.SendData(MessageID.SpawnBoss, number: player.whoAmI, number2: type);
+                            NetMessage.SendData(MessageID.SpawnBossUseLicenseStartEvent, number: player.whoAmI, number2: type);
                     }
                 }
                 else
@@ -85,7 +87,7 @@ namespace Redemption.Items.Usable.Summons
                         if (Main.netMode != NetmodeID.MultiplayerClient)
                             NPC.NewNPC(new EntitySource_BossSpawn(player), (int)player.position.X + 200, (int)player.position.Y - 200, type);
                         else
-                            NetMessage.SendData(MessageID.SpawnBoss, number: player.whoAmI, number2: type);
+                            NetMessage.SendData(MessageID.SpawnBossUseLicenseStartEvent, number: player.whoAmI, number2: type);
                     }
                     else
                     {
@@ -98,7 +100,7 @@ namespace Redemption.Items.Usable.Summons
                         if (Main.netMode != NetmodeID.MultiplayerClient)
                             NPC.NewNPC(new EntitySource_BossSpawn(player), (int)player.position.X + 200, (int)player.position.Y - 200, type);
                         else
-                            NetMessage.SendData(MessageID.SpawnBoss, number: player.whoAmI, number2: type);
+                            NetMessage.SendData(MessageID.SpawnBossUseLicenseStartEvent, number: player.whoAmI, number2: type);
                     }
                 }
             }
@@ -113,7 +115,7 @@ namespace Redemption.Items.Usable.Summons
             {
                 OverrideColor = Main.DiscoColor
             };
-            if (RedeBossDowned.nebDeath > 5 || RedeBossDowned.downedNebuleus)
+            if (RedeBossDowned.nebDeath > 5)
             {
                 tooltips.Insert(tooltipLocation, line);
             }

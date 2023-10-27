@@ -1,16 +1,12 @@
 using Microsoft.Xna.Framework;
-using Redemption.BaseExtension;
 using Redemption.Biomes;
 using Redemption.Dusts;
 using Redemption.Items.Materials.PreHM;
 using Redemption.NPCs.Critters;
-using Redemption.Tiles.Furniture.Misc;
-using Redemption.Tiles.Furniture.SlayerShip;
 using Redemption.Tiles.Natural;
 using Redemption.Tiles.Plants;
 using Redemption.Tiles.Tiles;
-using System.Linq;
-using System.Reflection.Metadata;
+using Redemption.WorldGeneration;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
@@ -33,8 +29,19 @@ namespace Redemption.Globals
                     Dust.NewDust(new Vector2(i * 16, j * 16), 0, 0, ModContent.DustType<XenoWaterDust>(), Main.rand.NextFloat(-2f, 2f), Main.rand.NextFloat(-4f, -2f));
             }
         }
-
-        public override bool Drop(int i, int j, int type)
+        public override bool CanDrop(int i, int j, int type)
+        {
+            if (type == ModContent.TileType<IrradiatedDirtTile>() && TileID.Sets.BreakableWhenPlacing[ModContent.TileType<IrradiatedDirtTile>()])
+                return false;
+            if (type == ModContent.TileType<AncientDirtTile>() && TileID.Sets.BreakableWhenPlacing[ModContent.TileType<AncientDirtTile>()])
+                return false;
+            if (type == ModContent.TileType<ShadestoneBrickTile>() && TileID.Sets.BreakableWhenPlacing[ModContent.TileType<ShadestoneBrickTile>()])
+                return false;
+            if (type == ModContent.TileType<ShadestoneTile>() && TileID.Sets.BreakableWhenPlacing[ModContent.TileType<ShadestoneTile>()])
+                return false;
+            return base.CanDrop(i, j, type);
+        }
+        public override void Drop(int i, int j, int type)
         {
             if (Main.netMode != NetmodeID.MultiplayerClient && !WorldGen.noTileActions && !WorldGen.gen)
             {
@@ -51,17 +58,6 @@ namespace Redemption.Globals
             }
             if ((type == TileID.LeafBlock || type == TileID.LivingMahoganyLeaves) && Main.rand.NextBool(4))
                 Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 16, 16, ModContent.ItemType<LivingTwig>());
-
-            if (type == ModContent.TileType<IrradiatedDirtTile>() && TileID.Sets.BreakableWhenPlacing[ModContent.TileType<IrradiatedDirtTile>()])
-                return false;
-            if (type == ModContent.TileType<AncientDirtTile>() && TileID.Sets.BreakableWhenPlacing[ModContent.TileType<AncientDirtTile>()])
-                return false;
-            if (type == ModContent.TileType<ShadestoneBrickTile>() && TileID.Sets.BreakableWhenPlacing[ModContent.TileType<ShadestoneBrickTile>()])
-                return false;
-            if (type == ModContent.TileType<ShadestoneTile>() && TileID.Sets.BreakableWhenPlacing[ModContent.TileType<ShadestoneTile>()])
-                return false;
-
-            return base.Drop(i, j, type);
         }
         public override void RandomUpdate(int i, int j, int type)
         {
@@ -89,33 +85,33 @@ namespace Redemption.Globals
                         WorldGen.PlaceTile(i, j - 1, ModContent.TileType<RadRootTile>(), true);
                 }
             }
-            if (Terraria.NPC.downedBoss3 && TileID.Sets.Conversion.Ice[type] && RedeWorld.alignment >= 0)
+            if (RedeGen.cryoCrystalSpawn && TileID.Sets.Conversion.Ice[type])
             {
                 bool tileUp = !Framing.GetTileSafely(i, j - 1).HasTile;
                 bool tileDown = !Framing.GetTileSafely(i, j + 1).HasTile;
                 bool tileLeft = !Framing.GetTileSafely(i - 1, j).HasTile;
                 bool tileRight = !Framing.GetTileSafely(i + 1, j).HasTile;
-                if (Main.rand.NextBool(1200) && j > (int)WorldGen.rockLayer)
+                if (Main.rand.NextBool(1200) && j > (int)(Main.maxTilesY * .25f))
                 {
                     if (tileUp)
                     {
                         WorldGen.PlaceObject(i, j - 1, ModContent.TileType<CryoCrystalTile>(), true);
-                        NetMessage.SendObjectPlacment(-1, i, j - 1, ModContent.TileType<CryoCrystalTile>(), 0, 0, -1, -1);
+                        NetMessage.SendObjectPlacement(-1, i, j - 1, ModContent.TileType<CryoCrystalTile>(), 0, 0, -1, -1);
                     }
                     else if (tileDown)
                     {
                         WorldGen.PlaceObject(i, j + 1, ModContent.TileType<CryoCrystalTile>(), true);
-                        NetMessage.SendObjectPlacment(-1, i, j + 1, ModContent.TileType<CryoCrystalTile>(), 0, 0, -1, -1);
+                        NetMessage.SendObjectPlacement(-1, i, j + 1, ModContent.TileType<CryoCrystalTile>(), 0, 0, -1, -1);
                     }
                     else if (tileLeft)
                     {
                         WorldGen.PlaceObject(i - 1, j, ModContent.TileType<CryoCrystalTile>(), true);
-                        NetMessage.SendObjectPlacment(-1, i - 1, j, ModContent.TileType<CryoCrystalTile>(), 0, 0, -1, -1);
+                        NetMessage.SendObjectPlacement(-1, i - 1, j, ModContent.TileType<CryoCrystalTile>(), 0, 0, -1, -1);
                     }
                     else if (tileRight)
                     {
                         WorldGen.PlaceObject(i + 1, j, ModContent.TileType<CryoCrystalTile>(), true);
-                        NetMessage.SendObjectPlacment(-1, i + 1, j, ModContent.TileType<CryoCrystalTile>(), 0, 0, -1, -1);
+                        NetMessage.SendObjectPlacement(-1, i + 1, j, ModContent.TileType<CryoCrystalTile>(), 0, 0, -1, -1);
                     }
                 }
             }
@@ -125,12 +121,16 @@ namespace Redemption.Globals
         {
             if (Main.tile[i, j - 1].HasTile && RedeTileHelper.CannotMineTileBelow[Main.tile[i, j - 1].TileType])
                 return false;
+            if (Main.tile[i, j + 1].HasTile && RedeTileHelper.CannotMineTileAbove[Main.tile[i, j + 1].TileType])
+                return false;
             return base.CanKillTile(i, j, type, ref blockDamaged);
         }
 
         public override bool CanExplode(int i, int j, int type)
         {
             if (Main.tile[i, j - 1].HasTile && RedeTileHelper.CannotMineTileBelow[Main.tile[i, j - 1].TileType])
+                return false;
+            if (Main.tile[i, j + 1].HasTile && RedeTileHelper.CannotMineTileAbove[Main.tile[i, j + 1].TileType])
                 return false;
             return base.CanExplode(i, j, type);
         }
@@ -139,11 +139,15 @@ namespace Redemption.Globals
         {
             if (Main.tile[i, j - 1].HasTile && RedeTileHelper.CannotMineTileBelow[Main.tile[i, j - 1].TileType])
                 return false;
+            if (Main.tile[i, j + 1].HasTile && RedeTileHelper.CannotMineTileAbove[Main.tile[i, j + 1].TileType])
+                return false;
             return base.Slope(i, j, type);
         }
     }
     public static class RedeTileHelper
     {
         public static bool[] CannotMineTileBelow = TileID.Sets.Factory.CreateBoolSet();
+        public static bool[] CannotMineTileAbove = TileID.Sets.Factory.CreateBoolSet();
+        public static bool[] CannotTeleportInFront = WallID.Sets.Factory.CreateBoolSet();
     }
 }

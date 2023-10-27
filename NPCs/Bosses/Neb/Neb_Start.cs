@@ -19,7 +19,7 @@ namespace Redemption.NPCs.Bosses.Neb
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("");
+            // DisplayName.SetDefault("");
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0)
             {
@@ -120,9 +120,9 @@ namespace Redemption.NPCs.Bosses.Neb
                 case 4:
                     if (NPC.ai[2]++ == 5)
                     {
-                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<Neb_Start_Visual>(), 0, new Vector2(0, 90), true, SoundID.Item163, NPC.whoAmI);
-                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<Neb_Start_Visual2>(), 0, new Vector2(0, 90), false, SoundID.Item1, NPC.whoAmI);
-                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<Neb_Start_Visual3>(), 0, new Vector2(0, 90), false, SoundID.Item1, NPC.whoAmI);
+                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<Neb_Start_Visual>(), 0, new Vector2(0, 90), SoundID.Item163, NPC.whoAmI);
+                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<Neb_Start_Visual2>(), 0, new Vector2(0, 90), NPC.whoAmI);
+                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<Neb_Start_Visual3>(), 0, new Vector2(0, 90), NPC.whoAmI);
                     }
                     if (NPC.ai[2] >= 5)
                         player.RedemptionScreen().ScreenShakeIntensity = MathHelper.Max(Main.LocalPlayer.RedemptionScreen().ScreenShakeIntensity, 10);
@@ -141,10 +141,10 @@ namespace Redemption.NPCs.Bosses.Neb
 
                     SoundEngine.PlaySound(CustomSounds.NebSound3, NPC.position);
                     SoundEngine.PlaySound(CustomSounds.Teleport2, NPC.position);
-                    DustHelper.DrawParticleStar(NPC.Center, new GlowParticle2(), Color.IndianRed, 5, 4, 3, 1, 2, 0, ai0: .05f, ai1: Main.rand.Next(50, 60));
-                    DustHelper.DrawParticleStar(NPC.Center, new GlowParticle2(), Color.Pink, 5, 5, 3, 1, 2, 0, ai0: .05f, ai1: Main.rand.Next(50, 60));
-                    DustHelper.DrawParticleStar(NPC.Center, new GlowParticle2(), Color.Purple, 5, 6, 3, 1, 2, 0, ai0: .05f, ai1: Main.rand.Next(50, 60));
-                    DustHelper.DrawParticleStar(NPC.Center, new GlowParticle2(), Color.Blue, 5, 7, 1, 3, 2, 0, ai0: .05f, ai1: Main.rand.Next(50, 60));
+                    DustHelper.DrawParticleStar<GlowParticle2>(NPC.Center, Color.IndianRed, 5, 4, 3, 1, 2, 0, ai0: .05f, ai1: Main.rand.Next(50, 60));
+                    DustHelper.DrawParticleStar<GlowParticle2>(NPC.Center, Color.Pink, 5, 5, 3, 1, 2, 0, ai0: .05f, ai1: Main.rand.Next(50, 60));
+                    DustHelper.DrawParticleStar<GlowParticle2>(NPC.Center, Color.Purple, 5, 6, 3, 1, 2, 0, ai0: .05f, ai1: Main.rand.Next(50, 60));
+                    DustHelper.DrawParticleStar<GlowParticle2>(NPC.Center, Color.Blue, 5, 7, 1, 3, 2, 0, ai0: .05f, ai1: Main.rand.Next(50, 60));
                     for (int d = 0; d < 16; d++)
                         ParticleManager.NewParticle(NPC.Center, RedeHelper.Spread(6), new RainbowParticle(), Color.White, 1);
 
@@ -186,7 +186,7 @@ namespace Redemption.NPCs.Bosses.Neb
         public int proType = 0;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Nebuleus");
+            // DisplayName.SetDefault("Nebuleus");
         }
         public override void SetDefaults()
         {
@@ -261,8 +261,8 @@ namespace Redemption.NPCs.Bosses.Neb
                 Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
 
                 Color color = new(Main.DiscoR * 6, Main.DiscoG * 6, Main.DiscoB * 6);
-                Main.EntitySpriteDraw(texture, position - new Vector2(0, 80), new Rectangle?(rect), color * Projectile.Opacity, Projectile.rotation, origin, Projectile.scale * 0.5f, 0, 0);
-                Main.EntitySpriteDraw(texture, position - new Vector2(0, 80), new Rectangle?(rect), color * 0.7f * Projectile.Opacity, -Projectile.rotation, origin, Projectile.scale * 0.5f, 0, 0);
+                Main.EntitySpriteDraw(texture, position, new Rectangle?(rect), color * Projectile.Opacity, Projectile.rotation, origin, Projectile.scale * 0.5f, 0, 0);
+                Main.EntitySpriteDraw(texture, position, new Rectangle?(rect), color * 0.7f * Projectile.Opacity, -Projectile.rotation, origin, Projectile.scale * 0.5f, 0, 0);
 
                 Main.spriteBatch.End();
                 Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
@@ -274,7 +274,7 @@ namespace Redemption.NPCs.Bosses.Neb
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Nebuleus");
+            // DisplayName.SetDefault("Nebuleus");
         }
         public override void SetDefaults()
         {
@@ -288,7 +288,7 @@ namespace Redemption.NPCs.Bosses.Neb
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Nebuleus");
+            // DisplayName.SetDefault("Nebuleus");
         }
         public override void SetDefaults()
         {

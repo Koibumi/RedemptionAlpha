@@ -4,6 +4,7 @@ using Terraria;
 using Terraria.GameContent;
 using Terraria.ModLoader;
 using Redemption.Buffs.Debuffs;
+using Redemption.Globals;
 
 namespace Redemption.Projectiles.Misc
 {
@@ -12,22 +13,23 @@ namespace Redemption.Projectiles.Misc
         public override string Texture => "Redemption/Textures/IceMist";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Toxic Gas");
+            // DisplayName.SetDefault("Toxic Gas");
+            ElementID.ProjPoison[Type] = true;
+            ElementID.ProjWind[Type] = true;
         }
         public override void SetDefaults()
         {
             Projectile.width = 150;
             Projectile.height = 150;
             Projectile.DamageType = DamageClass.Ranged;
-            Projectile.penetrate = -1;
+            Projectile.penetrate = 10;
             Projectile.hostile = false;
             Projectile.friendly = true;
             Projectile.tileCollide = false;
             Projectile.alpha = 255;
             Projectile.timeLeft = 600;
             Projectile.scale = Main.rand.NextFloat(0.5f, 0.8f);
-            Projectile.rotation = Main.rand.NextFloat(0, MathHelper.TwoPi);
-            Projectile.usesLocalNPCImmunity = true;
+            Projectile.rotation = RedeHelper.RandomRotation();
         }
         public override void AI()
         {
@@ -69,16 +71,10 @@ namespace Redemption.Projectiles.Misc
                 }
             }
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             if (Main.rand.NextBool(5))
                 target.AddBuff(ModContent.BuffType<GlowingPustulesDebuff>(), 300);
-
-            if (Projectile.ai[0] == 0)
-            {
-                Projectile.localNPCImmunity[target.whoAmI] = 30;
-                target.immune[Projectile.owner] = 0;
-            }
         }
         public override bool PreDraw(ref Color lightColor)
         {

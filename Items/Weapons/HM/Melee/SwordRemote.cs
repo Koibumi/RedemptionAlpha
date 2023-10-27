@@ -1,6 +1,7 @@
-﻿using Terraria.ID;
+using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria;
+using Terraria.Localization;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using System;
@@ -20,12 +21,12 @@ namespace Redemption.Items.Weapons.HM.Melee
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Cleaver Remote");
-            Tooltip.SetDefault("'Size does matter'"
+            // DisplayName.SetDefault("Cleaver Remote");
+            /* Tooltip.SetDefault("'Size does matter'"
                 + "\nCalls upon the Omega Cleaver to unleash a devastating attack" +
                 "\nRight-Click to switch mode of attack" +
-                "\n20 second cooldown");
-            SacrificeTotal = 1;
+                "\n15 second cooldown"); */
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -48,14 +49,17 @@ namespace Redemption.Items.Weapons.HM.Melee
             Item.noUseGraphic = false;
             Item.shoot = ModContent.ProjectileType<RemoteCleaver>();
             if (!Main.dedServ)
-                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Item.ModItem.Texture + "_Glow").Value;
+                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
         }
         public override bool AltFunctionUse(Player player) => true;
         public int AttackMode;
         public override bool CanUseItem(Player player)
         {
             if (player.altFunctionUse == 2)
+            {
                 Item.UseSound = CustomSounds.ShootChange;
+                return true;
+            }
             else
                 Item.UseSound = SoundID.Item44;
             return !player.HasBuff(ModContent.BuffType<SwordRemoteCooldown>());
@@ -75,22 +79,22 @@ namespace Redemption.Items.Weapons.HM.Melee
                 switch (AttackMode)
                 {
                     case 0:
-                        CombatText.NewText(player.getRect(), Color.Red, "Swing Mode", true, false);
+                        CombatText.NewText(player.getRect(), Color.Red, Language.GetTextValue("Mods.Redemption.Items.SwordRemote.Mode1"), true, false);
                         break;
                     case 1:
-                        CombatText.NewText(player.getRect(), Color.Red, "Stab Mode", true, false);
+                        CombatText.NewText(player.getRect(), Color.Red, Language.GetTextValue("Mods.Redemption.Items.SwordRemote.Mode2"), true, false);
                         break;
                     case 2:
-                        CombatText.NewText(player.getRect(), Color.Red, "Sword Burst Mode", true, false);
+                        CombatText.NewText(player.getRect(), Color.Red, Language.GetTextValue("Mods.Redemption.Items.SwordRemote.Mode3"), true, false);
                         break;
                     case 3:
-                        CombatText.NewText(player.getRect(), Color.Red, "Red Prism Mode", true, false);
+                        CombatText.NewText(player.getRect(), Color.Red, Language.GetTextValue("Mods.Redemption.Items.SwordRemote.Mode4"), true, false);
                         break;
                 }
             }
             else
             {
-                player.AddBuff(ModContent.BuffType<SwordRemoteCooldown>(), 1200, true);
+                player.AddBuff(ModContent.BuffType<SwordRemoteCooldown>(), 900, true);
                 switch (AttackMode)
                 {
                     case 0:
@@ -115,16 +119,16 @@ namespace Redemption.Items.Weapons.HM.Melee
             switch (AttackMode)
             {
                 case 0:
-                    shotType = "Swing Mode";
+                    shotType = Language.GetTextValue("Mods.Redemption.Items.SwordRemote.Mode1");
                     break;
                 case 1:
-                    shotType = "Stab Mode";
+                    shotType = Language.GetTextValue("Mods.Redemption.Items.SwordRemote.Mode2");
                     break;
                 case 2:
-                    shotType = "Sword Burst Mode";
+                    shotType = Language.GetTextValue("Mods.Redemption.Items.SwordRemote.Mode3");
                     break;
                 case 3:
-                    shotType = "Red Prism Mode";
+                    shotType = Language.GetTextValue("Mods.Redemption.Items.SwordRemote.Mode4");
                     break;
             }
             TooltipLine line = new(Mod, "ShotName", shotType)
@@ -140,7 +144,7 @@ namespace Redemption.Items.Weapons.HM.Melee
         public override string Texture => "Redemption/NPCs/Bosses/Cleaver/OmegaCleaver";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Omega Cleaver");
+            // DisplayName.SetDefault("Omega Cleaver");
             Main.projFrames[Projectile.type] = 5;
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 6;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
@@ -150,6 +154,7 @@ namespace Redemption.Items.Weapons.HM.Melee
             Projectile.width = 98;
             Projectile.height = 280;
             Projectile.penetrate = -1;
+            Projectile.DamageType = DamageClass.Default;
             Projectile.hostile = false;
             Projectile.friendly = false;
             Projectile.ignoreWater = true;
@@ -161,10 +166,6 @@ namespace Redemption.Items.Weapons.HM.Melee
         NPC target;
         public override void AI()
         {
-            for (int k = Projectile.oldPos.Length - 1; k > 0; k--)
-                oldrot[k] = oldrot[k - 1];
-
-            oldrot[0] = Projectile.rotation;
             Player player = Main.player[Projectile.owner];
             switch (Projectile.ai[0])
             {
@@ -176,9 +177,9 @@ namespace Redemption.Items.Weapons.HM.Melee
                             Projectile.localAI[1]++;
                             if (RedeHelper.ClosestNPC(ref target, 2000, Projectile.Center, true, player.MinionAttackTargetNPC))
                             {
-                                rot.SlowRotation(target.Center.X > Projectile.Center.X ? 0.78f : 5.49f, (float)Math.PI / 20f);
+                                rot.SlowRotation(target.RightOf(Projectile) ? 0.78f : 5.49f, (float)Math.PI / 20f);
                                 Projectile.rotation = rot;
-                                Projectile.Move(target.Center + new Vector2(Projectile.Center.X > target.Center.X ? 200 : -200, -160), 16, 3);
+                                Projectile.Move(target.Center + new Vector2(200 * Projectile.RightOfDir(target), -160), 16, 3);
                             }
                             else
                             {
@@ -192,8 +193,8 @@ namespace Redemption.Items.Weapons.HM.Melee
                                 Projectile.alpha = 0;
                                 if (RedeHelper.ClosestNPC(ref target, 2000, Projectile.Center, true, player.MinionAttackTargetNPC))
                                 {
-                                    Projectile.rotation = target.Center.X > Projectile.Center.X ? 0.78f : 5.49f;
-                                    repeat = target.Center.X > Projectile.Center.X ? 0 : 1;
+                                    Projectile.rotation = target.RightOf(Projectile) ? 0.78f : 5.49f;
+                                    repeat = target.RightOf(Projectile) ? 0 : 1;
                                 }
                                 else
                                 {
@@ -388,11 +389,18 @@ namespace Redemption.Items.Weapons.HM.Melee
                     }
                     break;
             }
+            for (int k = Projectile.oldPos.Length - 1; k > 0; k--)
+                oldrot[k] = oldrot[k - 1];
+            oldrot[0] = Projectile.rotation;
         }
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
-            float collisionPoint = 0f;
-            return Collision.CheckAABBvLineCollision(targetHitbox.Center(), targetHitbox.Size(), Projectile.Center, Projectile.Center + (Projectile.rotation + -MathHelper.PiOver2).ToRotationVector2() * 140, 58, ref collisionPoint);
+            Vector2 unit = new Vector2(1.5f, 0).RotatedBy(Projectile.rotation + -MathHelper.PiOver2);
+            float point = 0f;
+            if (Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), Projectile.Center - unit * 72,
+                Projectile.Center + unit * 72, 58, ref point))
+                return true;
+            return false;
         }
         public override Color? GetAlpha(Color lightColor)
         {

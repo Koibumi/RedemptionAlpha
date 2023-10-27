@@ -15,7 +15,8 @@ namespace Redemption.Projectiles.Ranged
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Plutonium Beam");
+            // DisplayName.SetDefault("Plutonium Beam");
+            ElementID.ProjThunder[Type] = true;
         }
 
         public override void SetDefaults()
@@ -28,9 +29,10 @@ namespace Redemption.Projectiles.Ranged
             Projectile.timeLeft = 1400;
             Projectile.penetrate = 20;
             Projectile.tileCollide = true;
+            Projectile.DamageType = DamageClass.Ranged;
             Projectile.Redemption().EnergyBased = true;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             if (Main.rand.NextBool(2))
                 target.AddBuff(ModContent.BuffType<ElectrifiedDebuff>(), 120);
@@ -47,7 +49,7 @@ namespace Redemption.Projectiles.Ranged
                 }
             }
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             Player player = Main.player[Projectile.owner];
             RedeDraw.SpawnRing(Projectile.Center, Color.LightBlue, glowScale: 3);

@@ -19,9 +19,10 @@ namespace Redemption.NPCs.Bosses.Neb
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Shooting Star");
+            // DisplayName.SetDefault("Shooting Star");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 5;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjCelestial[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -51,7 +52,7 @@ namespace Redemption.NPCs.Bosses.Neb
             else
                 Projectile.velocity = Projectile.velocity.RotatedBy(Math.PI / -180) * Projectile.ai[0];
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             for (int i = 0; i < 3; i++)
                 ParticleManager.NewParticle(Projectile.Center, RedeHelper.Spread(2), new RainbowParticle(), Color.White, 1);
@@ -74,7 +75,7 @@ namespace Redemption.NPCs.Bosses.Neb
         public override string Texture => "Redemption/NPCs/Bosses/Neb/CurvingStar2_Tele";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Shooting Star");
+            // DisplayName.SetDefault("Shooting Star");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 5;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
         }
@@ -127,7 +128,7 @@ namespace Redemption.NPCs.Bosses.Neb
         public override string Texture => "Redemption/NPCs/Bosses/Neb/CurvingStar2_Tele";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Shooting Star");
+            // DisplayName.SetDefault("Shooting Star");
         }
         public override void SetDefaults()
         {

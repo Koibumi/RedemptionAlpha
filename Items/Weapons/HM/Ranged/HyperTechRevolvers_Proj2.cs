@@ -11,7 +11,7 @@ namespace Redemption.Items.Weapons.HM.Ranged
         public override string Texture => "Redemption/Items/Weapons/HM/Ranged/HyperTechRevolvers_Proj";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Hyper-Tech Revolver");
+            // DisplayName.SetDefault("Hyper-Tech Revolver");
         }
         public override void SetDefaults()
         {
@@ -49,7 +49,7 @@ namespace Redemption.Items.Weapons.HM.Ranged
             if (Projectile.timeLeft <= 200)
                 Projectile.tileCollide = true;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             Player player = Main.player[Projectile.owner];
             if (Projectile.localAI[0] != 1)

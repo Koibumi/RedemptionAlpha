@@ -3,6 +3,7 @@ using Terraria;
 using Terraria.DataStructures;
 using Terraria.Enums;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 
@@ -26,11 +27,11 @@ namespace Redemption.Tiles.Furniture.Lab
             TileObjectData.newTile.AnchorBottom = new AnchorData(AnchorType.SolidTile | AnchorType.SolidWithTop | AnchorType.SolidSide, TileObjectData.newTile.Width, 0);
             TileObjectData.addTile(Type);
             DustType = DustID.Electric;
-            MinPick = 500;
+            MinPick = 1000;
             MineResist = 3f;
-            ModTranslation name = CreateMapEntryName();
-            name.SetDefault("Wide Laboratory Console");
-            AddMapEntry(new Color(0, 187, 240));
+            LocalizedText name = CreateMapEntryName();
+            // name.SetDefault("Wide Laboratory Console");
+            AddMapEntry(new Color(0, 187, 240), name);
             AnimationFrameHeight = 36;
         }
         public override void ModifyLight(int i, int j, ref float r, ref float g, ref float b)
@@ -55,11 +56,11 @@ namespace Redemption.Tiles.Furniture.Lab
     }
     public class WideLabConsole : PlaceholderTile
     {
-        public override string Texture => "Redemption/Placeholder";
-        public override void SetStaticDefaults()
+        public override string Texture => Redemption.PLACEHOLDER_TEXTURE;
+        public override void SetSafeStaticDefaults()
         {
-            DisplayName.SetDefault("Wide Laboratory Console");
-            Tooltip.SetDefault("[c/ff0000:Unbreakable]");
+            // DisplayName.SetDefault("Wide Laboratory Console");
+            // Tooltip.SetDefault("[c/ff0000:Unbreakable]");
         }
 
         public override void SetDefaults()

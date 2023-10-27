@@ -24,6 +24,8 @@ using Terraria.ModLoader;
 using Terraria.ModLoader.Utilities;
 using Terraria.Utilities;
 using Redemption.BaseExtension;
+using System.IO;
+using Terraria.Localization;
 
 namespace Redemption.NPCs.PreHM
 {
@@ -51,20 +53,14 @@ namespace Redemption.NPCs.PreHM
         {
             Main.npcFrameCount[NPC.type] = 9;
 
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Bleeding,
-                    BuffID.Poisoned
-                }
-            });
-
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0)
             {
                 Velocity = 1f
             };
 
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
+            ElementID.NPCBlood[Type] = true;
+            ElementID.NPCShadow[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -83,8 +79,10 @@ namespace Redemption.NPCs.PreHM
             Banner = NPC.type;
             BannerItem = ModContent.ItemType<JollyMadmanBanner>();
             NPC.RedemptionGuard().GuardPoints = 25;
+
+            NPC.GetGlobalNPC<ElementalNPC>().OverrideMultiplier[ElementID.Holy] *= 2f;
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -110,80 +108,86 @@ namespace Redemption.NPCs.PreHM
         }
 
         private bool PsychicHit;
-        public override bool StrikeNPC(ref double damage, int defense, ref float knockback, int hitDirection, ref bool crit)
+        private int PsychicDamage;
+        public override void ModifyIncomingHit(ref NPC.HitModifiers modifiers)
         {
-            bool vDmg = false;
             if (NPC.RedemptionGuard().GuardPoints >= 0)
             {
-                NPC.RedemptionGuard().GuardHit(NPC, ref vDmg, ref damage, ref knockback, SoundID.NPCHit4);
-                if (Main.netMode == NetmodeID.MultiplayerClient)
-                    NetMessage.SendData(MessageID.DamageNPC, -1, -1, null, NPC.whoAmI, (float)damage, knockback, hitDirection, 0, 0, 0);
-                if (NPC.RedemptionGuard().GuardPoints >= 0)
-                    return vDmg;
+                modifiers.DisableCrit();
+                modifiers.ModifyHitInfo += (ref NPC.HitInfo n) => NPC.RedemptionGuard().GuardHit(ref n, NPC, SoundID.NPCHit4, .25f, false, ModContent.DustType<VoidFlame>(), default, 10, 2);
             }
-            NPC.RedemptionGuard().GuardBreakCheck(NPC, ModContent.DustType<VoidFlame>(), CustomSounds.GuardBreak, 10, 2);
 
             if (PsychicHit)
             {
                 SoundEngine.PlaySound(SoundID.NPCHit48, NPC.position);
                 if (NPC.life < NPC.lifeMax)
                 {
-                    NPC.life += (int)(damage / 10);
-                    NPC.HealEffect((int)(damage / 10));
+                    NPC.life += PsychicDamage / 10;
+                    NPC.HealEffect(PsychicDamage / 10);
                 }
                 if (NPC.life > NPC.lifeMax)
                     NPC.life = NPC.lifeMax;
 
-                damage = 0;
+                modifiers.FinalDamage *= 0;
+                modifiers.HideCombatText();
+                NPC.life++;
+                PsychicDamage = 0;
                 PsychicHit = false;
-                if (Main.netMode == NetmodeID.MultiplayerClient)
-                    NetMessage.SendData(MessageID.DamageNPC, -1, -1, null, NPC.whoAmI, (float)damage, knockback, hitDirection, 0, 0, 0);
-                return false;
+                return;
             }
-            return true;
         }
-        public override void ModifyHitByItem(Player player, Item item, ref int damage, ref float knockback, ref bool crit)
+        public override void OnHitByItem(Player player, Item item, NPC.HitInfo hit, int damageDone)
         {
             if (!RedeConfigClient.Instance.ElementDisable)
             {
-                if (ItemLists.Holy.Contains(item.type))
-                    NPC.Redemption().elementDmg *= 2f;
-
-                if (ItemLists.Psychic.Contains(item.type))
+                if (item.HasElement(ElementID.Psychic))
+                {
                     PsychicHit = true;
+                    PsychicDamage = damageDone;
+                }
             }
         }
-        public override void ModifyHitByProjectile(Projectile projectile, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
+        public override void OnHitByProjectile(Projectile projectile, NPC.HitInfo hit, int damageDone)
         {
             if (!RedeConfigClient.Instance.ElementDisable)
             {
-                if (ProjectileLists.Holy.Contains(projectile.type))
-                    NPC.Redemption().elementDmg *= 2f;
-
-                if (ProjectileLists.Psychic.Contains(projectile.type))
+                if (projectile.HasElement(ElementID.Psychic))
+                {
                     PsychicHit = true;
+                    PsychicDamage = damageDone;
+                }
             }
         }
-
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.WriteVector2(moveTo);
+        }
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            moveTo = reader.ReadVector2();
+        }
         private Vector2 moveTo;
         private int runCooldown;
         private int dodgeCooldown;
         private readonly float[] doorVars = new float[3];
         public override void OnSpawn(IEntitySource source)
         {
-            WeightedRandom<int> NPCType = new(Main.rand);
-            NPCType.Add(ModContent.NPCType<SkeletonWanderer>());
-            NPCType.Add(ModContent.NPCType<SkeletonAssassin>());
-            NPCType.Add(ModContent.NPCType<SkeletonDuelist>());
-            NPCType.Add(ModContent.NPCType<EpidotrianSkeleton>());
-
-            for (int i = 0; i < Main.rand.Next(3, 6); i++)
+            if (NPC.ai[3] != 4)
             {
-                Vector2 pos = RedeHelper.FindGround(NPC, 8);
-                RedeHelper.SpawnNPC(NPC.GetSource_FromAI(), (int)pos.X * 16, (int)pos.Y * 16, NPCType);
-            }
+                WeightedRandom<int> NPCType = new(Main.rand);
+                NPCType.Add(ModContent.NPCType<SkeletonWanderer>());
+                NPCType.Add(ModContent.NPCType<SkeletonAssassin>());
+                NPCType.Add(ModContent.NPCType<SkeletonDuelist>());
+                NPCType.Add(ModContent.NPCType<EpidotrianSkeleton>());
 
+                for (int i = 0; i < Main.rand.Next(3, 6); i++)
+                {
+                    Vector2 pos = NPCHelper.FindGround(NPC, 8);
+                    RedeHelper.SpawnNPC(NPC.GetSource_FromAI(), (int)pos.X * 16, (int)pos.Y * 16, NPCType);
+                }
+            }
             TimerRand = Main.rand.Next(80, 280);
+            NPC.netUpdate = true;
         }
         public override void AI()
         {
@@ -192,7 +196,6 @@ namespace Redemption.NPCs.PreHM
             NPC.TargetClosest();
             if (AIState != ActionState.Slash)
                 NPC.LookByVelocity();
-
             Rectangle SlashHitbox = new((int)(NPC.spriteDirection == -1 ? NPC.Center.X - 45 : NPC.Center.X + 7), (int)(NPC.Center.Y - 34), 38, 60);
             dodgeCooldown--;
             dodgeCooldown = (int)MathHelper.Max(0, dodgeCooldown);
@@ -208,6 +211,7 @@ namespace Redemption.NPCs.PreHM
                         AITimer = 0;
                         TimerRand = Main.rand.Next(120, 260);
                         AIState = ActionState.Wander;
+                        NPC.netUpdate = true;
                     }
 
                     SightCheck();
@@ -222,11 +226,12 @@ namespace Redemption.NPCs.PreHM
                         AITimer = 0;
                         TimerRand = Main.rand.Next(80, 280);
                         AIState = ActionState.Idle;
+                        NPC.netUpdate = true;
                     }
                     BaseAI.AttemptOpenDoor(NPC, ref doorVars[0], ref doorVars[1], ref doorVars[2], 80, 4, 30, interactDoorStyle: 2);
 
-                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20);
-                    RedeHelper.HorizontallyMove(NPC, moveTo * 16, 0.4f, 0.8f, 6, 6, NPC.Center.Y > player.Center.Y);
+                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20, (moveTo.Y - 32) * 16);
+                    NPCHelper.HorizontallyMove(NPC, moveTo * 16, 0.4f, 0.8f, 6, 6, NPC.Center.Y > moveTo.Y * 16);
                     break;
 
                 case ActionState.Alert:
@@ -246,7 +251,7 @@ namespace Redemption.NPCs.PreHM
                         for (int i = 0; i < Main.maxProjectiles; i++)
                         {
                             Projectile proj = Main.projectile[i];
-                            if (!proj.active || !proj.friendly || proj.damage <= 0 || proj.velocity.Length() == 0)
+                            if (!proj.active || !proj.friendly || proj.damage <= 0 || proj.sentry || proj.minion || proj.velocity.Length() == 0)
                                 continue;
 
                             if (!NPC.Sight(proj, 80 + (proj.velocity.Length() * 3), true, true))
@@ -258,8 +263,12 @@ namespace Redemption.NPCs.PreHM
                                 Main.dust[dust].velocity *= 0.2f;
                                 Main.dust[dust].noGravity = true;
                             }
-                            NPC.Dodge(proj);
+                            if (Main.rand.NextBool())
+                                NPC.velocity.X *= -1;
+                            NPC.velocity.X *= 2f;
+                            NPC.velocity.Y -= Main.rand.NextFloat(1, 3);
                             dodgeCooldown = 90;
+                            break;
                         }
                     }
                     BaseAI.AttemptOpenDoor(NPC, ref doorVars[0], ref doorVars[1], ref doorVars[2], 80, 4, 30, interactDoorStyle: 2);
@@ -274,8 +283,8 @@ namespace Redemption.NPCs.PreHM
                         AIState = ActionState.Slash;
                     }
 
-                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20);
-                    RedeHelper.HorizontallyMove(NPC, globalNPC.attacker.Center, 0.2f, 2.4f * (NPC.RedemptionNPCBuff().rallied ? 1.2f : 1), 12, 8, NPC.Center.Y > globalNPC.attacker.Center.Y);
+                    NPC.PlatformFallCheck(ref NPC.Redemption().fallDownPlatform, 20, globalNPC.attacker.Center.Y);
+                    NPCHelper.HorizontallyMove(NPC, globalNPC.attacker.Center, 0.2f, 2.4f * (NPC.RedemptionNPCBuff().rallied ? 1.2f : 1), 12, 8, NPC.Center.Y > globalNPC.attacker.Center.Y, globalNPC.attacker);
 
                     break;
 
@@ -286,6 +295,7 @@ namespace Redemption.NPCs.PreHM
                         AITimer = 0;
                         TimerRand = Main.rand.Next(120, 260);
                         AIState = ActionState.Wander;
+                        NPC.netUpdate = true;
                     }
 
                     if (NPC.velocity.Y < 0)
@@ -295,33 +305,42 @@ namespace Redemption.NPCs.PreHM
 
                     if (NPC.frame.Y == 6 * 62 && globalNPC.attacker.Hitbox.Intersects(SlashHitbox))
                     {
-                        int damage = NPC.RedemptionNPCBuff().disarmed ? (int)(NPC.damage * 0.2f) : NPC.damage;
+                        int damage = NPC.RedemptionNPCBuff().disarmed ? NPC.damage / 3 : NPC.damage;
                         if (globalNPC.attacker is NPC attackerNPC && attackerNPC.immune[NPC.whoAmI] <= 0)
                         {
                             attackerNPC.immune[NPC.whoAmI] = 10;
-                            int hitDirection = NPC.Center.X > attackerNPC.Center.X ? -1 : 1;
+                            int hitDirection = attackerNPC.RightOfDir(NPC);
                             BaseAI.DamageNPC(attackerNPC, damage, 5, hitDirection, NPC);
-                            attackerNPC.AddBuff(BuffID.Bleeding, 1000);
-                            attackerNPC.AddBuff(ModContent.BuffType<DirtyWoundDebuff>(), 1400);
+                            if (attackerNPC.life <= 0)
+                            {
+                                for (int i = 0; i < 30; i++)
+                                {
+                                    int dustIndex = Dust.NewDust(NPC.position, NPC.width, NPC.height, DustID.LifeDrain);
+                                    Main.dust[dustIndex].velocity.Y = -3;
+                                    Main.dust[dustIndex].velocity.X = 0;
+                                    Main.dust[dustIndex].noGravity = true;
+                                }
+                                SoundEngine.PlaySound(SoundID.NPCHit48, NPC.position);
+                                NPC.life += 250;
+                                if (NPC.life >= NPC.lifeMax)
+                                    NPC.life = NPC.lifeMax;
+                                NPC.HealEffect(250);
+                            }
                         }
                         else if (globalNPC.attacker is Player attackerPlayer)
                         {
-                            int hitDirection = NPC.Center.X > attackerPlayer.Center.X ? -1 : 1;
+                            int hitDirection = attackerPlayer.RightOfDir(NPC);
                             BaseAI.DamagePlayer(attackerPlayer, damage, 5, hitDirection, NPC);
-                            if (globalNPC.attacker is Player && (Main.rand.NextBool(2) || Main.expertMode))
-                            {
-                                attackerPlayer.AddBuff(BuffID.Bleeding, 1000);
-                                attackerPlayer.AddBuff(ModContent.BuffType<DirtyWoundDebuff>(), 1400);
-                            }
                         }
                     }
                     break;
             }
         }
-        public override bool? CanFallThroughPlatforms() => NPC.Redemption().fallDownPlatform;
-        private bool Flare;
-        private float FlareTimer;
-        public override void FindFrame(int frameHeight)
+        public override void PostAI()
+        {
+            CustomFrames(62);
+        }
+        private void CustomFrames(int frameHeight)
         {
             if (AIState is ActionState.Alert or ActionState.Slash)
             {
@@ -364,6 +383,14 @@ namespace Redemption.NPCs.PreHM
                 }
                 return;
             }
+        }
+        public override bool? CanFallThroughPlatforms() => NPC.Redemption().fallDownPlatform;
+        private bool Flare;
+        private float FlareTimer;
+        public override void FindFrame(int frameHeight)
+        {
+            if (AIState is ActionState.Slash)
+                return;
             if (NPC.collideY || NPC.velocity.Y == 0)
             {
                 NPC.rotation = 0;
@@ -403,7 +430,7 @@ namespace Redemption.NPCs.PreHM
             for (int i = 0; i < Main.maxNPCs; i++)
             {
                 NPC target = Main.npc[i];
-                if (!target.active || target.whoAmI == NPC.whoAmI || target.dontTakeDamage || target.type == NPCID.OldMan)
+                if (!target.active || target.whoAmI == NPC.whoAmI || target.dontTakeDamage || target.type == NPCID.OldMan || target.type == NPCID.TargetDummy)
                     continue;
 
                 if (!WhitelistNPC.Contains(target.type) && (target.lifeMax <= 5 || (!target.friendly && !NPCID.Sets.TakesDamageFromHostilesWithoutBeingFriendly[target.type])))
@@ -430,6 +457,7 @@ namespace Redemption.NPCs.PreHM
                 moveTo = NPC.FindGround(20);
                 AITimer = 0;
                 AIState = ActionState.Alert;
+                NPC.netUpdate = true;
             }
             if (Main.rand.NextBool(600))
             {
@@ -440,6 +468,7 @@ namespace Redemption.NPCs.PreHM
                     moveTo = NPC.FindGround(20);
                     AITimer = 0;
                     AIState = ActionState.Alert;
+                    NPC.netUpdate = true;
                 }
                 return;
             }
@@ -451,9 +480,22 @@ namespace Redemption.NPCs.PreHM
                 moveTo = NPC.FindGround(20);
                 AITimer = 0;
                 AIState = ActionState.Alert;
+                NPC.netUpdate = true;
             }
         }
-
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit)
+        {
+            target.AddBuff(BuffID.Bleeding, 1000);
+            target.AddBuff(ModContent.BuffType<DirtyWoundDebuff>(), 1400);
+        }
+        public override void OnHitPlayer(Player target, Player.HurtInfo hurtInfo)
+        {
+            if (Main.rand.NextBool(2) || Main.expertMode)
+            {
+                target.AddBuff(BuffID.Bleeding, 1000);
+                target.AddBuff(ModContent.BuffType<DirtyWoundDebuff>(), 1400);
+            }
+        }
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
             var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
@@ -461,14 +503,14 @@ namespace Redemption.NPCs.PreHM
             if (!NPC.IsABestiaryIconDummy && !NPC.RedemptionGuard().GuardBroken)
             {
                 spriteBatch.End();
-                spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.NonPremultiplied, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
-                GameShaders.Armor.ApplySecondary(shader, Main.player[Main.myPlayer], null);
+                spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.NonPremultiplied, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
+                GameShaders.Armor.ApplySecondary(shader, Main.LocalPlayer, null);
             }
 
             spriteBatch.Draw(TextureAssets.Npc[NPC.type].Value, NPC.Center - new Vector2(0, 4) - screenPos, NPC.frame, drawColor, NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0);
 
             spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            spriteBatch.BeginDefault();
             return false;
         }
         public override void PostDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
@@ -480,8 +522,10 @@ namespace Redemption.NPCs.PreHM
             }
         }
 
-        public override bool? CanHitNPC(NPC target) => false;
+        public override bool CanHitNPC(NPC target) => false;
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => false;
+        public override bool? CanBeHitByItem(Player player, Item item) => dodgeCooldown <= 80 ? null : false;
+        public override bool? CanBeHitByProjectile(Projectile projectile) => dodgeCooldown <= 80 ? null : false;
 
         public override void OnKill()
         {
@@ -494,7 +538,7 @@ namespace Redemption.NPCs.PreHM
             npcLoot.Add(ItemDropRule.OneFromOptions(1, ModContent.ItemType<ZweihanderFragment1>(), ModContent.ItemType<ZweihanderFragment2>()));
             npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<JollyHelm>(), 2));
             npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<AncientGoldCoin>(), 1, 4, 12));
-            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<GraveSteelShards>(), 1, 8, 16));
+            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<GraveSteelShards>(), 1, 16, 28));
             npcLoot.Add(ItemDropRule.ByCondition(new LostSoulCondition(), ModContent.ItemType<LostSoul>(), 1, 3, 3));
         }
 
@@ -508,12 +552,12 @@ namespace Redemption.NPCs.PreHM
 
         public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
         {
+            bestiaryEntry.UIInfoProvider = new CustomCollectionInfoProvider(ContentSamples.NpcBestiaryCreditIdsByNpcNetIds[Type], false, 5);
             bestiaryEntry.Info.AddRange(new IBestiaryInfoElement[]
             {
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Biomes.Caverns,
 
-                new FlavorTextBestiaryInfoElement(
-                    "The body of a noble knight of Gathuram, the soul of a criminal. Now dead and stuck under the earth in the dark labyrinthine caves, they have lost their split minds and gone insane.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.JollyMadman"))
             });
         }
     }

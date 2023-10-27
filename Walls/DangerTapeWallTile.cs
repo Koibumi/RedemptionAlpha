@@ -1,5 +1,5 @@
 using Microsoft.Xna.Framework;
-using Redemption.Items.Placeable.Tiles;
+using Redemption.Globals;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -9,8 +9,8 @@ namespace Redemption.Walls
     {
         public override void SetStaticDefaults()
         {
+            RedeTileHelper.CannotTeleportInFront[Type] = true;
             Main.wallHouse[Type] = false;
-            ItemDrop = ModContent.ItemType<DangerTapeWall>();
             AddMapEntry(new Color(43, 43, 44));
         }
         public override bool CanExplode(int i, int j) => false;
@@ -22,7 +22,6 @@ namespace Redemption.Walls
         public override void SetStaticDefaults()
         {
             Main.wallHouse[Type] = true;
-            ItemDrop = ModContent.ItemType<DangerTapeWall2>();
             AddMapEntry(new Color(43, 43, 44));
         }
     }

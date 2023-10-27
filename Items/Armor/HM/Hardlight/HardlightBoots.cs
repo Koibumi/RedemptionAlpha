@@ -10,10 +10,10 @@ namespace Redemption.Items.Armor.HM.Hardlight
     {
 		public override void SetStaticDefaults()
 		{
-			Tooltip.SetDefault("5% increased damage\n" +
-				"10% increased movement speed");
+			/* Tooltip.SetDefault("5% increased damage\n" +
+				"10% increased movement speed"); */
 
-			SacrificeTotal = 1;
+			Item.ResearchUnlockCount = 1;
 		}
 
 		public override void SetDefaults()
@@ -21,7 +21,7 @@ namespace Redemption.Items.Armor.HM.Hardlight
 			Item.width = 22;
 			Item.height = 18;
 			Item.sellPrice(silver: 30);
-			Item.rare = ItemRarityID.Cyan;
+			Item.rare = ItemRarityID.LightPurple;
 			Item.defense = 13;
 		}
 

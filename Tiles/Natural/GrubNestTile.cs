@@ -2,6 +2,7 @@
 using Redemption.Tiles.Tiles;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 
@@ -20,8 +21,8 @@ namespace Redemption.Tiles.Natural
             TileObjectData.newTile.AnchorValidTiles = new int[] { ModContent.TileType<IrradiatedSandstoneTile>() };
             TileObjectData.addTile(Type);
             DustType = DustID.Ash;
-            ModTranslation name = CreateMapEntryName();
-            name.SetDefault("Grub Nest");
+            LocalizedText name = CreateMapEntryName();
+            // name.SetDefault("Grub Nest");
             AddMapEntry(new Color(40, 60, 40), name);
         }
         public override void NumDust(int i, int j, bool fail, ref int num)

@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria.GameContent;
 using Redemption.Effects.PrimitiveTrails;
 using ReLogic.Content;
+using Redemption.Globals;
 
 namespace Redemption.NPCs.Bosses.Neb.Phase2
 {
@@ -13,9 +14,10 @@ namespace Redemption.NPCs.Bosses.Neb.Phase2
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Starfall");
+            // DisplayName.SetDefault("Starfall");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 5;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjCelestial[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -93,7 +95,7 @@ namespace Redemption.NPCs.Bosses.Neb.Phase2
         // >
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Telegraph");
+            // DisplayName.SetDefault("Telegraph");
         }
 
         public override void SetDefaults()

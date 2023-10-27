@@ -1,7 +1,9 @@
 using Microsoft.Xna.Framework;
 using Redemption.Items.Placeable.Tiles;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.Items.Weapons.HM.Ranged
@@ -10,17 +12,17 @@ namespace Redemption.Items.Weapons.HM.Ranged
 	{
 		public override void SetStaticDefaults()
 		{
-            DisplayName.SetDefault("Steam-Cog Minigun");
-            Tooltip.SetDefault("Holding left-click will charge the weapon up, releasing will cause it to shoot rapidly for a short duration\n" +
+            // DisplayName.SetDefault("Steam-Cog Minigun");
+            /* Tooltip.SetDefault("Holding left-click will charge the weapon up, releasing will cause it to shoot rapidly for a short duration\n" +
                 "Shooting duration scales with the amount of time charged up, capping at 5 seconds\n" +
                 "Replaces normal bullets with high velocity bullets\n" +
-                "66% chance to not consume ammo");
-            SacrificeTotal = 1;
+                "66% chance to not consume ammo"); */
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
         {
-            Item.damage = 31;
+            Item.damage = 34;
             Item.DamageType = DamageClass.Ranged;
             Item.width = 78;
             Item.height = 28;
@@ -43,6 +45,25 @@ namespace Redemption.Items.Weapons.HM.Ranged
         public override void ModifyShootStats(Player player, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
         {
             type = ModContent.ProjectileType<SteampunkMinigun_Proj>();
+        }
+        public override void ModifyTooltips(List<TooltipLine> tooltips)
+        {
+            if (Main.keyState.PressingShift())
+            {
+                TooltipLine line = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.Items.SteampunkMinigun.Lore"))
+                {
+                    OverrideColor = Color.LightGray
+                };
+                tooltips.Add(line);
+            }
+            else
+            {
+                TooltipLine line = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.SpecialTooltips.Viewer"))
+                {
+                    OverrideColor = Color.Gray,
+                };
+                tooltips.Add(line);
+            }
         }
         public override void AddRecipes()
         {

@@ -16,15 +16,14 @@ namespace Redemption.Items.Weapons.HM.Ranged
         public override string Texture => "Redemption/Items/Weapons/HM/Ranged/FlakCannon";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Flak Cannon");
+            // DisplayName.SetDefault("Flak Cannon");
         }
-        public override void SetDefaults()
+        public override void SetSafeDefaults()
         {
             Projectile.width = 62;
             Projectile.height = 60;
             Projectile.friendly = false;
             Projectile.hostile = false;
-            Projectile.tileCollide = false;
             Projectile.penetrate = -1;
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.ignoreWater = true;

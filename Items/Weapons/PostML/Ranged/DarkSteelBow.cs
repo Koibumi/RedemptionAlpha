@@ -1,11 +1,13 @@
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria;
+using Terraria.Localization;
 using Microsoft.Xna.Framework;
 using Redemption.Projectiles.Ranged;
 using System.Collections.Generic;
 using Redemption.Globals;
 using Terraria.DataStructures;
+using Redemption.Items.Weapons.PostML.Melee;
 
 namespace Redemption.Items.Weapons.PostML.Ranged
 {
@@ -13,10 +15,11 @@ namespace Redemption.Items.Weapons.PostML.Ranged
 	{
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Daerel's Dark-Steel Bow");
-            Tooltip.SetDefault("Shoots Dark-Steel arrows that create shadow tendrils upon hitting a target\n" +
-                "20% chance not to consume ammo");
-            SacrificeTotal = 1;
+            // DisplayName.SetDefault("Daerel's Dark-Steel Bow");
+            /* Tooltip.SetDefault("Shoots Dark-Steel arrows that create shadow tendrils upon hitting a target\n" +
+                "20% chance not to consume ammo"); */
+            ItemID.Sets.ShimmerTransformToItem[Type] = ModContent.ItemType<MythrilsBane>();
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -42,7 +45,7 @@ namespace Redemption.Items.Weapons.PostML.Ranged
 
             // Projectile Properties
             Item.shootSpeed = 20f;
-            Item.shoot = ProjectileID.WoodenArrowFriendly;
+            Item.shoot = ModContent.ProjectileType<DarkSteelArrow>();
             Item.useAmmo = AmmoID.Arrow;
         }
         public override Vector2? HoldoutOffset()
@@ -55,7 +58,7 @@ namespace Redemption.Items.Weapons.PostML.Ranged
         }
         public override void ModifyShootStats(Player player, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
         {
-            type = ModContent.ProjectileType<DarkSteelArrow>();
+            type = Item.shoot;
         }
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
@@ -67,10 +70,7 @@ namespace Redemption.Items.Weapons.PostML.Ranged
         {
             if (Main.keyState.PressingShift())
             {
-                TooltipLine line = new(Mod, "Lore",
-                    "'This bow was forged by the legendary bowsmith Raiktu Shadeheart, and became the reward for a special competition\n" +
-                    "held in Arrgath - Erellon's Capital. The winner was Daerel Foremaul, who received this weapon after a close victory.\n" +
-                    "The bow is made from rosewood of Erellon's jungles and Dark-Steel, a metal scavenged from the remains of a terrible demon.'")
+                TooltipLine line = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.Items.DarkSteelBow.Lore"))
                 {
                     OverrideColor = Color.LightGray
                 };
@@ -78,7 +78,7 @@ namespace Redemption.Items.Weapons.PostML.Ranged
             }
             else
             {
-                TooltipLine line = new(Mod, "HoldShift", "Hold [Shift] to view lore")
+                TooltipLine line = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.SpecialTooltips.Viewer"))
                 {
                     OverrideColor = Color.Gray,
                 };

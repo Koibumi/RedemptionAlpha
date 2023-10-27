@@ -16,7 +16,8 @@ namespace Redemption.Items.Weapons.PostML.Melee
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Infectious Gauntlet");
+            // DisplayName.SetDefault("Infectious Gauntlet");
+            ElementID.ProjPoison[Type] = true;
         }
         public override bool ShouldUpdatePosition() => false;
         public override void SetSafeDefaults()
@@ -108,7 +109,7 @@ namespace Redemption.Items.Weapons.PostML.Melee
                         if (Timer >= 16 && Timer % 2 == 0 && Timer < 30)
                         {
                             SoundEngine.PlaySound(CustomSounds.Swoosh1 with { Volume = 0.4f }, Projectile.Center);
-                            Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center, RedeHelper.PolarVector(16, (Main.MouseWorld - player.Center).ToRotation() + Main.rand.NextFloat(-0.2f, 0.2f)), ModContent.ProjectileType<PZGauntlet_Proj2>(), (int)(Projectile.damage * 0.75f), Projectile.knockBack, player.whoAmI);
+                            Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center, RedeHelper.PolarVector(20, (Main.MouseWorld - player.Center).ToRotation() + Main.rand.NextFloat(-0.2f, 0.2f)), ModContent.ProjectileType<PZGauntlet_Proj2>(), (int)(Projectile.damage * 0.75f), Projectile.knockBack, player.whoAmI);
                         }
                         if (Timer <= 5 && !player.channel)
                             Projectile.Kill();
@@ -116,13 +117,13 @@ namespace Redemption.Items.Weapons.PostML.Melee
                 }
             }
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             Player player = Main.player[Projectile.owner];
             player.fullRotation = 0f;
         }
         public override bool? CanHitNPC(NPC target) => Projectile.ai[0] == 0 ? null : false;
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Player player = Main.player[Projectile.owner];
             player.immune = true;

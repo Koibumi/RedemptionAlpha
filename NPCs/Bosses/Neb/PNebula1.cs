@@ -9,6 +9,7 @@ using Terraria.Audio;
 using Redemption.Base;
 using ParticleLibrary;
 using Redemption.Particles;
+using Redemption.Globals;
 
 namespace Redemption.NPCs.Bosses.Neb
 {
@@ -34,7 +35,7 @@ namespace Redemption.NPCs.Bosses.Neb
         // >
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Telegraph");
+            // DisplayName.SetDefault("Telegraph");
         }
 
         public override void SetDefaults()
@@ -158,9 +159,10 @@ namespace Redemption.NPCs.Bosses.Neb
         public int proType = 0;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Piercing Nebula");
+            // DisplayName.SetDefault("Piercing Nebula");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 8;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjCelestial[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -258,7 +260,8 @@ namespace Redemption.NPCs.Bosses.Neb
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Piercing Nebula");
+            base.SetStaticDefaults();
+            // DisplayName.SetDefault("Piercing Nebula");
         }
         public override void SetDefaults()
         {
@@ -272,7 +275,8 @@ namespace Redemption.NPCs.Bosses.Neb
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Piercing Nebula");
+            base.SetStaticDefaults();
+            // DisplayName.SetDefault("Piercing Nebula");
         }
         public override void SetDefaults()
         {

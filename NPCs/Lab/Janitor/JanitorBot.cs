@@ -2,25 +2,39 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.Base;
 using Redemption.Biomes;
-using Redemption.Buffs.Debuffs;
-using Redemption.Buffs.NPCBuffs;
 using Redemption.Dusts.Tiles;
 using Redemption.Globals;
 using Redemption.Items.Usable;
 using System.Collections.Generic;
 using Terraria;
-using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.GameContent.Bestiary;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Redemption.BaseExtension;
+using ReLogic.Content;
+using Terraria.Localization;
+using Redemption.Globals.NPC;
 
 namespace Redemption.NPCs.Lab.Janitor
 {
     [AutoloadBossHead]
     public class JanitorBot : ModNPC
     {
+        private static Asset<Texture2D> SlipAni;
+        private static Asset<Texture2D> YeetAni;
+        public override void Load()
+        {
+            if (Main.dedServ)
+                return;
+            SlipAni = ModContent.Request<Texture2D>(Texture + "_Slip");
+            YeetAni = ModContent.Request<Texture2D>(Texture + "_Yeet");
+        }
+        public override void Unload()
+        {
+            SlipAni = null;
+            YeetAni = null;
+        }
         public enum ActionState
         {
             Begin,
@@ -42,24 +56,14 @@ namespace Redemption.NPCs.Lab.Janitor
         public ref float TimerRand => ref NPC.ai[2];
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("The Janitor");
+            // DisplayName.SetDefault("The Janitor");
             Main.npcFrameCount[NPC.type] = 19;
 
             NPCID.Sets.MPAllowedEnemies[Type] = true;
             NPCID.Sets.BossBestiaryPriority.Add(Type);
 
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Confused,
-                    BuffID.Poisoned,
-                    BuffID.Venom,
-                    ModContent.BuffType<InfestedDebuff>(),
-                    ModContent.BuffType<NecroticGougeDebuff>(),
-                    ModContent.BuffType<ViralityDebuff>(),
-                    ModContent.BuffType<DirtyWoundDebuff>()
-                }
-            });
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Inorganic);
+            NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Confused] = true;
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0);
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
@@ -70,7 +74,7 @@ namespace Redemption.NPCs.Lab.Janitor
             NPC.height = 40;
             NPC.friendly = false;
             NPC.damage = 55;
-            NPC.defense = 120;
+            NPC.defense = 20;
             NPC.lifeMax = 10500;
             NPC.HitSound = SoundID.NPCHit4;
             NPC.DeathSound = SoundID.NPCDeath3;
@@ -88,32 +92,27 @@ namespace Redemption.NPCs.Lab.Janitor
             SpawnModBiomes = new int[2] { ModContent.GetInstance<LidenBiomeOmega>().Type, ModContent.GetInstance<LabBiome>().Type };
         }
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => false;
-        public override bool? CanHitNPC(NPC target) => false;
+        public override bool CanHitNPC(NPC target) => false;
         public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
         {
             bestiaryEntry.Info.AddRange(new List<IBestiaryInfoElement> {
-                new FlavorTextBestiaryInfoElement("Amidst all the ailments that germs can conjure, all the grime mankind can produce. We'll send unto them, only you. Scrape and Clean until it is done.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.Janitor"))
             });
         }
-        public override bool StrikeNPC(ref double damage, int defense, ref float knockback, int hitDirection, ref bool crit)
+        public override void ModifyIncomingHit(ref NPC.HitModifiers modifiers)
         {
-            bool vDmg = false;
             if (AIState is not ActionState.Slip && NPC.RedemptionGuard().GuardPoints >= 0)
             {
-                NPC.RedemptionGuard().GuardHit(NPC, ref vDmg, ref damage, ref knockback, SoundID.NPCHit4);
-                if (Main.netMode == NetmodeID.MultiplayerClient)
-                    NetMessage.SendData(MessageID.DamageNPC, -1, -1, null, NPC.whoAmI, (float)damage, knockback, hitDirection, 0, 0, 0);
-                if (NPC.RedemptionGuard().GuardPoints >= 0)
-                    return vDmg;
+                modifiers.DisableCrit();
+                modifiers.ModifyHitInfo += (ref NPC.HitInfo n) => NPC.RedemptionGuard().GuardHit(ref n, NPC, SoundID.NPCHit4, .25f, false, DustID.Electric, default, 10, 1, 1000);
             }
-            NPC.RedemptionGuard().GuardBreakCheck(NPC, DustID.Electric, CustomSounds.GuardBreak, 10, 1, 1000);
+            else
+                modifiers.FinalDamage *= 2;
 
             if (AIState is ActionState.Slip)
-                damage /= 4;
-            damage *= 2;
-            return true;
+                modifiers.FinalDamage /= 2;
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -139,8 +138,11 @@ namespace Redemption.NPCs.Lab.Janitor
         }
         public override void AI()
         {
+            CustomFrames(46);
+
             Player player = Main.player[NPC.target];
-            DespawnHandler();
+            if (NPC.DespawnHandler(1, 5))
+                return;
             NPC.LookAtEntity(player);
 
             if (!player.active || player.dead)
@@ -150,7 +152,7 @@ namespace Redemption.NPCs.Lab.Janitor
             {
                 case ActionState.Begin:
                     if (!Main.dedServ)
-                        RedeSystem.Instance.TitleCardUIElement.DisplayTitle("The Janitor", 60, 90, 0.8f, 0, Color.Yellow, "A Janitor");
+                        RedeSystem.Instance.TitleCardUIElement.DisplayTitle(Language.GetTextValue("Mods.Redemption.TitleCard.Janitor.Name"), 60, 90, 0.8f, 0, Color.Yellow, Language.GetTextValue("Mods.Redemption.TitleCard.Janitor.Modifier"));
 
                     AIState = ActionState.Jump;
                     NPC.netUpdate = true;
@@ -288,8 +290,7 @@ namespace Redemption.NPCs.Lab.Janitor
                     break;
             }
         }
-        private int AniFrameY;
-        public override void FindFrame(int frameHeight)
+        private void CustomFrames(int frameHeight)
         {
             Player player = Main.player[NPC.target];
             if (AIState is ActionState.Yeet && AITimer >= 30 && AITimer <= 60)
@@ -302,10 +303,10 @@ namespace Redemption.NPCs.Lab.Janitor
                     AniFrameY++;
                     if (AniFrameY == 4)
                     {
-                        if (!Main.rand.NextBool(3))
-                            NPC.Shoot(NPC.Center, ModContent.ProjectileType<JanitorMop_Proj>(), NPC.damage, RedeHelper.PolarVector(12, (player.Center - NPC.Center).ToRotation()), true, SoundID.Item19);
+                        if (!Main.rand.NextBool(2))
+                            NPC.Shoot(NPC.Center, ModContent.ProjectileType<JanitorMop_Proj>(), NPC.damage, RedeHelper.PolarVector(12, (player.Center - NPC.Center).ToRotation()), SoundID.Item19);
                         else
-                            NPC.Shoot(NPC.Center, ModContent.ProjectileType<JanitorMop_Proj>(), NPC.damage, RedeHelper.PolarVector(8, (player.Center - NPC.Center).ToRotation()), true, SoundID.Item19, 1);
+                            NPC.Shoot(NPC.Center, ModContent.ProjectileType<JanitorMop_Proj>(), NPC.damage, RedeHelper.PolarVector(8, (player.Center - NPC.Center).ToRotation()), SoundID.Item19, 1);
                     }
                     if (AniFrameY > 5)
                         AniFrameY = 5;
@@ -324,13 +325,21 @@ namespace Redemption.NPCs.Lab.Janitor
                     NPC.frameCounter = 0;
                     NPC.frame.Y += frameHeight;
                     if (NPC.frame.Y == 8 * frameHeight)
-                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<JanitorBucket_Proj>(), NPC.damage, RedeHelper.PolarVector(12, (player.Center - NPC.Center).ToRotation()), true, SoundID.Item19);
+                        NPC.Shoot(NPC.Center, ModContent.ProjectileType<JanitorBucket_Proj>(), NPC.damage, RedeHelper.PolarVector(12, (player.Center - NPC.Center).ToRotation()), SoundID.Item19);
 
                     if (NPC.frame.Y > 10 * frameHeight)
                         NPC.frame.Y = 10 * frameHeight;
                 }
                 return;
             }
+        }
+        private int AniFrameY;
+        public override void FindFrame(int frameHeight)
+        {
+            if (AIState is ActionState.Yeet && AITimer >= 30 && AITimer <= 60)
+                return;
+            if (AIState is ActionState.Toss && AITimer >= 40 && AITimer <= 70)
+                return;
             if (AIState is ActionState.Stunned)
             {
                 if (NPC.frame.Y < 11 * frameHeight)
@@ -397,48 +406,31 @@ namespace Redemption.NPCs.Lab.Janitor
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
             Texture2D texture = TextureAssets.Npc[NPC.type].Value;
-            Texture2D SlipAni = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Slip").Value;
-            Texture2D YeetAni = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Yeet").Value;
             var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
             if (AIState is ActionState.Slip)
             {
-                int Height = SlipAni.Height / 7;
+                int Height = SlipAni.Value.Height / 7;
                 int y = Height * AniFrameY;
-                Rectangle rect = new(0, y, SlipAni.Width, Height);
-                Vector2 origin = new(SlipAni.Width / 2f, Height / 2f);
-                spriteBatch.Draw(SlipAni, NPC.Center - screenPos - new Vector2(0, 3), new Rectangle?(rect), NPC.GetAlpha(drawColor), NPC.rotation, origin, NPC.scale, effects, 0);
+                Rectangle rect = new(0, y, SlipAni.Value.Width, Height);
+                Vector2 origin = new(SlipAni.Value.Width / 2f, Height / 2f);
+                spriteBatch.Draw(SlipAni.Value, NPC.Center - screenPos - new Vector2(0, 3), new Rectangle?(rect), NPC.GetAlpha(drawColor), NPC.rotation, origin, NPC.scale, effects, 0);
             }
             else if (AIState is ActionState.Yeet && AITimer >= 30 && AITimer <= 60)
             {
-                int Height = YeetAni.Height / 6;
+                int Height = YeetAni.Value.Height / 6;
                 int y = Height * AniFrameY;
-                Rectangle rect = new(0, y, YeetAni.Width, Height);
-                Vector2 origin = new(YeetAni.Width / 2f, Height / 2f);
-                spriteBatch.Draw(YeetAni, NPC.Center - screenPos - new Vector2(0, 6), new Rectangle?(rect), NPC.GetAlpha(drawColor), NPC.rotation, origin, NPC.scale, effects, 0);
+                Rectangle rect = new(0, y, YeetAni.Value.Width, Height);
+                Vector2 origin = new(YeetAni.Value.Width / 2f, Height / 2f);
+                spriteBatch.Draw(YeetAni.Value, NPC.Center - screenPos - new Vector2(0, 6), new Rectangle?(rect), NPC.GetAlpha(drawColor), NPC.rotation, origin, NPC.scale, effects, 0);
             }
             else
                 spriteBatch.Draw(texture, NPC.Center - screenPos, NPC.frame, NPC.GetAlpha(drawColor), NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0f);
             return false;
         }
-        private void DespawnHandler()
+        public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment)
         {
-            Player player = Main.player[NPC.target];
-            if (!player.active || player.dead)
-            {
-                NPC.TargetClosest(false);
-                player = Main.player[NPC.target];
-                if (!player.active || player.dead)
-                {
-                    NPC.alpha += 5;
-                    if (NPC.alpha >= 255)
-                        NPC.active = false;
-                }
-            }
-        }
-        public override void ScaleExpertStats(int numPlayers, float bossLifeScale)
-        {
-            NPC.lifeMax = (int)(NPC.lifeMax * 0.6f * bossLifeScale);
+            NPC.lifeMax = (int)(NPC.lifeMax * 0.6f * balance * bossAdjustment);
             NPC.damage = (int)(NPC.damage * 0.6f);
         }
     }

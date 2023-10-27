@@ -3,9 +3,7 @@ using Terraria.ID;
 using Terraria;
 using Microsoft.Xna.Framework;
 using Terraria.DataStructures;
-using Redemption.Globals;
 using Terraria.Audio;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Redemption.Items.Materials.HM;
 using Redemption.BaseExtension;
 using Microsoft.Xna.Framework.Graphics;
@@ -17,11 +15,11 @@ namespace Redemption.Items.Weapons.HM.Melee
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Infectious Glaive");
-            Tooltip.SetDefault("");
+            //DisplayName.SetDefault("Infectious Glaive");
+            //Tooltip.SetDefault("Fires a spread of xenomite shards every two swings");
             ItemID.Sets.SkipsInitialUseSound[Item.type] = true;
             ItemID.Sets.Spears[Item.type] = true;
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -51,7 +49,7 @@ namespace Redemption.Items.Weapons.HM.Melee
             Item.shootSpeed = 3.7f;
             Item.shoot = ModContent.ProjectileType<InfectiousGlaive_Proj>();
             if (!Main.dedServ)
-                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Item.ModItem.Texture + "_Glow").Value;
+                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
         }
         private bool side;
         public override bool AltFunctionUse(Player player) => true;
@@ -80,7 +78,7 @@ namespace Redemption.Items.Weapons.HM.Melee
         {
             CreateRecipe()
                 .AddIngredient(ModContent.ItemType<XenoXyston>())
-                .AddIngredient(ModContent.ItemType<XenomiteItem>(), 8)
+                .AddIngredient(ModContent.ItemType<Xenomite>(), 8)
                 .AddIngredient(ModContent.ItemType<ToxicBile>(), 5)
                 .AddTile(TileID.MythrilAnvil)
                 .Register();

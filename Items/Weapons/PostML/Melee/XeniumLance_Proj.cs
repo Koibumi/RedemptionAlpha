@@ -8,6 +8,8 @@ using Redemption.Globals;
 using ReLogic.Content;
 using Redemption.BaseExtension;
 using Redemption.Effects.PrimitiveTrails;
+using Redemption.Buffs.Cooldowns;
+using Redemption.Projectiles.Melee;
 
 namespace Redemption.Items.Weapons.PostML.Melee
 {
@@ -15,7 +17,8 @@ namespace Redemption.Items.Weapons.PostML.Melee
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Xenium Lance");
+            // DisplayName.SetDefault("Xenium Lance");
+            ElementID.ProjThunder[Type] = true;
         }
 
         public override bool ShouldUpdatePosition() => false;
@@ -30,6 +33,7 @@ namespace Redemption.Items.Weapons.PostML.Melee
             Projectile.friendly = true;
             Projectile.penetrate = -1;
             Projectile.alpha = 255;
+            Projectile.usesLocalNPCImmunity = true;
             Projectile.Redemption().TechnicallyMelee = true;
         }
 
@@ -59,14 +63,19 @@ namespace Redemption.Items.Weapons.PostML.Melee
             else
                 Projectile.rotation = (Projectile.Center - player.Center).ToRotation() - MathHelper.Pi - MathHelper.PiOver4;
 
+            player.SetCompositeArmFront(true, Length >= 80 ? Player.CompositeArmStretchAmount.Full : Player.CompositeArmStretchAmount.Quarter, (player.Center - Projectile.Center).ToRotation() + MathHelper.PiOver2);
+
             switch (Projectile.ai[0])
             {
                 case 0:
-                    player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, (player.Center - Projectile.Center).ToRotation() + MathHelper.PiOver2);
                     if (Timer++ == 0)
                     {
                         startVector = RedeHelper.PolarVector(1, Projectile.velocity.ToRotation() - (MathHelper.PiOver2 * Projectile.spriteDirection));
                         speed = MathHelper.ToRadians(6);
+                    }
+                    if (Timer % 3 == 0)
+                    {
+                        Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center, Vector2.Zero, ModContent.ProjectileType<XeniumLanceSpark_Proj>(), Projectile.damage / 6, 0, Main.myPlayer);
                     }
                     if (Timer < 10)
                     {
@@ -89,11 +98,14 @@ namespace Redemption.Items.Weapons.PostML.Melee
                     break;
 
                 case 1:
-                    player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, (player.Center - Projectile.Center).ToRotation() + MathHelper.PiOver2);
                     if (Timer++ == 0)
                     {
                         startVector = RedeHelper.PolarVector(1, Projectile.velocity.ToRotation() + (MathHelper.PiOver2 * Projectile.spriteDirection));
                         speed = MathHelper.ToRadians(6);
+                    }
+                    if (Timer % 3 == 0)
+                    {
+                        Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center, Vector2.Zero, ModContent.ProjectileType<XeniumLanceSpark_Proj>(), Projectile.damage / 6, 0, Main.myPlayer);
                     }
                     if (Timer < 10)
                     {
@@ -115,11 +127,14 @@ namespace Redemption.Items.Weapons.PostML.Melee
                     Length = MathHelper.Clamp(Length, 60, 120);
                     break;
                 case 2:
-                    player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, (player.Center - Projectile.Center).ToRotation() + MathHelper.PiOver2);
                     if (Timer++ == 0)
                     {
                         startVector = RedeHelper.PolarVector(1, Projectile.velocity.ToRotation() - (MathHelper.PiOver2 * Projectile.spriteDirection));
                         speed = MathHelper.ToRadians(6);
+                    }
+                    if (Timer % 2 == 0)
+                    {
+                        Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center, Vector2.Zero, ModContent.ProjectileType<XeniumLanceSpark_Proj>(), Projectile.damage / 6, 0, Main.myPlayer);
                     }
                     if (Timer < 10)
                     {
@@ -146,7 +161,6 @@ namespace Redemption.Items.Weapons.PostML.Melee
                         startVector = RedeHelper.PolarVector(1, Projectile.velocity.ToRotation());
                         speed = 1.2f;
                     }
-
                     if (Timer == 5)
                     {
                         player.velocity = RedeHelper.PolarVector(35, Projectile.velocity.ToRotation());
@@ -169,9 +183,7 @@ namespace Redemption.Items.Weapons.PostML.Melee
                     }
                     if (Timer >= 10)
                     {
-                        player.immune = true;
-                        player.immuneTime = 60;
-                        Projectile.damage += Timer * 100;
+                        player.Redemption().contactImmune = true;
                     }
                     Length *= speed;
                     vector = startVector * Length;
@@ -186,7 +198,27 @@ namespace Redemption.Items.Weapons.PostML.Melee
                 Projectile.alpha = 0;
             return false;
         }
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+        {
+            if (Projectile.ai[0] == 3 && Timer >= 10)
+                modifiers.FlatBonusDamage += Timer * 200;
+        }
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            Player player = Main.player[Projectile.owner];
+            Projectile.localNPCImmunity[target.whoAmI] = 15;
+            target.immune[Projectile.owner] = 0;
+            if (Projectile.ai[0] == 3)
+            {
+                player.ClearBuff(ModContent.BuffType<XeniumLanceCooldown>());
 
+                player.immune = true;
+                player.immuneTime = (int)MathHelper.Max(player.immuneTime, 20);
+
+                Projectile.localNPCImmunity[target.whoAmI] = 60;
+                target.immune[Projectile.owner] = 0;
+            }
+        }
         public override bool PreDraw(ref Color lightColor)
         {
             Player player = Main.player[Projectile.owner];

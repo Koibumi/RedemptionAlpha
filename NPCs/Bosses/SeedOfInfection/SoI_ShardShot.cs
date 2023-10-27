@@ -2,6 +2,8 @@
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ID;
+using Redemption.Globals;
+using Redemption.Buffs.Debuffs;
 
 namespace Redemption.NPCs.Bosses.SeedOfInfection
 {
@@ -9,8 +11,9 @@ namespace Redemption.NPCs.Bosses.SeedOfInfection
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Shard Shot");
+            // DisplayName.SetDefault("Shard Shot");
             Main.projFrames[Projectile.type] = 3;
+            ElementID.ProjPoison[Type] = true;
         }
 
         public override void SetDefaults()
@@ -24,7 +27,9 @@ namespace Redemption.NPCs.Bosses.SeedOfInfection
             Projectile.tileCollide = false;
             Projectile.timeLeft = 160;
         }
-
+        public override void OnHitPlayer(Player target, Player.HurtInfo info) => target.AddBuff(ModContent.BuffType<BileDebuff>(), 120);
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) => target.AddBuff(ModContent.BuffType<GreenRashesDebuff>(), 120);
+        public override bool? CanHitNPC(NPC target) => Projectile.ai[0] is 2 && Projectile.ai[1] != target.whoAmI ? null : false;
         public override void AI()
         {
             if (++Projectile.frameCounter >= 3)
@@ -44,10 +49,30 @@ namespace Redemption.NPCs.Bosses.SeedOfInfection
                 Projectile.velocity.Y += 0.2f;
         }
 
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             int dustIndex = Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.GreenFairy, Scale: 1.5f);
             Main.dust[dustIndex].velocity *= 2f;
         }
+    }
+    public class SoI_ShardShot_Friendly : SoI_ShardShot
+    {
+        public override string Texture => "Redemption/NPCs/Bosses/SeedOfInfection/SoI_ShardShot";
+        public override void SetStaticDefaults()
+        {
+            //DisplayName.SetDefault("Shard Shot");
+            Main.projFrames[Projectile.type] = 3;
+            ElementID.ProjPoison[Type] = true;
+        }
+        public override void SetDefaults()
+        {
+            base.SetDefaults();
+            Projectile.friendly = true;
+            Projectile.hostile = false;
+            Projectile.penetrate = 1;
+            Projectile.tileCollide = true;
+            Projectile.timeLeft = 10;
+        }
+        public override bool? CanHitNPC(NPC target) => null;
     }
 }

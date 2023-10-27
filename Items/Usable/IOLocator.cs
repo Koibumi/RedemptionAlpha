@@ -13,15 +13,15 @@ namespace Redemption.Items.Usable
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("IO-Locator");
-            Tooltip.SetDefault("Holding this in your hand will point to the Abandoned Laboratory");
-            SacrificeTotal = 1;
+            // DisplayName.SetDefault("IO-Locator");
+            // Tooltip.SetDefault("Holding this in your hand will point to the Abandoned Laboratory");
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
         {
             Item.value = Item.buyPrice(0, 15, 50, 0);
-            Item.rare = ItemRarityID.Lime;
+            Item.rare = ItemRarityID.Pink;
             Item.width = 34;
             Item.height = 26;
         }
@@ -36,7 +36,7 @@ namespace Redemption.Items.Usable
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Pointer");
+            // DisplayName.SetDefault("Pointer");
         }
 
         public override void SetDefaults()

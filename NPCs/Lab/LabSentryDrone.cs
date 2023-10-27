@@ -7,6 +7,7 @@ using Redemption.Walls;
 using Redemption.Globals;
 using Terraria.Audio;
 using Terraria.GameContent;
+using Redemption.Biomes;
 
 namespace Redemption.NPCs.Lab
 {
@@ -14,7 +15,7 @@ namespace Redemption.NPCs.Lab
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Laboratory Drone");
+            // DisplayName.SetDefault("Laboratory Drone");
             Main.npcFrameCount[NPC.type] = 4;
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0) { Hide = true };
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
@@ -33,7 +34,7 @@ namespace Redemption.NPCs.Lab
             NPC.aiStyle = -1;
             NPC.immortal = true;
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             Dust.NewDust(NPC.position + NPC.velocity, NPC.width, NPC.height, DustID.Electric);
         }
@@ -57,8 +58,7 @@ namespace Redemption.NPCs.Lab
                 }
             }
             Player player = Main.player[NPC.target];
-            DespawnHandler();
-            if (!player.active || player.dead || !LabArea.Active || RedeWorld.labSafe)
+            if (DespawnHandler())
                 return;
 
             NPC.Move(new Vector2(movX, movY), 15, 30, true);
@@ -98,7 +98,7 @@ namespace Redemption.NPCs.Lab
                             SoundEngine.PlaySound(SoundID.Item91, NPC.position);
                             Main.projectile[proj].tileCollide = false;
                             Main.projectile[proj].timeLeft = 200;
-                            Main.projectile[proj].netUpdate2 = true;
+                            Main.projectile[proj].netUpdate = true;
                         }
                     }
                 }
@@ -114,7 +114,7 @@ namespace Redemption.NPCs.Lab
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
             Texture2D texture = TextureAssets.Npc[NPC.type].Value;
-            Texture2D gunAni = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Head").Value;
+            Texture2D gunAni = ModContent.Request<Texture2D>(Texture + "_Head").Value;
             var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
             spriteBatch.Draw(gunAni, NPC.Center - screenPos, new Rectangle?(new Rectangle(0, 0, gunAni.Width, gunAni.Height)), drawColor, customGunRot ? gunRot : NPC.DirectionTo(Main.player[NPC.target].Center).ToRotation(), new Vector2(gunAni.Width / 2f, gunAni.Height / 2f), NPC.scale, effects, 0);
@@ -122,16 +122,19 @@ namespace Redemption.NPCs.Lab
             spriteBatch.Draw(texture, NPC.Center - screenPos, NPC.frame, drawColor, NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0f);
             return false;
         }
-        private void DespawnHandler()
+        private bool DespawnHandler()
         {
             Player player = Main.player[NPC.target];
-            if (!player.active || player.dead || !LabArea.Active || RedeWorld.labSafe)
+            if (!player.active || player.dead || !player.InModBiome<LabBiome>() || RedeWorld.labSafe)
             {
                 NPC.TargetClosest(false);
-                NPC.velocity = new Vector2(0f, -10f);
+                NPC.velocity.X *= .96f;
+                NPC.velocity.Y -= 3;
                 if (NPC.timeLeft > 10)
                     NPC.timeLeft = 10;
+                return true;
             }
+            return false;
         }
     }
 }

@@ -2,21 +2,19 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.Biomes;
 using Redemption.Buffs.Debuffs;
-using Redemption.Buffs.NPCBuffs;
 using Redemption.Globals;
-using Redemption.Items.Armor.Vanity;
+using Redemption.Globals.NPC;
 using Redemption.Items.Armor.Vanity.Intruder;
 using Redemption.Items.Materials.HM;
-using Redemption.Items.Materials.PreHM;
 using Redemption.Items.Placeable.Banners;
 using Redemption.Items.Usable.Potions;
 using Terraria;
 using Terraria.Audio;
-using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.NPCs.Wasteland
@@ -36,25 +34,20 @@ namespace Redemption.NPCs.Wasteland
         }
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Sneezy Snow Flinx");
+            // DisplayName.SetDefault("Sneezy Snow Flinx");
             Main.npcFrameCount[NPC.type] = 16;
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Poisoned,
-                    ModContent.BuffType<PureChillDebuff>(),
-                    ModContent.BuffType<IceFrozen>(),
-                    ModContent.BuffType<BileDebuff>(),
-                    ModContent.BuffType<GreenRashesDebuff>(),
-                    ModContent.BuffType<GlowingPustulesDebuff>(),
-                    ModContent.BuffType<FleshCrystalsDebuff>()
-                }
-            });
+            NPCID.Sets.ShimmerTransformToNPC[NPC.type] = NPCID.SnowFlinx;
+
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Infected);
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Cold);
+
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0)
             {
                 Velocity = 1f
             };
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
+            ElementID.NPCIce[Type] = true;
+            ElementID.NPCPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -74,7 +67,7 @@ namespace Redemption.NPCs.Wasteland
             Banner = NPC.type;
             BannerItem = ModContent.ItemType<SneezyFlinxBanner>();
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -91,17 +84,18 @@ namespace Redemption.NPCs.Wasteland
         {
             bestiaryEntry.Info.AddRange(new IBestiaryInfoElement[]
             {
-                new FlavorTextBestiaryInfoElement(
-                    "Looks like its big nose has caught a cold! Seems like it wasn't prepared for weather as cold as one made by a nuclear winter.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.SneezyFlinx"))
             });
         }
-        public override void ModifyHitPlayer(Player target, ref int damage, ref bool crit)
+        public override void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers)
         {
             if (Main.rand.NextBool(2) || Main.expertMode)
                 target.AddBuff(ModContent.BuffType<GreenRashesDebuff>(), Main.rand.Next(400, 1000));
         }
         public override bool PreAI()
         {
+            CustomFrames(48);
+
             Player player = Main.player[NPC.target];
             NPC.LookByVelocity();
             if (NPC.localAI[0] == 0 && NPC.velocity.Y == 0 && Main.rand.NextBool(500) && NPC.DistanceSQ(player.Center) < 600 * 600)
@@ -115,7 +109,7 @@ namespace Redemption.NPCs.Wasteland
                 return false;
             return true;
         }
-        public override void FindFrame(int frameHeight)
+        private void CustomFrames(int frameHeight)
         {
             if (NPC.localAI[0] != 0)
             {
@@ -171,6 +165,11 @@ namespace Redemption.NPCs.Wasteland
                 }
                 return;
             }
+        }
+        public override void FindFrame(int frameHeight)
+        {
+            if (NPC.localAI[0] != 0)
+                return;
             if (NPC.collideY || NPC.velocity.Y == 0)
             {
                 NPC.rotation = 0;
@@ -191,7 +190,7 @@ namespace Redemption.NPCs.Wasteland
         }
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
-            Texture2D sneezeTex = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Sneeze").Value;
+            Texture2D sneezeTex = ModContent.Request<Texture2D>(Texture + "_Sneeze").Value;
             Vector2 SneezeOrigin = new(sneezeTex.Width / 2, sneezeTex.Height / 2);
             var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             if (NPC.localAI[0] != 0 && AIState == ActionState.Sneeze)
@@ -205,8 +204,8 @@ namespace Redemption.NPCs.Wasteland
         }
         public override void ModifyNPCLoot(NPCLoot npcLoot)
         {
-            npcLoot.Add(ItemDropRule.ByCondition(new Conditions.BeatAnyMechBoss(), ModContent.ItemType<XenomiteShard>(), 4, 4, 8));
-            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<ToxicBile>(), 2, 2, 5));
+            npcLoot.Add(ItemDropRule.ByCondition(new Conditions.BeatAnyMechBoss(), ModContent.ItemType<Xenomite>(), 4, 2, 4));
+            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<ToxicBile>(), 2, 4, 8));
             npcLoot.Add(ItemDropRule.OneFromOptions(50, ModContent.ItemType<IntruderMask>(), ModContent.ItemType<IntruderArmour>(), ModContent.ItemType<IntruderPants>()));
             npcLoot.Add(ItemDropRule.Food(ModContent.ItemType<StarliteDonut>(), 150));
             var dropRules = Main.ItemDropsDB.GetRulesForNPCID(NPCID.SnowFlinx, false);
@@ -215,21 +214,19 @@ namespace Redemption.NPCs.Wasteland
                 npcLoot.Add(dropRule);
             }
         }
-        public override void ModifyHitByItem(Player player, Item item, ref int damage, ref float knockback, ref bool crit)
+        public override void ModifyHitByItem(Player player, Item item, ref NPC.HitModifiers modifiers)
         {
             if (AIState is ActionState.Sneeze)
             {
                 if (item.pick > 0)
-                    damage = item.damage + item.pick * 2;
+                    modifiers.FlatBonusDamage += item.pick * 2;
 
             }
         }
-        public override bool StrikeNPC(ref double damage, int defense, ref float knockback, int hitDirection, ref bool crit)
+        public override void ModifyIncomingHit(ref NPC.HitModifiers modifiers)
         {
             if (AIState is ActionState.Sneeze)
-                damage *= 0.1;
-
-            return true;
+                modifiers.FinalDamage *= 0.1f;
         }
     }
 }

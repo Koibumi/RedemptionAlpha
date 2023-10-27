@@ -11,7 +11,10 @@ using Terraria.Audio;
 using Redemption.Base;
 using ReLogic.Content;
 using Redemption.WorldGeneration;
-using Redemption.UI;
+using Redemption.Biomes;
+using Redemption.UI.ChatUI;
+using Terraria.Graphics.CameraModifiers;
+using Terraria.Localization;
 
 namespace Redemption.NPCs.Lab.Volt
 {
@@ -22,7 +25,7 @@ namespace Redemption.NPCs.Lab.Volt
         public ref float AITimer => ref NPC.ai[1];
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Protector Volt");
+            // DisplayName.SetDefault("Protector Volt");
             Main.npcFrameCount[NPC.type] = 5;
             NPCID.Sets.DontDoHardmodeScaling[Type] = true;
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0) { Hide = true };
@@ -43,12 +46,13 @@ namespace Redemption.NPCs.Lab.Volt
             NPC.netAlways = true;
             NPC.aiStyle = -1;
         }
+        private static readonly SoundStyle voice = CustomSounds.Voice6 with { Pitch = -0.1f };
         public override bool CheckActive()
         {
-            return !LabArea.Active;
+            return !Main.LocalPlayer.InModBiome<LabBiome>();
         }
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => false;
-        public override bool? CanHitNPC(NPC target) => false;
+        public override bool CanHitNPC(NPC target) => false;
         public readonly Vector2 modifier = new(0, -200);
         public override void AI()
         {
@@ -58,8 +62,6 @@ namespace Redemption.NPCs.Lab.Volt
             if (NPC.target < 0 || NPC.target == 255 || player.dead || !player.active)
                 NPC.TargetClosest();
 
-            SoundStyle voice = CustomSounds.Voice6 with { Pitch = -0.1f };
-
             if (RedeBossDowned.downedVolt)
                 NPC.Transform(ModContent.NPCType<ProtectorVolt_NPC>());
             else
@@ -67,7 +69,7 @@ namespace Redemption.NPCs.Lab.Volt
                 switch (State)
                 {
                     case 0:
-                        if (NPC.DistanceSQ(player.Center) < 300 * 300 && player.Center.X > NPC.Center.X)
+                        if (NPC.DistanceSQ(player.Center) < 300 * 300 && player.RightOf(NPC))
                         {
                             if (player.IsFullTBot())
                                 State = 2;
@@ -89,13 +91,13 @@ namespace Redemption.NPCs.Lab.Volt
                         else
                         {
                             AITimer++;
-                            if (AITimer == 40)
+                            if (AITimer == 40 && !Main.dedServ)
                             {
                                 DialogueChain chain = new();
-                                chain.Add(new(NPC, "Halt!", Colors.RarityYellow, new Color(100, 86, 0), voice, 2, 100, 0, false, modifier: modifier)) // 110
-                                     .Add(new(NPC, "You aren't supposed to be here!", Colors.RarityYellow, new Color(100, 86, 0), voice, 2, 100, 30, true, modifier: modifier)); // 192
-                                TextBubbleUI.Visible = true;
-                                TextBubbleUI.Add(chain);
+                                chain.Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.Volt.Start.1"), Colors.RarityYellow, new Color(100, 86, 0), voice, .03f, 2f, 0, false, modifier: modifier)) // 110
+                                     .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.Volt.Start.2"), Colors.RarityYellow, new Color(100, 86, 0), voice, .03f, 2f, .5f, true, modifier: modifier)); // 192
+                                ChatUI.Visible = true;
+                                ChatUI.Add(chain);
                             }
                             if (AITimer == 342)
                             {
@@ -107,6 +109,9 @@ namespace Redemption.NPCs.Lab.Volt
 
                                 if (!Main.dedServ)
                                     SoundEngine.PlaySound(CustomSounds.EarthBoom, NPC.position);
+
+                                PunchCameraModifier camPunch = new(NPC.Center, new Vector2(0f, -1f), 20f, 6f, 30, 1000f, "Volt");
+                                Main.instance.CameraModifiers.Add(camPunch);
 
                                 for (int i = 0; i < 40; i++)
                                     Dust.NewDust(NPC.BottomLeft, Main.rand.Next(NPC.width), 1, DustID.Smoke, 0, 0, 0, default, 2f);
@@ -133,17 +138,18 @@ namespace Redemption.NPCs.Lab.Volt
                         break;
                     case 2:
                         AITimer++;
-                        if (AITimer == 40)
+                        if (AITimer == 40 && !Main.dedServ)
                         {
                             DialogueChain chain = new();
-                            chain.Add(new(NPC, "Hm? Are you supposed to be let through?", Colors.RarityYellow, new Color(100, 86, 0), voice, 2, 100, 0, false, modifier: modifier)) // 178
-                                 .Add(new(NPC, "One second...", Colors.RarityYellow, new Color(100, 86, 0), voice, 2, 100, 0, false, modifier: modifier)) // 126
-                                 .Add(new(NPC, ".[20].[20].[20]", Colors.RarityYellow, new Color(100, 86, 0), voice, 2, 100, 0, false, modifier: modifier)) // 166
-                                 .Add(new(NPC, "Everything seems to be in order.[30] Move along.", Colors.RarityYellow, new Color(100, 86, 0), voice, 2, 100, 30, true, modifier: modifier)); // 248
-                            TextBubbleUI.Visible = true;
-                            TextBubbleUI.Add(chain);
+                            chain.Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.Volt.Start.R1"), Colors.RarityYellow, new Color(100, 86, 0), voice, .03f, 2f, 0, false, modifier: modifier))
+                                 .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.Volt.Start.R2"), Colors.RarityYellow, new Color(100, 86, 0), voice, .03f, 2f, 0, false, modifier: modifier))
+                                 .Add(new(NPC, ".[0.3].[0.3].[0.3]", Colors.RarityYellow, new Color(100, 86, 0), voice, .03f, 2f, 0, false, modifier: modifier)) // 166
+                                 .Add(new(NPC, Language.GetTextValue("Mods.Redemption.Cutscene.Volt.Start.R3"), Colors.RarityYellow, new Color(100, 86, 0), voice, .03f, 2f, .5f, true, modifier: modifier, endID: 1));
+                            chain.OnEndTrigger += Chain_OnEndTrigger;
+                            ChatUI.Visible = true;
+                            ChatUI.Add(chain);
                         }
-                        if (AITimer > 758)
+                        if (AITimer > 2000)
                         {
                             if (!LabArea.labAccess[3])
                                 Item.NewItem(NPC.GetSource_Loot(), (int)NPC.position.X, (int)NPC.position.Y, NPC.width, NPC.height, ModContent.ItemType<ZoneAccessPanel4>());
@@ -151,10 +157,12 @@ namespace Redemption.NPCs.Lab.Volt
                             NPC nPC = new();
                             nPC.SetDefaults(ModContent.NPCType<ProtectorVolt>());
                             Main.BestiaryTracker.Kills.RegisterKill(nPC);
-
-                            RedeBossDowned.downedVolt = true;
-                            if (Main.netMode == NetmodeID.Server)
-                                NetMessage.SendData(MessageID.WorldData);
+                            if (Main.netMode != NetmodeID.MultiplayerClient)
+                            {
+                                RedeBossDowned.downedVolt = true;
+                                if (Main.netMode == NetmodeID.Server)
+                                    NetMessage.SendData(MessageID.WorldData);
+                            }
 
                             NPC.Transform(ModContent.NPCType<ProtectorVolt_NPC>());
                             NPC.netUpdate = true;
@@ -164,15 +172,23 @@ namespace Redemption.NPCs.Lab.Volt
                         AITimer++;
                         if (AITimer >= 60)
                         {
-                            RedeBossDowned.voltBegin = true;
-                            if (Main.netMode == NetmodeID.Server)
-                                NetMessage.SendData(MessageID.WorldData);
+                            if (Main.netMode != NetmodeID.MultiplayerClient)
+                            {
+                                RedeBossDowned.voltBegin = true;
+                                if (Main.netMode == NetmodeID.Server)
+                                    NetMessage.SendData(MessageID.WorldData);
+                            }
 
                             NPC.Transform(ModContent.NPCType<ProtectorVolt>());
+                            NPC.netUpdate = true;
                         }
                         break;
                 }
             }
+        }
+        private void Chain_OnEndTrigger(Dialogue dialogue, int ID)
+        {
+            AITimer = 3000;
         }
         public override void FindFrame(int frameHeight)
         {
@@ -193,7 +209,7 @@ namespace Redemption.NPCs.Lab.Volt
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
             Texture2D texture = TextureAssets.Npc[NPC.type].Value;
-            Texture2D GunTex = ModContent.Request<Texture2D>(NPC.ModNPC.Texture + "_Gun").Value;
+            Texture2D GunTex = ModContent.Request<Texture2D>(Texture + "_Gun").Value;
             var effects = NPC.spriteDirection == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
 
             spriteBatch.Draw(texture, NPC.Center - screenPos, NPC.frame, drawColor, NPC.rotation, NPC.frame.Size() / 2, NPC.scale, effects, 0f);

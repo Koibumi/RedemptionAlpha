@@ -16,7 +16,7 @@ namespace Redemption.Items.Weapons.HM.Melee
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Slayer's Rocket Fist");
+            // DisplayName.SetDefault("Slayer's Rocket Fist");
         }
         public override bool ShouldUpdatePosition() => false;
         public override void SetSafeDefaults()
@@ -116,13 +116,13 @@ namespace Redemption.Items.Weapons.HM.Melee
                 }
             }
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             Player player = Main.player[Projectile.owner];
             player.fullRotation = 0f;
         }
         public override bool? CanHitNPC(NPC target) => Projectile.ai[0] == 0 ? null : false;
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Player player = Main.player[Projectile.owner];
             if (Main.myPlayer == Projectile.owner)

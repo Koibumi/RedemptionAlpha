@@ -19,9 +19,10 @@ namespace Redemption.Items.Weapons.PreHM.Melee
         public float[] oldrot = new float[4];
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Eaglecrest Javelin");
+            // DisplayName.SetDefault("Eaglecrest Javelin");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 4;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjEarth[Type] = true;
         }
 
         public override void SetDefaults()
@@ -42,10 +43,6 @@ namespace Redemption.Items.Weapons.PreHM.Melee
         private int thunderCooldown;
         public override void AI()
         {
-            for (int k = Projectile.oldPos.Length - 1; k > 0; k--)
-                oldrot[k] = oldrot[k - 1];
-            oldrot[0] = Projectile.rotation;
-
             Player player = Main.player[Projectile.owner];
             if (player.noItems || player.CCed || player.dead || !player.active)
                 Projectile.Kill();
@@ -103,8 +100,11 @@ namespace Redemption.Items.Weapons.PreHM.Melee
                 player.itemRotation -= MathHelper.ToRadians(-20f * player.direction);
 
             thunderCooldown--;
+            for (int k = Projectile.oldPos.Length - 1; k > 0; k--)
+                oldrot[k] = oldrot[k - 1];
+            oldrot[0] = Projectile.rotation;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             if (Projectile.ai[0] >= 1)
                 StrikeLightning();
@@ -115,7 +115,7 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             SoundEngine.PlaySound(SoundID.Dig, Projectile.position);
             return true;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Projectile.localNPCImmunity[target.whoAmI] = 30;
             target.immune[Projectile.owner] = 0;
@@ -137,13 +137,13 @@ namespace Redemption.Items.Weapons.PreHM.Melee
                 Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.Stone,
                     -Projectile.velocity.X * 0.01f, -Projectile.velocity.Y * 0.6f, Scale: 2);
             for (int i = 0; i < 3; i++)
-                DustHelper.DrawParticleElectricity(Projectile.Center - new Vector2(0, 400), Projectile.Center, new LightningParticle(), 2f, 30, 0.1f, 1);
+                DustHelper.DrawParticleElectricity<LightningParticle>(Projectile.Center - new Vector2(0, 400), Projectile.Center, 2f, 30, 0.1f, 1);
             DustHelper.DrawCircle(Projectile.Center - new Vector2(0, 400), DustID.Sandnado, 1, 4, 4, 1, 3, nogravity: true);
 
             if (!Main.dedServ)
                 SoundEngine.PlaySound(CustomSounds.Thunderstrike, Projectile.position);
             if (Projectile.owner == Main.myPlayer)
-                Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center - new Vector2(0, 400), new Vector2(0, 5), ModContent.ProjectileType<EaglecrestJavelin_Thunder>(), 38, 8, Projectile.owner);
+                Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center - new Vector2(0, 400), new Vector2(0, 5), ModContent.ProjectileType<EaglecrestJavelin_Thunder>(), (int)(Projectile.damage * .75f), 8, Projectile.owner);
         }
         public override bool PreDraw(ref Color lightColor)
         {
@@ -159,7 +159,7 @@ namespace Redemption.Items.Weapons.PreHM.Melee
 
             for (int k = 0; k < Projectile.oldPos.Length; k++)
             {
-                Vector2 drawPos = Projectile.oldPos[k] - Main.screenPosition + Vector2.UnitY * Projectile.gfxOffY;
+                Vector2 drawPos = Projectile.oldPos[k] - Main.screenPosition - Vector2.UnitY * Projectile.gfxOffY;
                 Color color = new Color(255, 180, 0) * ((Projectile.oldPos.Length - k) / (float)Projectile.oldPos.Length);
                 Main.EntitySpriteDraw(texture, drawPos + new Vector2(8, 8), null, color * glow, oldrot[k], origin, Projectile.scale * scale, spriteEffects, 0);
             }
@@ -167,7 +167,7 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
 
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition + Vector2.UnitY * Projectile.gfxOffY, null, Projectile.GetAlpha(lightColor), Projectile.rotation, origin, Projectile.scale, spriteEffects, 0);
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition - Vector2.UnitY * Projectile.gfxOffY, null, Projectile.GetAlpha(lightColor), Projectile.rotation, origin, Projectile.scale, spriteEffects, 0);
             return false;
         }
     }
@@ -176,7 +176,8 @@ namespace Redemption.Items.Weapons.PreHM.Melee
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Lightning");
+            // DisplayName.SetDefault("Lightning");
+            ElementID.ProjThunder[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -191,15 +192,15 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             Projectile.tileCollide = false;
             Projectile.usesLocalNPCImmunity = true;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Projectile.localNPCImmunity[target.whoAmI] = 30;
             target.immune[Projectile.owner] = 0;
-            target.AddBuff(ModContent.BuffType<ElectrifiedDebuff>(), 120);
+            target.AddBuff(ModContent.BuffType<ElectrifiedDebuff>(), 30);
         }
-        public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
-            hitDirection = Projectile.Center.X > target.Center.X ? -1 : 1;
+            modifiers.HitDirectionOverride = Projectile.RightOfDir(target);
         }
     }
 }

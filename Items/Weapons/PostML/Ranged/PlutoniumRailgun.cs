@@ -10,7 +10,6 @@ using Redemption.Items.Materials.HM;
 using Terraria.DataStructures;
 using Redemption.Globals.Player;
 using Redemption.Globals;
-using Redemption.Items.Weapons.HM.Ammo;
 using Terraria.Audio;
 
 namespace Redemption.Items.Weapons.PostML.Ranged
@@ -19,17 +18,17 @@ namespace Redemption.Items.Weapons.PostML.Ranged
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("(9[i:" + ModContent.ItemType<EnergyPack>() + "]) Shoots three piercing beams of plutonium, each consuming 3 Energy\n" +
-                "Requires an Energy Pack to be in your inventory");
-            SacrificeTotal = 1;
+            /* Tooltip.SetDefault("(9[i:" + ModContent.ItemType<EnergyPack>() + "]) Shoots three piercing beams of plutonium, each consuming 3 Energy\n" +
+                "Requires an Energy Pack to be in your inventory"); */
+            Item.ResearchUnlockCount = 1;
         }
         public override void SetDefaults()
         {
-            Item.damage = 488;
+            Item.damage = 410;
             Item.noMelee = true;
             Item.DamageType = DamageClass.Ranged;
-            Item.width = 84;
-            Item.height = 32;
+            Item.width = 92;
+            Item.height = 40;
             Item.useTime = 15;
             Item.useAnimation = 45;
             Item.reuseDelay = 20;
@@ -42,7 +41,7 @@ namespace Redemption.Items.Weapons.PostML.Ranged
             Item.autoReuse = true;
             Item.shootSpeed = 3;
             if (!Main.dedServ)
-                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Item.ModItem.Texture + "_Glow").Value;
+                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
         }
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
@@ -57,14 +56,14 @@ namespace Redemption.Items.Weapons.PostML.Ranged
         }
         public override Vector2? HoldoutOffset()
         {
-            return new Vector2(-4, 0);
+            return new Vector2(-8, 0);
         }
         public override void AddRecipes()
         {
             CreateRecipe()
                 .AddIngredient(ModContent.ItemType<Plutonium>(), 30)
                 .AddIngredient(ModContent.ItemType<Plating>(), 5)
-                .AddIngredient(ModContent.ItemType<Capacitator>())
+                .AddIngredient(ModContent.ItemType<Capacitor>())
                 .AddTile(TileID.LunarCraftingStation)
                 .Register();
         }

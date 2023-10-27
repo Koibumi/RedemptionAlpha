@@ -14,8 +14,9 @@ namespace Redemption.Projectiles.Magic
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Bacteria");
+            // DisplayName.SetDefault("Bacteria");
             Main.projFrames[Projectile.type] = 2;
+            ElementID.ProjPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -42,7 +43,7 @@ namespace Redemption.Projectiles.Magic
             Projectile.velocity *= .98f;
             Projectile.rotation += 0.02f;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(SoundID.NPCDeath1 with { Volume = .4f }, Projectile.position);
             for (int i = 0; i < 6; i++)
@@ -72,7 +73,7 @@ namespace Redemption.Projectiles.Magic
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, new Rectangle?(rect), Projectile.GetAlpha(lightColor), Projectile.rotation, drawOrigin, Projectile.scale, effects, 0);
             return false;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(ModContent.BuffType<BInfectionDebuff>(), 1000);
         }

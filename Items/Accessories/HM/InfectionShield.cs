@@ -18,22 +18,23 @@ namespace Redemption.Items.Accessories.HM
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Infected Thornshield");
-            Tooltip.SetDefault("Double tap a direction to dash"
-                + "\n8% increased melee critical strike chance"
+            // DisplayName.SetDefault("Infected Thornshield");
+            /* Tooltip.SetDefault("Double tap a direction to dash"
+                + "\n4% increased melee critical strike chance"
                 + "\nInflicts Infection upon dashing into an enemy"
-                + "\nReleases acid-like sparks as you move");
-            SacrificeTotal = 1;
+                + "\nReleases acid-like sparks as you move"); */
+            Item.ResearchUnlockCount = 1;
+            ElementID.ItemPoison[Type] = true;
         }
 
         public override void SetDefaults()
         {
             Item.width = 30;
             Item.height = 32;
-            Item.rare = ItemRarityID.Lime;
+            Item.rare = ItemRarityID.Expert;
             Item.value = 80000;
             Item.damage = 40;
-            Item.canBePlacedInVanityRegardlessOfConditions = true;
+            Item.hasVanityEffects = true;
             Item.DamageType = DamageClass.Melee;
             Item.accessory = true;
             Item.crit = 4;
@@ -44,13 +45,13 @@ namespace Redemption.Items.Accessories.HM
         {
             CreateRecipe()
                 .AddIngredient(ItemID.EoCShield)
-                .AddIngredient(ModContent.ItemType<XenomiteItem>(), 10)
+                .AddIngredient(ModContent.ItemType<Xenomite>(), 10)
                 .AddIngredient(ItemID.TitaniumBar, 5)
                 .AddTile(TileID.MythrilAnvil)
                 .Register();
             CreateRecipe()
                 .AddIngredient(ItemID.EoCShield)
-                .AddIngredient(ModContent.ItemType<XenomiteItem>(), 10)
+                .AddIngredient(ModContent.ItemType<Xenomite>(), 10)
                 .AddIngredient(ItemID.AdamantiteBar, 5)
                 .AddTile(TileID.MythrilAnvil)
                 .Register();
@@ -65,7 +66,7 @@ namespace Redemption.Items.Accessories.HM
                 }
             }
             player.GetModPlayer<ThornshieldDashPlayer>().DashAccessoryEquipped = true;
-            player.GetCritChance(DamageClass.Melee) += 8;
+            player.GetCritChance(DamageClass.Melee) += 4;
         }
     }
     public class ThornshieldDashPlayer : ModPlayer
@@ -136,7 +137,7 @@ namespace Redemption.Items.Accessories.HM
 
             if (DashTimer > 0)
             {
-                Player.eocDash = DashTimer;
+                Player.eocDash = DashTimer - 1;
                 Player.armorEffectDrawShadowEOCShield = true;
                 if (ShieldHit < 0 && DashTimer > 15)
                 {
@@ -146,7 +147,7 @@ namespace Redemption.Items.Accessories.HM
                     for (int i = 0; i < Main.maxNPCs; i++)
                     {
                         NPC npc = Main.npc[i];
-                        if (!npc.active || npc.dontTakeDamage || npc.friendly)
+                        if (!npc.active || npc.dontTakeDamage || npc.friendly || NPCLoader.CanBeHitByItem(npc, Player, new Item(ModContent.ItemType<InfectionShield>())) == false)
                             continue;
 
                         if (!hitbox.Intersects(npc.Hitbox) || !npc.noTileCollide && !Collision.CanHit(Player.position, Player.width, Player.height, npc.position, npc.width, npc.height))
@@ -155,7 +156,7 @@ namespace Redemption.Items.Accessories.HM
                         if ((npc.CountsAsACritter || npc.lifeMax <= 5) && Player.dontHurtCritters)
                             continue;
 
-                        float damage = 40 * Player.GetDamage(DamageClass.Melee).Multiplicative;
+                        float damage = 40 * Player.GetDamage(DamageClass.Melee).Additive;
                         float knockback = 10;
                         bool crit = false;
 
@@ -175,7 +176,7 @@ namespace Redemption.Items.Accessories.HM
                             if (Main.rand.NextBool(5))
                                 npc.AddBuff(ModContent.BuffType<GlowingPustulesDebuff>(), 300);
 
-                            BaseAI.DamageNPC(npc, (int)damage, knockback, hitDirection, Player, crit: crit, item: new Item(ItemID.BeeKeeper));
+                            BaseAI.DamageNPC(npc, (int)damage, knockback, hitDirection, Player, crit: crit, item: new Item(ModContent.ItemType<InfectionShield>()));
                             if (Main.netMode != NetmodeID.SinglePlayer)
                                 NetMessage.SendData(MessageID.DamageNPC, -1, -1, null, i, damage, knockback, hitDirection, 0,
                                     0, 0);
@@ -187,16 +188,17 @@ namespace Redemption.Items.Accessories.HM
                         Player.velocity.X = -Player.velocity.X;
                         Player.velocity.Y = -4f;
                         ShieldHit = i;
+                        DashTimer = 0;
                     }
                 }
                 DashTimer--;
             }
         }
-        public override bool PreHurt(bool pvp, bool quiet, ref int damage, ref int hitDirection, ref bool crit, ref bool customDamage, ref bool playSound, ref bool genGore, ref PlayerDeathReason damageSource, ref int cooldownCounter)
+        public override bool ImmuneTo(PlayerDeathReason damageSource, int cooldownCounter, bool dodgeable)
         {
             if (damageSource.SourceNPCIndex >= 0 && ShieldHit < 0 && DashTimer > 15)
-                return false;
-            return true;
+                return true;
+            return false;
         }
         private bool CanUseDash()
         {
@@ -215,7 +217,7 @@ namespace Redemption.Items.Accessories.HM
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Acid Spark");
+            // DisplayName.SetDefault("Acid Spark");
         }
         public override void SetDefaults()
         {

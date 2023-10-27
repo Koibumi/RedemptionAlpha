@@ -11,7 +11,7 @@ namespace Redemption.NPCs.Bosses.Thorn
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Flash");
+            // DisplayName.SetDefault("Flash");
         }
         public override void SetDefaults()
         {
@@ -47,7 +47,7 @@ namespace Redemption.NPCs.Bosses.Thorn
         {
             return Color.White * Projectile.Opacity;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(SoundID.Item71, Projectile.position);
             Player player = Main.player[Projectile.owner];

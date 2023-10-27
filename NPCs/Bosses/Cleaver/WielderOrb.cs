@@ -3,7 +3,7 @@ using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Redemption.BaseExtension;
+using Redemption.Globals;
 
 namespace Redemption.NPCs.Bosses.Cleaver
 {
@@ -11,7 +11,7 @@ namespace Redemption.NPCs.Bosses.Cleaver
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Shield Orb");
+            // DisplayName.SetDefault("Shield Orb");
             Main.projFrames[Projectile.type] = 4;
         }
         public override void SetDefaults()
@@ -51,7 +51,7 @@ namespace Redemption.NPCs.Bosses.Cleaver
             for (int i = 0; i < Main.maxProjectiles; i++)
             {
                 Projectile target = Main.projectile[i];
-                if (!target.active || Projectile.whoAmI == target.whoAmI || target.minion || !target.friendly || target.hostile || target.damage <= 5 || target.Redemption().TechnicallyMelee || !Projectile.Hitbox.Intersects(target.Hitbox) || target.Redemption().ParryBlacklist)
+                if (!target.active || Projectile.whoAmI == target.whoAmI || !target.friendly || target.hostile || target.damage <= 5 || !Projectile.Hitbox.Intersects(target.Hitbox) || target.ProjBlockBlacklist())
                     continue;
 
                 if (!Main.dedServ)

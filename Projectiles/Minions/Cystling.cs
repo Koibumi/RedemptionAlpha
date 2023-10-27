@@ -12,13 +12,15 @@ namespace Redemption.Projectiles.Minions
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Cystling");
+            // DisplayName.SetDefault("Cystling");
             Main.projFrames[Projectile.type] = 6;
             Main.projPet[Projectile.type] = true;
 
             ProjectileID.Sets.MinionSacrificable[Projectile.type] = true;
             ProjectileID.Sets.CultistIsResistantTo[Projectile.type] = true;
             ProjectileID.Sets.MinionTargettingFeature[Projectile.type] = true;
+            ElementID.ProjPoison[Type] = true;
+            ElementID.ProjPsychic[Type] = true;
         }
 
         public override void SetDefaults()
@@ -36,7 +38,7 @@ namespace Redemption.Projectiles.Minions
             Projectile.usesLocalNPCImmunity = true;
         }
 
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Projectile.localNPCImmunity[target.whoAmI] = 20;
             target.immune[Projectile.owner] = 0;

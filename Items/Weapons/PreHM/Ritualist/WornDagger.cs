@@ -3,6 +3,7 @@ using Redemption.DamageClasses;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.Items.Weapons.PreHM.Ritualist
@@ -11,8 +12,8 @@ namespace Redemption.Items.Weapons.PreHM.Ritualist
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Worn Dagger");
-            SacrificeTotal = 1;
+            // DisplayName.SetDefault("Worn Dagger");
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -50,7 +51,7 @@ namespace Redemption.Items.Weapons.PreHM.Ritualist
         }
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
-            TooltipLine slashLine = new(Mod, "SharpBonus", "Slash Bonus: Small chance to decapitate skeletons, killing them instantly") { OverrideColor = Colors.RarityOrange };
+            TooltipLine slashLine = new(Mod, "SharpBonus", Language.GetTextValue("Mods.Redemption.GenericTooltips.Bonuses.SlashBonus")) { OverrideColor = Colors.RarityOrange };
             tooltips.Add(slashLine);
         }
     }

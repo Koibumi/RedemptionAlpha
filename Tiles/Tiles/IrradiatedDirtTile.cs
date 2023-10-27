@@ -1,7 +1,6 @@
 using Microsoft.Xna.Framework;
 using Redemption.Globals.Player;
 using Redemption.Items.Accessories.HM;
-using Redemption.Items.Placeable.Tiles;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -15,6 +14,7 @@ namespace Redemption.Tiles.Tiles
 		public override void SetStaticDefaults()
 		{
 			Main.tileSolid[Type] = true;
+            Main.tileBrick[Type] = true;
             Main.tileMerge[Type][ModContent.TileType<IrradiatedGrassTile>()] = true;
             Main.tileMerge[ModContent.TileType<IrradiatedGrassTile>()][Type] = true;
             Main.tileMerge[Type][ModContent.TileType<IrradiatedCorruptGrassTile>()] = true;
@@ -38,7 +38,15 @@ namespace Redemption.Tiles.Tiles
             MinPick = 10;
             MineResist = 1f;
             DustType = DustID.Ash;
-            ItemDrop = ModContent.ItemType<IrradiatedDirt>();
+        }
+        public override void FloorVisuals(Player player)
+        {
+            if (player.velocity.X != 0f && Main.rand.NextBool(20))
+            {
+                Dust dust = Dust.NewDustDirect(player.Bottom, 0, 0, DustType, 0f, -Main.rand.NextFloat(2f));
+                dust.noGravity = true;
+                dust.fadeIn = 1f;
+            }
         }
         public override void KillTile(int i, int j, ref bool fail, ref bool effectOnly, ref bool noItem)
         {

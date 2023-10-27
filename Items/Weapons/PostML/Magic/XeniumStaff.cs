@@ -1,32 +1,31 @@
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Redemption.BaseExtension;
+using Redemption.Globals;
 using Redemption.Items.Materials.HM;
 using Redemption.Items.Materials.PostML;
-using Redemption.Items.Weapons.PreHM.Ritualist;
 using Redemption.Projectiles.Magic;
-using Redemption.Projectiles.Ranged;
 using Redemption.Tiles.Furniture.Lab;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.Items.Weapons.PostML.Magic
 {
     public class XeniumStaff : ModItem
     {
+        public override LocalizedText Tooltip => base.Tooltip.WithFormatArgs(ElementID.PoisonS);
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Casts two harmless bubble mines\n" +
-                "Right-click to fire a small beam that detonates any mine it hits");
+            /* Tooltip.SetDefault("Casts two harmless bubble mines\n" +
+                "Right-click to fire a small " + ElementID.PoisonS + " beam that detonates any mine it hits"); */
             Item.staff[Item.type] = true;
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
         {
-            Item.damage = 180;
+            Item.damage = 375;
             Item.DamageType = DamageClass.Magic;
             Item.mana = 14;
             Item.width = 58;
@@ -56,7 +55,7 @@ namespace Redemption.Items.Weapons.PostML.Magic
             if (player.altFunctionUse == 2)
             {
                 type = ModContent.ProjectileType<XeniumStaff_Proj>();
-                Projectile.NewProjectile(source, position, velocity, type, damage, knockback, player.whoAmI);
+                Projectile.NewProjectile(source, position, velocity, type, damage / 4, knockback, player.whoAmI);
                 return false;
             }
             int numberProjectiles = 2;
@@ -72,7 +71,7 @@ namespace Redemption.Items.Weapons.PostML.Magic
         {
             CreateRecipe()
                 .AddIngredient(ModContent.ItemType<XeniumAlloy>(), 12)
-                .AddIngredient(ModContent.ItemType<Capacitator>())
+                .AddIngredient(ModContent.ItemType<Capacitor>())
                 .AddIngredient(ModContent.ItemType<CarbonMyofibre>(), 5)
                 .AddTile(ModContent.TileType<XeniumRefineryTile>())
                 .Register();

@@ -11,9 +11,9 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria.GameContent;
 using Terraria.Utilities;
 using Redemption.Items.Placeable.Banners;
-using Redemption.Buffs.Debuffs;
-using Redemption.Buffs.NPCBuffs;
-using Redemption.Items.Usable;
+using Redemption.Globals.NPC;
+using System.IO;
+using Terraria.Localization;
 
 namespace Redemption.NPCs.PreHM
 {
@@ -48,22 +48,14 @@ namespace Redemption.NPCs.PreHM
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Blobble");
+            // DisplayName.SetDefault("Blobble");
             Main.npcFrameCount[Type] = 3;
-
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    BuffID.Bleeding,
-                    ModContent.BuffType<InfestedDebuff>(),
-                    ModContent.BuffType<NecroticGougeDebuff>(),
-                    ModContent.BuffType<DirtyWoundDebuff>()
-                }
-            });
+            NPCID.Sets.ShimmerTransformToNPC[NPC.type] = NPCID.ShimmerSlime;
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.NoBlood);
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0);
-
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
+            ElementID.NPCWater[Type] = true;
         }
 
         public override void SetDefaults()
@@ -84,7 +76,7 @@ namespace Redemption.NPCs.PreHM
             BannerItem = ModContent.ItemType<BlobbleBanner>();
         }
 
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -98,7 +90,14 @@ namespace Redemption.NPCs.PreHM
             }
             Dust.NewDust(NPC.position + NPC.velocity, NPC.width, NPC.height, DustID.t_Slime, NPC.velocity.X * 0.5f, NPC.velocity.Y * 0.5f, 0, new Color(178, 203, 177), 2);
         }
-
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.Write(Xvel);
+        }
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            Xvel = reader.ReadInt32();
+        }
         public int Xvel;
         public override void OnSpawn(IEntitySource source)
         {
@@ -107,6 +106,7 @@ namespace Redemption.NPCs.PreHM
                 NPC.GivenName = "Serbble";
 
             TimerRand = Main.rand.Next(30, 120);
+            NPC.netUpdate = true;
         }
         public override void AI()
         {
@@ -129,6 +129,7 @@ namespace Redemption.NPCs.PreHM
                         AITimer = 0;
                         TimerRand = Main.rand.Next(30, 120);
                         AIState = ActionState.Bounce;
+                        NPC.netUpdate = true;
                     }
                     break;
 
@@ -145,39 +146,37 @@ namespace Redemption.NPCs.PreHM
         public override void FindFrame(int frameHeight)
         {
             if (Main.netMode != NetmodeID.Server)
-            {
                 NPC.frame.Width = TextureAssets.Npc[NPC.type].Width() / 7;
-                NPC.frame.X = NPC.frame.Width * (int)HatType;
-                if (NPC.collideY || NPC.velocity.Y == 0)
+            NPC.frame.X = NPC.frame.Width * (int)HatType;
+            if (NPC.collideY || NPC.velocity.Y == 0)
+            {
+                NPC.rotation = 0;
+                NPC.frameCounter++;
+                if (NPC.frameCounter >= 10)
                 {
-                    NPC.rotation = 0;
-                    NPC.frameCounter++;
-                    if (NPC.frameCounter >= 10)
-                    {
-                        NPC.frameCounter = 0;
-                        NPC.frame.Y += frameHeight;
-                        if (NPC.frame.Y > 2 * frameHeight)
-                            NPC.frame.Y = 0;
-                    }
+                    NPC.frameCounter = 0;
+                    NPC.frame.Y += frameHeight;
+                    if (NPC.frame.Y > 2 * frameHeight)
+                        NPC.frame.Y = 0;
                 }
-                else
-                {
-                    NPC.rotation = NPC.velocity.X * 0.03f;
-                    NPC.frame.Y = 2 * frameHeight;
-                }
+            }
+            else
+            {
+                NPC.rotation = NPC.velocity.X * 0.03f;
+                NPC.frame.Y = 2 * frameHeight;
             }
         }
 
         public void PickHat()
         {
             WeightedRandom<HatState> choice = new(Main.rand);
-            choice.Add(HatState.None, 10);
-            choice.Add(HatState.Crown, 2);
+            choice.Add(HatState.None, 10); // 54%
+            choice.Add(HatState.Crown, 2); // 11%
             choice.Add(HatState.Fez, 2);
             choice.Add(HatState.Flatcap, 2);
-            choice.Add(HatState.GodsTophat, 1);
+            choice.Add(HatState.GodsTophat, 1); // 5%
             choice.Add(HatState.OldTophat, 1);
-            choice.Add(HatState.Serb, 0.3);
+            choice.Add(HatState.Serb, 0.3); // 1.6%
 
             HatType = choice;
         }
@@ -192,18 +191,20 @@ namespace Redemption.NPCs.PreHM
             return false;
         }
 
-        public override void OnHitPlayer(Player target, int damage, bool crit) => target.AddBuff(BuffID.Slimed, 120);
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit) => target.AddBuff(BuffID.Slimed, 120);
+        public override void OnHitPlayer(Player target, Player.HurtInfo hurtInfo) => target.AddBuff(BuffID.Slimed, 120);
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit) => target.AddBuff(BuffID.Slimed, 120);
 
         public override void OnKill()
         {
             if (HatType is HatState.Serb)
                 Item.NewItem(NPC.GetSource_Loot(), NPC.getRect(), ItemID.Marshmallow);
 
-            if (Main.rand.NextBool(2) && !RedeWorld.blobbleSwarm && RedeWorld.blobbleSwarmCooldown <= 0)
+            if (Main.rand.NextBool(2) && !RedeWorld.blobbleSwarm && RedeWorld.blobbleSwarmCooldown <= 0 && Main.netMode != NetmodeID.MultiplayerClient)
             {
-                Main.NewText("A blobble swarm approaches!", Color.PaleGreen);
+                Main.NewText("A blobble swarm has arrived!", Color.PaleGreen);
                 RedeWorld.blobbleSwarm = true;
+                if (Main.netMode == NetmodeID.Server)
+                    NetMessage.SendData(MessageID.WorldData);
             }
         }
 
@@ -220,13 +221,13 @@ namespace Redemption.NPCs.PreHM
 
         public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
         {
+            bestiaryEntry.UIInfoProvider = new CustomCollectionInfoProvider(ContentSamples.NpcBestiaryCreditIdsByNpcNetIds[Type], false, 25);
             bestiaryEntry.Info.AddRange(new IBestiaryInfoElement[]
             {
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Times.DayTime,
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Biomes.Surface,
 
-                new FlavorTextBestiaryInfoElement(
-                    "An exceptionally rare slime native to Ithon. It may look harmless, but the acid it is composed of can dissolve iron in less than a minute.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.Blobble"))
             });
         }
     }

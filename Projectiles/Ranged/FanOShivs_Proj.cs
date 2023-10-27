@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using Redemption.Globals;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -9,7 +10,7 @@ namespace Redemption.Projectiles.Ranged
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Shiv");
+            // DisplayName.SetDefault("Shiv");
         }
         public override void SetDefaults()
         {
@@ -20,7 +21,7 @@ namespace Redemption.Projectiles.Ranged
             Projectile.penetrate = 2;
             Projectile.timeLeft = 600;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             for (int i = 0; i < 5; i++)
                 Dust.NewDust(Projectile.position + Projectile.velocity, Projectile.width, Projectile.height, DustID.Iron, Projectile.velocity.X * 0.5f, Projectile.velocity.Y * 0.5f);
@@ -45,7 +46,8 @@ namespace Redemption.Projectiles.Ranged
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Poisoned Shiv");
+            // DisplayName.SetDefault("Poisoned Shiv");
+            ElementID.ProjPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -57,7 +59,7 @@ namespace Redemption.Projectiles.Ranged
                 Dust.NewDust(Projectile.position + Projectile.velocity, Projectile.width, Projectile.height, DustID.Poisoned, Projectile.velocity.X * 0.5f, Projectile.velocity.Y * 0.5f);
             return true;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             if (Main.rand.NextBool(2))
                 target.AddBuff(BuffID.Poisoned, 600);

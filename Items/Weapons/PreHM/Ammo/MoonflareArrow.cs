@@ -4,9 +4,9 @@ using Redemption.Items.Materials.PreHM;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
-using Terraria.Localization;
 using Terraria.ModLoader;
 using Redemption.BaseExtension;
+using Redemption.Globals;
 
 namespace Redemption.Items.Weapons.PreHM.Ammo
 {
@@ -14,11 +14,11 @@ namespace Redemption.Items.Weapons.PreHM.Ammo
 	{
 		public override void SetStaticDefaults()
 		{
-            DisplayName.SetDefault("Moonflare Arrow");
-            Tooltip.SetDefault("Burns targets while the moon is out" +
-				"\nFlame intensity is based on moon phase");
-
-			SacrificeTotal = 99;
+            // DisplayName.SetDefault("Moonflare Arrow");
+            /* Tooltip.SetDefault("Burns targets while the moon is out" +
+				"\nFlame intensity is based on moon phase"); */
+            ItemID.Sets.ShimmerTransformToItem[Type] = ItemID.ShimmerArrow;
+            Item.ResearchUnlockCount = 99;
 		}
 
 		public override void SetDefaults()
@@ -27,7 +27,7 @@ namespace Redemption.Items.Weapons.PreHM.Ammo
 			Item.DamageType = DamageClass.Ranged;
 			Item.width = 14;
 			Item.height = 34;
-			Item.maxStack = 9999;
+			Item.maxStack = Item.CommonMaxStack;
 			Item.consumable = true;
 			Item.knockBack = 2.5f;
 			Item.value = 2;
@@ -36,7 +36,7 @@ namespace Redemption.Items.Weapons.PreHM.Ammo
 			Item.shootSpeed = 7f;
 			Item.ammo = AmmoID.Arrow;
 			if (!Main.dedServ)
-				Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Item.ModItem.Texture + "_Glow").Value;
+				Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
 		}
 		public override void ModifyTooltips(List<TooltipLine> tooltips)
 		{
@@ -56,7 +56,7 @@ namespace Redemption.Items.Weapons.PreHM.Ammo
 				.AddIngredient(ItemID.WoodenArrow, 20)
 				.AddIngredient(ModContent.ItemType<MoonflareFragment>())
 				.AddTile(TileID.WorkBenches)
-				.AddCondition(new Recipe.Condition(NetworkText.FromLiteral("In Moonlight"), _ => !Main.dayTime && Main.moonPhase != 4))
+				.AddCondition(RedeConditions.InMoonlight)
 				.Register();
 		}
 	}

@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Graphics;
 using Terraria;
 using Terraria.GameContent;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.UI;
 
@@ -33,7 +34,7 @@ namespace Redemption.UI
             if (!Main.dedServ)
             {
                 Text = text;
-                Title = "Chalice of Alignment:";
+                Title = Language.GetTextValue("Mods.Redemption.UI.Chalice.Name") + ":";
                 FadeTimer = 0;
                 DisplayTimer = 0;
                 MaxDisplayTime = displayTime;
@@ -75,14 +76,23 @@ namespace Redemption.UI
                 }
             }
         }
-
+        public Vector2 lastScreenSize;
+        public Vector2 screenPos;
+        public override void OnInitialize()
+        {
+            lastScreenSize = new Vector2(Main.screenWidth, Main.screenHeight);
+            screenPos = new Vector2(Main.screenWidth / 2, Main.screenHeight / 2.3f);
+        }
         public override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible)
-            {
                 return;
-            }
 
+            if (lastScreenSize != new Vector2(Main.screenWidth, Main.screenHeight))
+            {
+                lastScreenSize = new Vector2(Main.screenWidth, Main.screenHeight);
+                screenPos = new(Main.screenWidth / 2, Main.screenHeight / 2.3f);
+            }
             DynamicSpriteFont font = TextFont switch
             {
                 1 => FontAssets.ItemStack.Value,
@@ -96,7 +106,7 @@ namespace Redemption.UI
             }
             else
             {
-                CenterPosition = new Vector2(Main.screenWidth / 2, Main.screenHeight / 2.3f);
+                CenterPosition = screenPos * Main.UIScale;
             }
             // * Main.UIScale
             int centerX = (int)CenterPosition.X;

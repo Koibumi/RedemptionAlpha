@@ -25,7 +25,7 @@ namespace Redemption.Items.Weapons.HM.Melee
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Tiny Cleaver");
+            // DisplayName.SetDefault("Tiny Cleaver");
         }
         public override bool ShouldUpdatePosition() => false;
         public override void SetSafeDefaults()
@@ -114,9 +114,8 @@ namespace Redemption.Items.Weapons.HM.Melee
                             }
                             Projectile.alpha = 255;
                             speed = MathHelper.ToRadians(6);
-
+                            startVector = RedeHelper.PolarVector(1, (Main.MouseWorld - player.Center).ToRotation() - ((MathHelper.PiOver2 + MathHelper.PiOver4) * Projectile.spriteDirection));
                             Projectile.ai[0] = 2;
-
                             SoundEngine.PlaySound(SoundID.Item1, Projectile.position);
                             SoundEngine.PlaySound(CustomSounds.ElectricSlash with { Volume = 0.3f, Pitch = 0.4f }, Projectile.position);
                             Timer = 0;
@@ -150,7 +149,7 @@ namespace Redemption.Items.Weapons.HM.Melee
                             speed = MathHelper.ToRadians(6);
 
                             Projectile.ai[0] = 3;
-
+                            startVector = RedeHelper.PolarVector(1, (Main.MouseWorld - player.Center).ToRotation() - ((MathHelper.PiOver2 + MathHelper.PiOver4) * Projectile.spriteDirection));
                             SoundEngine.PlaySound(SoundID.Item1, Projectile.position);
                             SoundEngine.PlaySound(CustomSounds.ElectricSlash with { Volume = 0.3f, Pitch = 0.4f }, Projectile.position);
                             Timer = 0;
@@ -173,7 +172,7 @@ namespace Redemption.Items.Weapons.HM.Melee
                             vector = startVector.RotatedBy(Rot) * Length;
                         }
                         if (Timer >= 3 && Timer < 12)
-                            extendoLength -= 4f;
+                            extendoLength -= 2f;
 
                         if (Timer >= 16 * SwingSpeed)
                         {
@@ -186,7 +185,7 @@ namespace Redemption.Items.Weapons.HM.Melee
                             speed = MathHelper.ToRadians(6);
 
                             Projectile.ai[0] = 4;
-
+                            startVector = RedeHelper.PolarVector(1, (Main.MouseWorld - player.Center).ToRotation() - ((MathHelper.PiOver2 + MathHelper.PiOver4) * Projectile.spriteDirection));
                             SoundEngine.PlaySound(SoundID.Item1, Projectile.position);
                             SoundEngine.PlaySound(CustomSounds.ElectricSlash with { Volume = 0.3f, Pitch = 0.5f }, Projectile.position);
                             Timer = 0;
@@ -208,8 +207,8 @@ namespace Redemption.Items.Weapons.HM.Melee
                             speed *= 0.8f;
                             vector = startVector.RotatedBy(Rot) * Length;
                         }
-                        if (Timer >= 7)
-                            extendoLength -= 8f;
+                        if (Timer >= 8)
+                            extendoLength -= 10f;
 
                         if (Timer >= 12 * SwingSpeed)
                         {
@@ -288,28 +287,30 @@ namespace Redemption.Items.Weapons.HM.Melee
             float point = 0f;
             // Run an AABB versus Line check to look for collisions
             if (Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), Projectile.Center - unit * 20,
-                Projectile.Center + unit * (((extendoLength - 7) * extendo[3]) / 1.5f), 22, ref point))
+                Projectile.Center + unit * ((extendoLength - 7) * extendo[7] / 1.5f), 32, ref point))
                 return true;
             else
                 return false;
         }
-        public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
             if (Projectile.ai[0] == 5)
             {
-                damage = (int)(damage * 1.5f);
-                knockback += 4;
+                modifiers.FinalDamage *= 1.5f;
+                if (target.knockBackResist > 0)
+                    modifiers.Knockback.Flat += 4;
             }
 
-            RedeProjectile.Decapitation(target, ref damage, ref crit);
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            RedeProjectile.Decapitation(target, ref damageDone, ref hit.Crit);
+
             Projectile.localNPCImmunity[target.whoAmI] = 11;
             target.immune[Projectile.owner] = 0;
         }
 
-        public float[] extendo = new float[4] { 1, 2, 3, 4 };
+        public float[] extendo = new float[8] { 1, 2, 3, 4, 5, 6, 7, 8 };
         public float extendoLength = 10;
         public override bool PreDraw(ref Color lightColor)
         {
@@ -322,9 +323,9 @@ namespace Redemption.Items.Weapons.HM.Melee
             Vector2 v = RedeHelper.PolarVector(40, (Projectile.Center - player.Center).ToRotation());
 
             Main.EntitySpriteDraw(texture, Projectile.Center - v - Main.screenPosition + Vector2.UnitY * Projectile.gfxOffY, null, Projectile.GetAlpha(lightColor), Projectile.rotation, origin, Projectile.scale, spriteEffects, 0);
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 8; i++)
             {
-                Main.EntitySpriteDraw(i < 3 ? segMid : segEnd, Projectile.Center - v + RedeHelper.PolarVector(extendoLength * extendo[i], (Projectile.Center - player.Center).ToRotation()) - Main.screenPosition + Vector2.UnitY * Projectile.gfxOffY, null, Projectile.GetAlpha(lightColor), Projectile.rotation, origin, Projectile.scale, spriteEffects, 0);
+                Main.EntitySpriteDraw(i < 7 ? segMid : segEnd, Projectile.Center - v + RedeHelper.PolarVector(extendoLength * extendo[i], (Projectile.Center - player.Center).ToRotation()) - Main.screenPosition + Vector2.UnitY * Projectile.gfxOffY, null, Projectile.GetAlpha(lightColor), Projectile.rotation, origin, Projectile.scale, spriteEffects, 0);
             }
             return false;
         }
@@ -333,7 +334,7 @@ namespace Redemption.Items.Weapons.HM.Melee
             Player player = Main.player[Projectile.owner];
             Vector2 v = RedeHelper.PolarVector(40, (Projectile.Center - player.Center).ToRotation());
             Vector2 handleCenter = Projectile.Center - v + Vector2.UnitY * Projectile.gfxOffY;
-            Vector2 center = Projectile.Center - RedeHelper.PolarVector(30, (Projectile.Center - player.Center).ToRotation()) + RedeHelper.PolarVector(extendoLength * extendo[3], (Projectile.Center - player.Center).ToRotation()) + Vector2.UnitY * Projectile.gfxOffY;
+            Vector2 center = Projectile.Center - RedeHelper.PolarVector(30, (Projectile.Center - player.Center).ToRotation()) + RedeHelper.PolarVector(extendoLength * extendo[7], (Projectile.Center - player.Center).ToRotation()) + Vector2.UnitY * Projectile.gfxOffY;
             Vector2 directionToHandle = handleCenter - center;
             float chainRotation = directionToHandle.ToRotation() - MathHelper.PiOver2;
             float distanceToHandle = directionToHandle.Length();
@@ -346,8 +347,6 @@ namespace Redemption.Items.Weapons.HM.Melee
                 center += directionToHandle; //update draw position
                 directionToHandle = handleCenter - center; //update distance
                 distanceToHandle = directionToHandle.Length();
-
-                Color drawColor = Lighting.GetColor((int)center.X / 16, (int)(center.Y / 16));
 
                 //Draw chain
                 Main.EntitySpriteDraw(chainTexture.Value, center - Main.screenPosition,

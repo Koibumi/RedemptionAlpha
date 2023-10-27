@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Redemption.Buffs.Debuffs;
+using Redemption.Globals;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -12,7 +13,8 @@ namespace Redemption.Items.Weapons.HM.Ammo
         public override string Texture => "Redemption/Items/Weapons/HM/Ammo/BileArrow";
         public override void SetStaticDefaults()
 		{
-			DisplayName.SetDefault("Bile Arrow");
+			// DisplayName.SetDefault("Bile Arrow");
+            ElementID.ProjPoison[Type] = true;
         }
         public override void SetDefaults()
 		{
@@ -29,7 +31,7 @@ namespace Redemption.Items.Weapons.HM.Ammo
 			AIType = ProjectileID.CursedArrow;
             Projectile.arrow = true;
 		}
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             for (int i = 0; i < 4; i++)
                 Dust.NewDust(Projectile.position + Projectile.velocity, Projectile.width, Projectile.height, DustID.GreenTorch, Projectile.velocity.X * 0.5f, Projectile.velocity.Y * 0.5f);
@@ -47,7 +49,7 @@ namespace Redemption.Items.Weapons.HM.Ammo
             Projectile.rotation = Projectile.velocity.ToRotation() - MathHelper.PiOver2;
             Projectile.velocity.Y += 0.034f;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(ModContent.BuffType<BileDebuff>(), 600);
         }

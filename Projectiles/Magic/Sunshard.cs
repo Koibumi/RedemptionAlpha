@@ -15,12 +15,14 @@ namespace Redemption.Projectiles.Magic
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Redemptive Spark");
+            // DisplayName.SetDefault("Redemptive Spark");
             Main.projFrames[Projectile.type] = 5;
             ProjectileID.Sets.CultistIsResistantTo[Projectile.type] = true;
+            ProjectileID.Sets.DontCancelChannelOnKill[Type] = true;
 
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 5;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjHoly[Type] = true;
         }
 
         public override void SetDefaults()
@@ -159,7 +161,7 @@ namespace Redemption.Projectiles.Magic
             }
         }
 
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             DustHelper.DrawCircle(Projectile.Center, DustID.GoldFlame, 1, 4, 4, nogravity: true);
         }

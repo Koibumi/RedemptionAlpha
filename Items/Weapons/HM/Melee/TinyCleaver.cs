@@ -2,6 +2,7 @@ using Redemption.Items.Materials.HM;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.Items.Weapons.HM.Melee
@@ -10,11 +11,11 @@ namespace Redemption.Items.Weapons.HM.Melee
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Tiny Cleaver");
-            Tooltip.SetDefault("Swings causes the blade segments to detach, increasing range");
+            // DisplayName.SetDefault("Tiny Cleaver");
+            // Tooltip.SetDefault("Swings causes the blade segments to detach, increasing range");
 
             ItemID.Sets.SkipsInitialUseSound[Item.type] = true;
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -22,7 +23,7 @@ namespace Redemption.Items.Weapons.HM.Melee
             // Common Properties
             Item.width = 52;
             Item.height = 52;
-            Item.rare = ItemRarityID.Red;
+            Item.rare = ItemRarityID.Yellow;
             Item.value = Item.sellPrice(gold: 1);
 
             // Use Properties
@@ -33,7 +34,7 @@ namespace Redemption.Items.Weapons.HM.Melee
             Item.autoReuse = false;
 
             // Weapon Properties
-            Item.damage = 160;
+            Item.damage = 120;
             Item.knockBack = 6;
             Item.noUseGraphic = true;
             Item.DamageType = DamageClass.Melee;
@@ -55,8 +56,8 @@ namespace Redemption.Items.Weapons.HM.Melee
         }
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
-            TooltipLine axeLine = new(Mod, "SharpBonus", "Slash Bonus: Small chance to decapitate skeletons, killing them instantly") { OverrideColor = Colors.RarityOrange };
-            tooltips.Add(axeLine);
+            TooltipLine slashLine = new(Mod, "SharpBonus", Language.GetTextValue("Mods.Redemption.GenericTooltips.Bonuses.SlashBonus")) { OverrideColor = Colors.RarityOrange };
+            tooltips.Add(slashLine);
         }
     }
 }

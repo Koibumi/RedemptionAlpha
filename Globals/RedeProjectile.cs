@@ -4,11 +4,15 @@ using Terraria.ModLoader;
 using Redemption.BaseExtension;
 using Terraria.DataStructures;
 using System.Collections.Generic;
-using Redemption.Effects.PrimitiveTrails;
 using Terraria.ID;
-using static Redemption.Globals.RedeNet;
 using System.Linq;
 using Terraria.Enums;
+using Redemption.Buffs;
+using Microsoft.Xna.Framework.Graphics;
+using Redemption.NPCs.Minibosses.Calavia;
+using Terraria.Audio;
+using Redemption.Items.Weapons.PreHM.Melee;
+using Redemption.NPCs.Friendly.SpiritSummons;
 
 namespace Redemption.Globals
 {
@@ -21,13 +25,33 @@ namespace Redemption.Globals
         public bool RitDagger;
         public bool EnergyBased;
         public bool ParryBlacklist;
+        public bool friendlyHostile;
         public int DissolveTimer;
+        public float ReflectDamageIncrease;
+        public Rectangle swordHitbox;
         public override void SetDefaults(Projectile projectile)
         {
             if (ProjectileLists.IsTechnicallyMelee.Contains(projectile.type))
                 TechnicallyMelee = true;
         }
-
+        public override bool PreAI(Projectile projectile)
+        {
+            if ((projectile.DamageType == DamageClass.Melee || projectile.DamageType == DamageClass.SummonMeleeSpeed) && Main.player[projectile.owner].HasBuff<ExplosiveFlaskBuff>())
+            {
+                if (Main.rand.NextBool(3))
+                    Dust.NewDust(projectile.position, projectile.width, projectile.height, DustID.Smoke);
+                if (Main.rand.NextBool(10))
+                    Dust.NewDust(projectile.position, projectile.width, projectile.height, DustID.InfernoFork);
+                projectile.GetGlobalProjectile<ElementalProjectile>().OverrideElement[ElementID.Explosive] = 1;
+            }
+            return base.PreAI(projectile);
+        }
+        public override void ModifyHitNPC(Projectile projectile, Terraria.NPC target, ref Terraria.NPC.HitModifiers modifiers)
+        {
+            if (ReflectDamageIncrease is 0)
+                return;
+            modifiers.FinalDamage *= ReflectDamageIncrease;
+        }
         private readonly int[] bannedArenaProjs = new int[]
         {
             ProjectileID.SandBallGun,
@@ -59,44 +83,77 @@ namespace Redemption.Globals
             if (ArenaWorld.arenaActive && projectile.aiStyle == 7 && !projectile.Hitbox.Intersects(new Rectangle((int)ArenaWorld.arenaTopLeft.X, (int)ArenaWorld.arenaTopLeft.Y, (int)ArenaWorld.arenaSize.X, (int)ArenaWorld.arenaSize.Y)))
                 projectile.Kill();
         }
-        public override void ModifyHitNPC(Projectile projectile, Terraria.NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
-        {
-            if (IsAxe && crit)
-                damage += damage / 2;
-        }
         public static void Decapitation(Terraria.NPC target, ref int damage, ref bool crit, int chance = 200)
         {
-            if (target.life < target.lifeMax && NPCLists.SkeletonHumanoid.Contains(target.type))
+            bool humanoid = NPCLists.SkeletonHumanoid.Contains(target.type) || NPCLists.Humanoid.Contains(target.type);
+            if (target.life < target.lifeMax && target.life < damage * 100 && humanoid)
             {
                 if (Main.rand.NextBool(chance))
                 {
                     CombatText.NewText(target.getRect(), Color.Orange, "Decapitated!");
                     target.Redemption().decapitated = true;
-                    damage = damage < target.life ? target.life : damage;
                     crit = true;
+                    target.StrikeInstantKill();
                 }
             }
+        }
+        public static bool SwordClashFriendly(Projectile projectile, Projectile target, Entity player, ref bool parried, int frame = 5)
+        {
+            Rectangle targetHitbox = target.Hitbox;
+            if (target.Redemption().swordHitbox != default)
+                targetHitbox = target.Redemption().swordHitbox;
+
+            if (projectile.frame == frame && !parried && projectile.Redemption().swordHitbox.Intersects(targetHitbox) && target.type == ModContent.ProjectileType<Calavia_BladeOfTheMountain>() && target.frame >= 4 && target.frame <= 5)
+            {
+                if (player is Terraria.Player p)
+                {
+                    p.immune = true;
+                    p.immuneTime = 60;
+                    p.AddBuff(BuffID.ParryDamageBuff, 120);
+                }
+                player.velocity.X += 4 * player.RightOfDir(target);
+                RedeDraw.SpawnExplosion(RedeHelper.CenterPoint(projectile.Center, target.Center), Color.White, shakeAmount: 0, scale: 1f, noDust: true, tex: ModContent.Request<Texture2D>("Redemption/Textures/HolyGlow2").Value);
+                SoundEngine.PlaySound(CustomSounds.SwordClash, projectile.position);
+                DustHelper.DrawCircle(RedeHelper.CenterPoint(projectile.Center, target.Center), DustID.SilverCoin, 1, 4, 4, nogravity: true);
+                parried = true;
+                return true;
+            }
+            return false;
+        }
+        public static bool SwordClashHostile(Projectile projectile, Projectile target, Terraria.NPC npc, ref bool parried)
+        {
+            Rectangle targetHitbox = target.Hitbox;
+            if (target.Redemption().swordHitbox != default)
+                targetHitbox = target.Redemption().swordHitbox;
+
+            if (!parried && projectile.Redemption().swordHitbox.Intersects(targetHitbox) &&
+                ((target.type == ModContent.ProjectileType<Zweihander_SlashProj>() && target.frame is 4 or 3) ||
+                ((target.type == ModContent.ProjectileType<BladeOfTheMountain_Slash>() ||
+                target.type == ModContent.ProjectileType<Calavia_SS_BladeOfTheMountain>() ||
+                target.type == ModContent.ProjectileType<SwordSlicer_Slash>()) && target.frame is 5 or 4) ||
+                (target.type == ModContent.ProjectileType<KeepersClaw_Slash>() && target.frame is 2)))
+            {
+                npc.velocity.X += 4 * npc.RightOfDir(target);
+                SoundEngine.PlaySound(CustomSounds.SwordClash, projectile.position);
+                RedeDraw.SpawnExplosion(RedeHelper.CenterPoint(projectile.Center, target.Center), Color.White, shakeAmount: 0, scale: 1f, noDust: true, tex: ModContent.Request<Texture2D>("Redemption/Textures/HolyGlow2").Value);
+                DustHelper.DrawCircle(RedeHelper.CenterPoint(projectile.Center, target.Center), DustID.SilverCoin, 1, 4, 4, nogravity: true);
+                parried = true;
+                return true;
+            }
+            return false;
         }
         public static Dictionary<int, (Entity entity, IEntitySource source)> projOwners = new();
         public override void OnSpawn(Projectile projectile, IEntitySource source)
         {
             Entity attacker = null;
             if (source is EntitySource_ItemUse item && projectile.friendly && !projectile.hostile)
-            {
                 attacker = item.Entity;
-            }
             else if (source is EntitySource_Buff buff && projectile.friendly && !projectile.hostile)
-            {
                 attacker = buff.Entity;
-            }
             else if (source is EntitySource_ItemUse_WithAmmo itemAmmo && projectile.friendly && !projectile.hostile)
-            {
                 attacker = itemAmmo.Entity;
-            }
             else if (source is EntitySource_Mount mount && projectile.friendly && !projectile.hostile)
-            {
                 attacker = mount.Entity;
-            }
             else if (source is EntitySource_Parent parent)
             {
                 if (parent.Entity is Projectile proj)
@@ -110,15 +167,98 @@ namespace Redemption.Globals
                     projOwners.Remove(projectile.whoAmI);
                 projOwners.Add(projectile.whoAmI, (attacker, source));
             }
+        }
+        #region Wasteland Conversion
+        public override void PostAI(Projectile projectile)
+        {
+            if ((projectile.type != 10 && projectile.type != 145 && projectile.type != 147 && projectile.type != 149 && projectile.type != 146) || projectile.owner != Main.myPlayer)
+                return;
+            int x = (int)(projectile.Center.X / 16f);
+            int y = (int)(projectile.Center.Y / 16f);
 
-            if (projectile.ModProjectile is ITrailProjectile)
+            Tile tile = Main.tile[x, y];
+            int type = tile.TileType;
+            int wallType = tile.WallType;
+
+            for (int i = x - 1; i <= x + 1; i++)
             {
-                if (Main.netMode == NetmodeID.SinglePlayer)
-                    (projectile.ModProjectile as ITrailProjectile).DoTrailCreation(RedeSystem.TrailManager);
+                for (int j = y - 1; j <= y + 1; j++)
+                {
+                    if (!WorldGen.InWorld(x, y, 1))
+                        return;
 
-                else
-                    Redemption.WriteToPacket(Redemption.Instance.GetPacket(), (byte)ModMessageType.SpawnTrail, projectile.whoAmI).Send();
+                    if (projectile.type == 145 || projectile.type == 10)
+                    {
+                        if (Main.tile[x, y] != null)
+                        {
+                            if (type == ModContent.TileType<Tiles.Tiles.IrradiatedDirtTile>())
+                                tile.TileType = 0;
+                            else if (type == ModContent.TileType<Tiles.Tiles.IrradiatedSnowTile>())
+                                tile.TileType = 147;
+                            else if (type == ModContent.TileType<Tiles.Tiles.IrradiatedLivingWoodTile>())
+                                tile.TileType = 191;
+                        }
+                        if (Main.tile[x, y] != null)
+                        {
+                            if (wallType == ModContent.WallType<Walls.IrradiatedDirtWallTile>())
+                                Main.tile[x, y].WallType = 2;
+                        }
+                    }
+                    if (projectile.type == 147)
+                    {
+                        if (Main.tile[x, y] != null)
+                        {
+                            if (type == ModContent.TileType<Tiles.Tiles.IrradiatedDirtTile>())
+                                tile.TileType = 0;
+                            else if (type == ModContent.TileType<Tiles.Tiles.IrradiatedSnowTile>())
+                                tile.TileType = 147;
+                            else if (type == ModContent.TileType<Tiles.Tiles.IrradiatedLivingWoodTile>())
+                                tile.TileType = 191;
+                        }
+                        if (Main.tile[x, y] != null)
+                        {
+                            if (wallType == ModContent.WallType<Walls.IrradiatedDirtWallTile>())
+                                Main.tile[x, y].WallType = 2;
+                        }
+                    }
+                    if (projectile.type == 149)
+                    {
+                        if (Main.tile[x, y] != null)
+                        {
+                            if (type == ModContent.TileType<Tiles.Tiles.IrradiatedDirtTile>())
+                                tile.TileType = 0;
+                            else if (type == ModContent.TileType<Tiles.Tiles.IrradiatedSnowTile>())
+                                tile.TileType = 147;
+                            else if (type == ModContent.TileType<Tiles.Tiles.IrradiatedLivingWoodTile>())
+                                tile.TileType = 191;
+                        }
+                        if (Main.tile[x, y] != null)
+                        {
+                            if (wallType == ModContent.WallType<Walls.IrradiatedDirtWallTile>())
+                                Main.tile[x, y].WallType = 2;
+                        }
+                    }
+                    if (projectile.type == 146)
+                    {
+                        if (Main.tile[x, y] != null)
+                        {
+                            if (type == ModContent.TileType<Tiles.Tiles.IrradiatedDirtTile>())
+                                tile.TileType = 0;
+                            else if (type == ModContent.TileType<Tiles.Tiles.IrradiatedSnowTile>())
+                                tile.TileType = 147;
+                            else if (type == ModContent.TileType<Tiles.Tiles.IrradiatedLivingWoodTile>())
+                                tile.TileType = 191;
+                        }
+                        if (Main.tile[x, y] != null)
+                        {
+                            if (wallType == ModContent.WallType<Walls.IrradiatedDirtWallTile>())
+                                Main.tile[x, y].WallType = 2;
+                        }
+                    }
+                    NetMessage.SendTileSquare(-1, i, j, 1, 1);
+                }
             }
+            #endregion
         }
     }
     public abstract class TrueMeleeProjectile : ModProjectile
@@ -164,7 +304,7 @@ namespace Redemption.Globals
         public int maxLaserFrames = 1;
         public int LaserFrameDelay = 5;
         public bool StopsOnTiles = true;
-        
+
         public virtual void SetSafeStaticDefaults() { }
 
         public override void SetStaticDefaults()

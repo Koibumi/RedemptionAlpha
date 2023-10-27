@@ -16,7 +16,7 @@ namespace Redemption.Projectiles.Minions
         public override string Texture => "Redemption/NPCs/Bosses/KSIII/KS3_MissileDrone";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Missile Drone Mk.I");
+            // DisplayName.SetDefault("Missile Drone Mk.I");
             Main.projFrames[Projectile.type] = 4;
             ProjectileID.Sets.CultistIsResistantTo[Projectile.type] = true;
         }
@@ -112,9 +112,10 @@ namespace Redemption.Projectiles.Minions
         public override string Texture => "Redemption/NPCs/Bosses/KSIII/SlayerMissile";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Drone Missile");
+            // DisplayName.SetDefault("Drone Missile");
             Main.projFrames[Projectile.type] = 2;
             ProjectileID.Sets.MinionShot[Projectile.type] = true;
+            ElementID.ProjExplosive[Type] = true;
         }
 
         public override void SetDefaults()
@@ -125,6 +126,7 @@ namespace Redemption.Projectiles.Minions
             Projectile.hostile = false;
             Projectile.penetrate = 1;
             Projectile.tileCollide = false;
+            Projectile.DamageType = DamageClass.Summon;
             Projectile.timeLeft = 180;
         }
         public override void AI()
@@ -192,7 +194,7 @@ namespace Redemption.Projectiles.Minions
             return false;
         }
 
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(SoundID.Item14, Projectile.position);
             for (int i = 0; i < 25; i++)

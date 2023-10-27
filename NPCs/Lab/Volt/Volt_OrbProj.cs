@@ -2,6 +2,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Redemption.Base;
 using Redemption.Buffs.Debuffs;
+using Redemption.Globals;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -12,8 +13,9 @@ namespace Redemption.NPCs.Lab.Volt
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Electric Orb");
+            // DisplayName.SetDefault("Electric Orb");
             Main.projFrames[Projectile.type] = 4;
+            ElementID.ProjThunder[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -49,11 +51,11 @@ namespace Redemption.NPCs.Lab.Volt
                 }
             }
         }
-        public override void OnHitPlayer(Player target, int damage, bool crit)
+        public override void OnHitPlayer(Player target, Player.HurtInfo info)
         {
             target.AddBuff(ModContent.BuffType<StaticStunDebuff>(), 30);
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             for (int i = 0; i < 5; i++)
             {
@@ -69,7 +71,7 @@ namespace Redemption.NPCs.Lab.Volt
                     int p = Projectile.NewProjectile(Projectile.GetSource_FromAI(), Projectile.Center, vel * 3, ProjectileID.MartianTurretBolt, Projectile.damage / 2, 0f, Main.myPlayer);
                     Main.projectile[p].timeLeft = 60;
                     Main.projectile[p].tileCollide = false;
-                    Main.projectile[p].netUpdate2 = true;
+                    Main.projectile[p].netUpdate = true;
                 }
             }
         }

@@ -9,6 +9,7 @@ using Redemption.Items.Weapons.HM.Magic;
 using Redemption.Items.Weapons.HM.Melee;
 using Redemption.Items.Weapons.HM.Ranged;
 using Redemption.Items.Weapons.HM.Summon;
+using Redemption.Items.Weapons.PostML.Magic;
 using Redemption.Items.Weapons.PostML.Melee;
 using Redemption.Items.Weapons.PostML.Ranged;
 using Redemption.Tiles.Furniture.Lab;
@@ -22,11 +23,12 @@ namespace Redemption.Items.Placeable.Furniture.Lab
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Reinforced Laboratory Crate");
-            Tooltip.SetDefault("{$CommonItemTooltip.RightClickToOpen}");
+            // DisplayName.SetDefault("Reinforced Laboratory Crate");
+            // Tooltip.SetDefault("{$CommonItemTooltip.RightClickToOpen}");
             ItemID.Sets.IsFishingCrate[Type] = true;
             ItemID.Sets.IsFishingCrateHardmode[Type] = true;
-            SacrificeTotal = 10;
+            ItemID.Sets.ShimmerTransformToItem[Type] = ModContent.ItemType<LabCrate>();
+            Item.ResearchUnlockCount = 10;
         }
 
         public override void SetDefaults()
@@ -35,7 +37,7 @@ namespace Redemption.Items.Placeable.Furniture.Lab
             Item.width = 32;
             Item.height = 32;
             Item.rare = ItemRarityID.Lime;
-            Item.maxStack = 9999;
+            Item.maxStack = Item.CommonMaxStack;
         }
         public override void ModifyResearchSorting(ref ContentSamples.CreativeHelper.ItemGroup itemGroup)
         {
@@ -46,7 +48,7 @@ namespace Redemption.Items.Placeable.Furniture.Lab
         {
             var entitySource = player.GetSource_OpenItem(Type);
             int[] LabChestLoot = new int[] { ModContent.ItemType<GasMask>(), ModContent.ItemType<Holoshield>(), ModContent.ItemType<PrototypeAtomRifle>(), ModContent.ItemType<MiniWarhead>(), ModContent.ItemType<GravityHammer>(), ModContent.ItemType<TeslaGenerator>(), ModContent.ItemType<LightningRod>() };
-            int[] LabChestLoot4 = new int[] { ModContent.ItemType<HazmatSuit>(), ModContent.ItemType<MysteriousXenomiteFragment>(), ModContent.ItemType<EmptyMutagen>(), ModContent.ItemType<Hacksaw>(), ModContent.ItemType<DepletedCrossbow>() };
+            int[] LabChestLoot4 = new int[] { ModContent.ItemType<HazmatSuit>(), ModContent.ItemType<MysteriousXenomiteFragment>(), ModContent.ItemType<EmptyMutagen>(), ModContent.ItemType<Hacksaw>(), ModContent.ItemType<DepletedCrossbow>(), ModContent.ItemType<TeslaCoil>() };
             int[] FloppyDiskLoot = new int[]
             {
                 ModContent.ItemType<FloppyDisk1>(),
@@ -61,7 +63,7 @@ namespace Redemption.Items.Placeable.Furniture.Lab
             {
                 ModContent.ItemType<ScrapMetal>(),
                 ModContent.ItemType<AIChip>(),
-                ModContent.ItemType<Capacitator>(),
+                ModContent.ItemType<Capacitor>(),
                 ModContent.ItemType<Plating>(),
                 ModContent.ItemType<RawXenium>()
             };

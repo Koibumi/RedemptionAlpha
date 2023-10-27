@@ -6,10 +6,10 @@ using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Redemption.Globals;
-using Redemption.Buffs.NPCBuffs;
 using Redemption.Projectiles.Melee;
 using Redemption.Base;
 using Redemption.BaseExtension;
+using Redemption.Buffs.Debuffs;
 
 namespace Redemption.Items.Weapons.PreHM.Melee
 {
@@ -20,20 +20,21 @@ namespace Redemption.Items.Weapons.PreHM.Melee
         public float[] oldrot = new float[4];
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Pure-Iron Sword");
+            // DisplayName.SetDefault("Pure-Iron Sword");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 4;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjIce[Type] = true;
         }
 
         public override bool ShouldUpdatePosition() => false;
 
         public override void SetSafeDefaults()
         {
-            Projectile.width = 48;
-            Projectile.height = 48;
+            Projectile.width = 60;
+            Projectile.height = 60;
             Projectile.friendly = true;
             Projectile.penetrate = -1;
-            Length = 32;
+            Length = 52;
             Rot = MathHelper.ToRadians(2);
             Projectile.alpha = 255;
             Projectile.usesLocalNPCImmunity = true;
@@ -58,10 +59,6 @@ namespace Redemption.Items.Weapons.PreHM.Melee
         private float glow;
         public override void AI()
         {
-            for (int k = Projectile.oldPos.Length - 1; k > 0; k--)
-                oldrot[k] = oldrot[k - 1];
-            oldrot[0] = Projectile.rotation;
-
             Player player = Main.player[Projectile.owner];
             if (player.noItems || player.CCed || player.dead || !player.active)
                 Projectile.Kill();
@@ -231,32 +228,34 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             }
             if (Timer > 1)
                 Projectile.alpha = 0;
-
+            for (int k = Projectile.oldPos.Length - 1; k > 0; k--)
+                oldrot[k] = oldrot[k - 1];
+            oldrot[0] = Projectile.rotation;
         }
         private void BlockProj()
         {
             for (int i = 0; i < Main.maxProjectiles; i++)
             {
                 Projectile target = Main.projectile[i];
-                if (!target.active || target.whoAmI == Projectile.whoAmI || !target.hostile || target.damage > 200)
+                if (!target.active || target.whoAmI == Projectile.whoAmI || !target.hostile || target.damage > 200 / 4)
                     continue;
 
-                if (target.velocity.Length() == 0 || !Projectile.Hitbox.Intersects(target.Hitbox) || !ProjectileLists.Ice.Contains(target.type) || target.Redemption().TechnicallyMelee || target.Redemption().ParryBlacklist)
+                if (target.velocity.Length() == 0 || !Projectile.Hitbox.Intersects(target.Hitbox) || !target.HasElement(ElementID.Ice) || target.ProjBlockBlacklist(true))
                     continue;
 
                 DustHelper.DrawCircle(target.Center, DustID.IceTorch, 1, 4, 4, nogravity: true);
                 target.Kill();
             }
         }
-        public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection)
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
             if (Projectile.ai[0] == 3)
-                damage *= 2;
-
-            RedeProjectile.Decapitation(target, ref damage, ref crit);
+                modifiers.FinalDamage *= 2;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            RedeProjectile.Decapitation(target, ref damageDone, ref hit.Crit);
+
             Projectile.localNPCImmunity[target.whoAmI] = 11;
             target.immune[Projectile.owner] = 0;
 
@@ -274,7 +273,7 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
             Vector2 origin = new(texture.Width / 2f, texture.Height / 2f);
             float scale = BaseUtility.MultiLerp(Main.LocalPlayer.miscCounter % 100 / 100f, 1.2f, 1.1f, 1.2f);
-            Vector2 v = RedeHelper.PolarVector(6, (Projectile.Center - player.Center).ToRotation());
+            Vector2 v = RedeHelper.PolarVector(10, (Projectile.Center - player.Center).ToRotation());
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);

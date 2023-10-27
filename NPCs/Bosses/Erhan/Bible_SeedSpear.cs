@@ -4,6 +4,7 @@ using Terraria;
 using Terraria.ModLoader;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria.GameContent;
+using Redemption.Globals;
 
 namespace Redemption.NPCs.Bosses.Erhan
 {
@@ -12,7 +13,8 @@ namespace Redemption.NPCs.Bosses.Erhan
         public override string Texture => "Redemption/NPCs/Bosses/Erhan/HolySpear_Proj";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Holy Spear");
+            // DisplayName.SetDefault("Holy Spear");
+            ElementID.ProjHoly[Type] = true;
         }
 
         public override void SetDefaults()
@@ -53,7 +55,7 @@ namespace Redemption.NPCs.Bosses.Erhan
         {
             Texture2D texture = TextureAssets.Projectile[Projectile.type].Value;
             Vector2 drawOrigin = new(texture.Width / 2, texture.Height / 2 + 38);
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, Projectile.GetAlpha(Color.White), Projectile.rotation, drawOrigin, Projectile.scale, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, Projectile.GetAlpha(new Color(255, 255, 255, 50)), Projectile.rotation, drawOrigin, Projectile.scale, SpriteEffects.None, 0);
             return false;
         }
     }

@@ -7,6 +7,7 @@ using Terraria.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria.GameContent;
 using Redemption.BaseExtension;
+using Redemption.Globals;
 
 namespace Redemption.Projectiles.Hostile
 {
@@ -14,8 +15,9 @@ namespace Redemption.Projectiles.Hostile
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Fist Rocket");
+            // DisplayName.SetDefault("Fist Rocket");
             Main.projFrames[Projectile.type] = 2;
+            ElementID.ProjExplosive[Type] = true;
         }
 
         public override void SetDefaults()
@@ -27,13 +29,14 @@ namespace Redemption.Projectiles.Hostile
             Projectile.penetrate = 1;
             Projectile.tileCollide = true;
             Projectile.timeLeft = 80;
+            Projectile.Redemption().friendlyHostile = true;
         }
         public override bool? CanHitNPC(NPC target)
         {
             NPC host = Main.npc[(int)Projectile.ai[0]];
             return target == host.Redemption().attacker ? null : false;
         }
-        public override void ModifyHitNPC(NPC target, ref int damage, ref float knockback, ref bool crit, ref int hitDirection) => damage *= 4;
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers) => modifiers.FinalDamage *= 4;
         public override void AI()
         {
             NPC host = Main.npc[(int)Projectile.ai[0]];
@@ -104,8 +107,8 @@ namespace Redemption.Projectiles.Hostile
                 vector *= 12f / magnitude;
             }
         }
-        public override void OnHitPlayer(Player target, int damage, bool crit) => Projectile.Kill();
-        public override void Kill(int timeLeft)
+        public override void OnHitPlayer(Player target, Player.HurtInfo info) => Projectile.Kill();
+        public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(SoundID.Item14, Projectile.position);
             for (int i = 0; i < 10; i++)

@@ -1,5 +1,4 @@
 using Microsoft.Xna.Framework;
-using Redemption.Items.Placeable.Tiles;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -12,7 +11,6 @@ namespace Redemption.Walls
 		{
 			Main.wallHouse[Type] = false;
 			DustType = DustID.Ash;
-			ItemDrop = ModContent.ItemType<IrradiatedStoneWall>();
 			AddMapEntry(new Color(47, 47, 47));
 		}
 	}

@@ -4,7 +4,6 @@ using Redemption.Items.Placeable.Furniture.Misc;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.Enums;
-using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 
@@ -34,12 +33,13 @@ namespace Redemption.Tiles.Furniture.Misc
             TileObjectData.newAlternate.AnchorBottom = new AnchorData(AnchorType.SolidTile | AnchorType.SolidWithTop | AnchorType.SolidSide, 4, 1);
             TileObjectData.addAlternate(1);
             TileObjectData.addTile(Type);
-            MinPick = 500;
+            MinPick = 1000;
             MineResist = 15f;
+            HitSound = CustomSounds.StoneHit;
             AddMapEntry(new Color(104, 91, 83));
+            RegisterItemDrop(ModContent.ItemType<AncientFallenStatue>());
             DustType = ModContent.DustType<SlateDust>();
         }
-        public override void KillMultiTile(int i, int j, int frameX, int frameY) => Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 128, 112, ModContent.ItemType<AncientFallenStatue>());
         public override bool CanExplode(int i, int j) => false;
     }
 }

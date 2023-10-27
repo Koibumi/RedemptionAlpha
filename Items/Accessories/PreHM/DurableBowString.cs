@@ -9,16 +9,17 @@ namespace Redemption.Items.Accessories.PreHM
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Durable Bow String");
-            Tooltip.SetDefault("20% increased velocity of arrow-based weaponry");
-            SacrificeTotal = 1;
+            // DisplayName.SetDefault("Durable Bow String");
+            // Tooltip.SetDefault("20% increased velocity of arrow-based weaponry");
+            ItemID.Sets.ShimmerTransformToItem[Type] = ModContent.ItemType<LeatherSheath>();
+            Item.ResearchUnlockCount = 1;
         }
         public override void SetDefaults()
         {
             Item.width = 26;
             Item.height = 28;
             Item.value = Item.buyPrice(0, 1, 50, 0);
-            Item.canBePlacedInVanityRegardlessOfConditions = true;
+            Item.hasVanityEffects = true;
             Item.rare = ItemRarityID.Blue;
             Item.accessory = true;
         }

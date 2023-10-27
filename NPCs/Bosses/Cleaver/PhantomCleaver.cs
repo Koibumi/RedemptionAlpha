@@ -14,7 +14,7 @@ namespace Redemption.NPCs.Bosses.Cleaver
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Phantom Cleaver");
+            // DisplayName.SetDefault("Phantom Cleaver");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 5;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
         }
@@ -62,14 +62,18 @@ namespace Redemption.NPCs.Bosses.Cleaver
                     break;
             }
         }
-        public override void OnHitPlayer(Player target, int damage, bool crit)
+        public override void OnHitPlayer(Player target, Player.HurtInfo info)
         {
             target.AddBuff(ModContent.BuffType<SnippedDebuff>(), Main.expertMode ? 400 : 200);
         }
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
-            float collisionPoint = 0f;
-            return Collision.CheckAABBvLineCollision(targetHitbox.Center(), targetHitbox.Size(), Projectile.Center, Projectile.Center + (Projectile.rotation + -MathHelper.PiOver2).ToRotationVector2() * 140, 58, ref collisionPoint);
+            Vector2 unit = new Vector2(1.5f, 0).RotatedBy(Projectile.rotation + -MathHelper.PiOver2);
+            float point = 0f;
+            if (Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), Projectile.Center - unit * 72,
+                Projectile.Center + unit * 72, 58, ref point))
+                return true;
+            return false;
         }
         public override bool PreDraw(ref Color lightColor)
         {
@@ -90,7 +94,7 @@ namespace Redemption.NPCs.Bosses.Cleaver
         public override string Texture => "Redemption/NPCs/Bosses/Cleaver/PhantomCleaver";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Phantom Cleaver");
+            // DisplayName.SetDefault("Phantom Cleaver");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 5;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
         }
@@ -140,8 +144,12 @@ namespace Redemption.NPCs.Bosses.Cleaver
         }
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
-            float collisionPoint = 0f;
-            return Collision.CheckAABBvLineCollision(targetHitbox.Center(), targetHitbox.Size(), Projectile.Center, Projectile.Center + (Projectile.rotation + -MathHelper.PiOver2).ToRotationVector2() * 140, 58, ref collisionPoint);
+            Vector2 unit = new Vector2(1.5f, 0).RotatedBy(Projectile.rotation + -MathHelper.PiOver2);
+            float point = 0f;
+            if (Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), Projectile.Center - unit * 72,
+                Projectile.Center + unit * 72, 58, ref point))
+                return true;
+            return false;
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -163,7 +171,7 @@ namespace Redemption.NPCs.Bosses.Cleaver
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Phantom Cleaver");
+            // DisplayName.SetDefault("Phantom Cleaver");
         }
         public override void SetDefaults()
         {
@@ -192,7 +200,7 @@ namespace Redemption.NPCs.Bosses.Cleaver
         public override string Texture => "Redemption/NPCs/Bosses/Cleaver/PhantomCleaver";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Phantom Cleaver");
+            // DisplayName.SetDefault("Phantom Cleaver");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 5;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
         }
@@ -236,14 +244,18 @@ namespace Redemption.NPCs.Bosses.Cleaver
                     break;
             }
         }
-        public override void OnHitPlayer(Player target, int damage, bool crit)
+        public override void OnHitPlayer(Player target, Player.HurtInfo info)
         {
             target.AddBuff(ModContent.BuffType<SnippedDebuff>(), Main.expertMode ? 400 : 200);
         }
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
-            float collisionPoint = 0f;
-            return Collision.CheckAABBvLineCollision(targetHitbox.Center(), targetHitbox.Size(), Projectile.Center, Projectile.Center + (Projectile.rotation + -MathHelper.PiOver2).ToRotationVector2() * 140, 58, ref collisionPoint);
+            Vector2 unit = new Vector2(1.5f, 0).RotatedBy(Projectile.rotation + -MathHelper.PiOver2);
+            float point = 0f;
+            if (Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), Projectile.Center - unit * 72,
+                Projectile.Center + unit * 72, 58, ref point))
+                return true;
+            return false;
         }
         public override bool PreDraw(ref Color lightColor)
         {

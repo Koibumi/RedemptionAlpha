@@ -1,10 +1,9 @@
 using Microsoft.Xna.Framework;
-using Redemption.Items.Placeable.Furniture.Archcloth;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
-using Terraria.DataStructures;
+using Terraria.Localization;
 
 namespace Redemption.Tiles.Furniture.Archcloth
 {
@@ -21,13 +20,9 @@ namespace Redemption.Tiles.Furniture.Archcloth
             TileObjectData.newTile.StyleHorizontal = true;
             TileObjectData.newTile.StyleWrapLimit = 111;
             TileObjectData.addTile(Type);
-            AddMapEntry(new Color(123, 44, 122));
+            AddMapEntry(new Color(123, 44, 122), Language.GetText("MapObject.Banner"));
             DustType = DustID.DungeonPink;
         }
-
-        public override void KillMultiTile(int i, int j, int frameX, int frameY)
-        {
-            Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 16, 48, ModContent.ItemType<ArchclothBanner>());
-        }
+        public override bool CreateDust(int i, int j, ref int type) => false;
     }
 }

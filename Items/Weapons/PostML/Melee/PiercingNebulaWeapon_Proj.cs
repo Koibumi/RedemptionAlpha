@@ -1,14 +1,9 @@
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Terraria.GameContent;
 using Terraria;
 using Terraria.ID;
 using Redemption.Globals;
 using Terraria.ModLoader;
 using Terraria.Audio;
-using ParticleLibrary;
-using Redemption.Particles;
-using static Terraria.ModLoader.PlayerDrawLayer;
 
 namespace Redemption.Items.Weapons.PostML.Melee
 {
@@ -16,7 +11,7 @@ namespace Redemption.Items.Weapons.PostML.Melee
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Sword of the Forgotten");
+            // DisplayName.SetDefault("Sword of the Forgotten");
             Main.projFrames[Projectile.type] = 6;
         }
 

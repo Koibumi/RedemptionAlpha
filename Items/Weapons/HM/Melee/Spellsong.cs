@@ -1,23 +1,26 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.BaseExtension;
+using Redemption.Globals;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace Redemption.Items.Weapons.HM.Melee
 {
     public class Spellsong : ModItem
     {
+        public override LocalizedText Tooltip => base.Tooltip.WithFormatArgs(ElementID.ArcaneS);
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Spellsong, Core of the West");
-            Tooltip.SetDefault("Slashes emit arcane waves" +
-                "\nHolding left-click will do a 3-swing combo, ending with Spellsong shooting a beam that conjures mirages of itself");
+            // DisplayName.SetDefault("Spellsong, Core of the West");
+            /* Tooltip.SetDefault("Slashes emit arcane waves" +
+                "\nHolding left-click will do a 3-swing combo, ending with Spellsong shooting a beam that conjures mirages of itself"); */
 
             ItemID.Sets.SkipsInitialUseSound[Item.type] = true;
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -47,7 +50,7 @@ namespace Redemption.Items.Weapons.HM.Melee
             Item.shootSpeed = 5f;
             Item.shoot = ModContent.ProjectileType<Spellsong_Proj>();
             if (!Main.dedServ)
-                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Item.ModItem.Texture + "_Glow").Value;
+                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
         }
 
         public override void AddRecipes()
@@ -64,9 +67,7 @@ namespace Redemption.Items.Weapons.HM.Melee
         {
             if (Main.keyState.PressingShift())
             {
-                TooltipLine line = new(Mod, "Lore",
-                    "'A sword from Anglic myth, said to come from the far western lands beyond the Ravencrag mountains.\n" +
-                    "It is just a replica, but the original was supposedly wielded by a man from the west, who vanquished many great evils with it.'")
+                TooltipLine line = new(Mod, "Lore", Language.GetTextValue("Mods.Redemption.Items.Spellsong.Lore"))
                 {
                     OverrideColor = Color.LightGray
                 };
@@ -74,15 +75,15 @@ namespace Redemption.Items.Weapons.HM.Melee
             }
             else
             {
-                TooltipLine line = new(Mod, "HoldShift", "Hold [Shift] to view lore")
+                TooltipLine line = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.SpecialTooltips.Viewer"))
                 {
                     OverrideColor = Color.Gray,
                 };
                 tooltips.Add(line);
             }
 
-            TooltipLine axeLine = new(Mod, "SharpBonus", "Slash Bonus: Small chance to decapitate skeletons, killing them instantly") { OverrideColor = Colors.RarityOrange };
-            tooltips.Add(axeLine);
+            TooltipLine slashLine = new(Mod, "SharpBonus", Language.GetTextValue("Mods.Redemption.GenericTooltips.Bonuses.SlashBonus")) { OverrideColor = Colors.RarityOrange };
+            tooltips.Add(slashLine);
         }
     }
 }

@@ -1,8 +1,6 @@
 using Microsoft.Xna.Framework;
 using Redemption.Base;
 using Redemption.Biomes;
-using Redemption.Buffs.Debuffs;
-using Redemption.Buffs.NPCBuffs;
 using Redemption.Globals;
 using Redemption.Globals.NPC;
 using Redemption.Items.Placeable.Banners;
@@ -17,8 +15,10 @@ using Terraria.ModLoader;
 using Redemption.BaseExtension;
 using Redemption.Items.Materials.HM;
 using Redemption.Items.Usable.Potions;
-using Redemption.Items.Armor.Vanity;
 using Redemption.Items.Armor.Vanity.Intruder;
+using System.IO;
+using Redemption.NPCs.PreHM;
+using Terraria.Localization;
 
 namespace Redemption.NPCs.Wasteland
 {
@@ -44,27 +44,17 @@ namespace Redemption.NPCs.Wasteland
         {
             Main.npcFrameCount[Type] = 11;
             NPCID.Sets.TakesDamageFromHostilesWithoutBeingFriendly[Type] = true;
-
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                SpecificallyImmuneTo = new int[] {
-                    ModContent.BuffType<InfestedDebuff>(),
-                    BuffID.Bleeding,
-                    BuffID.Poisoned,
-                    ModContent.BuffType<DirtyWoundDebuff>(),
-                    ModContent.BuffType<NecroticGougeDebuff>(),
-                    ModContent.BuffType<BileDebuff>(),
-                    ModContent.BuffType<GreenRashesDebuff>(),
-                    ModContent.BuffType<GlowingPustulesDebuff>(),
-                    ModContent.BuffType<FleshCrystalsDebuff>()
-                }
-            });
+            NPCID.Sets.ShimmerTransformToNPC[NPC.type] = ModContent.NPCType<LivingBloom>();
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Infected);
+            BuffNPC.NPCTypeImmunity(Type, BuffNPC.NPCDebuffImmuneType.Inorganic);
 
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0)
             {
                 Velocity = 1f
             };
             NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, value);
+            ElementID.NPCNature[Type] = true;
+            ElementID.NPCPoison[Type] = true;
         }
 
         public override void SetDefaults()
@@ -79,17 +69,26 @@ namespace Redemption.NPCs.Wasteland
             NPC.value = 800;
             NPC.knockBackResist = 0.4f;
             NPC.aiStyle = -1;
+            NPC.chaseable = false;
             SpawnModBiomes = new int[1] { ModContent.GetInstance<WastelandPurityBiome>().Type };
             Banner = NPC.type;
             BannerItem = ModContent.ItemType<MutatedLivingBloomBanner>();
         }
-
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.WriteVector2(moveTo);
+        }
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            moveTo = reader.ReadVector2();
+        }
         public NPC npcTarget;
         public Vector2 moveTo;
         public int runCooldown;
         public override void OnSpawn(IEntitySource source)
         {
             TimerRand = Main.rand.Next(80, 180);
+            NPC.netUpdate = true;
         }
         public override void AI()
         {
@@ -98,6 +97,8 @@ namespace Redemption.NPCs.Wasteland
             NPC.TargetClosest();
             NPC.LookByVelocity();
             RegenCheck();
+            if ((globalNPC.attacker is Player || (globalNPC.attacker is NPC spirit && spirit.Redemption().spiritSummon)) && AIState > ActionState.Wander)
+                NPC.chaseable = true;
 
             switch (AIState)
             {
@@ -111,6 +112,7 @@ namespace Redemption.NPCs.Wasteland
                         AITimer = 0;
                         TimerRand = Main.rand.Next(120, 260);
                         AIState = ActionState.Wander;
+                        NPC.netUpdate = true;
                     }
 
                     if (NPC.ClosestNPCToNPC(ref npcTarget, 160, NPC.Center) && npcTarget.lifeMax > 5 && npcTarget.damage > 0 && !NPCLists.Plantlike.Contains(npcTarget.type) && !npcTarget.Redemption().invisible)
@@ -120,6 +122,7 @@ namespace Redemption.NPCs.Wasteland
                         AITimer = 0;
                         TimerRand = Main.rand.Next(120, 260);
                         AIState = ActionState.Threatened;
+                        NPC.netUpdate = true;
                     }
                     break;
 
@@ -131,6 +134,7 @@ namespace Redemption.NPCs.Wasteland
                         AITimer = 0;
                         TimerRand = Main.rand.Next(120, 260);
                         AIState = ActionState.Threatened;
+                        NPC.netUpdate = true;
                     }
 
                     AITimer++;
@@ -139,9 +143,10 @@ namespace Redemption.NPCs.Wasteland
                         AITimer = 0;
                         TimerRand = Main.rand.Next(120, 260);
                         AIState = ActionState.Idle;
+                        NPC.netUpdate = true;
                     }
 
-                    RedeHelper.HorizontallyMove(NPC, moveTo * 16, 0.4f, 1, 6, 4, false);
+                    NPCHelper.HorizontallyMove(NPC, moveTo * 16, 0.4f, 1, 6, 4, false);
                     break;
 
                 case ActionState.Threatened:
@@ -156,13 +161,14 @@ namespace Redemption.NPCs.Wasteland
                     else if (runCooldown > 0)
                         runCooldown--;
 
-                    RedeHelper.HorizontallyMove(NPC, new Vector2(globalNPC.attacker.Center.X < NPC.Center.X ? NPC.Center.X + 50 : NPC.Center.X - 50, NPC.Center.Y),
+                    NPCHelper.HorizontallyMove(NPC, new Vector2(NPC.Center.X + (50 * NPC.RightOfDir(globalNPC.attacker)), NPC.Center.Y),
                         0.5f, 2, 6, 4, false);
 
                     if (Main.rand.NextBool(200) && NPC.velocity.Y == 0)
                     {
                         AITimer = 0;
                         AIState = ActionState.RootAttack;
+                        NPC.netUpdate = true;
                     }
                     break;
                 case ActionState.RootAttack:
@@ -183,7 +189,7 @@ namespace Redemption.NPCs.Wasteland
                     if (AITimer == 5)
                     {
                         int tilePosY = BaseWorldGen.GetFirstTileFloor((int)(globalNPC.attacker.Center.X + (globalNPC.attacker.velocity.X * 30)) / 16, (int)(globalNPC.attacker.Center.Y / 16) - 2);
-                        NPC.Shoot(new Vector2(globalNPC.attacker.Center.X + (globalNPC.attacker.velocity.X * 30), (tilePosY * 16) + 30), ModContent.ProjectileType<MutatedLivingBloomRoot>(), NPC.damage, Vector2.Zero, false, SoundID.Item1, NPC.whoAmI);
+                        NPC.Shoot(new Vector2(globalNPC.attacker.Center.X + (globalNPC.attacker.velocity.X * 30), (tilePosY * 16) + 30), ModContent.ProjectileType<MutatedLivingBloomRoot>(), NPC.damage, Vector2.Zero, NPC.whoAmI);
                         for (int i = 0; i < Main.maxNPCs; i++)
                         {
                             NPC target = Main.npc[i];
@@ -197,7 +203,7 @@ namespace Redemption.NPCs.Wasteland
                                 continue;
 
                             int tilePosY2 = BaseWorldGen.GetFirstTileFloor((int)(target.Center.X + (target.velocity.X * 30)) / 16, (int)(target.Center.Y / 16) - 2);
-                            NPC.Shoot(new Vector2(target.Center.X + (target.velocity.X * 30), (tilePosY2 * 16) + 30), ModContent.ProjectileType<MutatedLivingBloomRoot>(), NPC.damage, Vector2.Zero, false, SoundID.Item1, NPC.whoAmI);
+                            NPC.Shoot(new Vector2(target.Center.X + (target.velocity.X * 30), (tilePosY2 * 16) + 30), ModContent.ProjectileType<MutatedLivingBloomRoot>(), NPC.damage, Vector2.Zero, NPC.whoAmI);
                         }
                         for (int p = 0; p < Main.maxPlayers; p++)
                         {
@@ -212,7 +218,7 @@ namespace Redemption.NPCs.Wasteland
                                 continue;
 
                             int tilePosY2 = BaseWorldGen.GetFirstTileFloor((int)(target.Center.X + (target.velocity.X * 30)) / 16, (int)(target.Center.Y / 16) - 2);
-                            NPC.Shoot(new Vector2(target.Center.X + (target.velocity.X * 30), (tilePosY2 * 16) + 30), ModContent.ProjectileType<MutatedLivingBloomRoot>(), NPC.damage, Vector2.Zero, false, SoundID.Item1, NPC.whoAmI);
+                            NPC.Shoot(new Vector2(target.Center.X + (target.velocity.X * 30), (tilePosY2 * 16) + 30), ModContent.ProjectileType<MutatedLivingBloomRoot>(), NPC.damage, Vector2.Zero, NPC.whoAmI);
                         }
                     }
                     else if (AITimer >= 80)
@@ -284,7 +290,7 @@ namespace Redemption.NPCs.Wasteland
         }
 
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => false;
-        public override bool? CanHitNPC(NPC target) => false;
+        public override bool CanHitNPC(NPC target) => false;
         public override void ModifyNPCLoot(NPCLoot npcLoot)
         {
             npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<ToxicBile>(), 4, 1, 3));
@@ -299,12 +305,11 @@ namespace Redemption.NPCs.Wasteland
         {
             bestiaryEntry.Info.AddRange(new IBestiaryInfoElement[]
             {
-                new FlavorTextBestiaryInfoElement(
-                    "Despite its peculiar circumstances, this Bloom seems to be doing fine. Two heads always were better than one, or so they say.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.MutatedLivingBloom"))
             });
         }
 
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (AIState is ActionState.Idle or ActionState.Wander)
             {

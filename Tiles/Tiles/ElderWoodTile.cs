@@ -1,5 +1,4 @@
 using Microsoft.Xna.Framework;
-using Redemption.Items.Placeable.Tiles;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -11,8 +10,9 @@ namespace Redemption.Tiles.Tiles
         {
             Main.tileSolid[Type] = true;
             Main.tileMergeDirt[Type] = true;
+            Main.tileBlendAll[Type] = true;
             Main.tileBlockLight[Type] = true;
-            ItemDrop = ModContent.ItemType<ElderWood>();
+            Main.tileBrick[Type] = true;
             MinPick = 0;
             MineResist = 2.5f;
             AddMapEntry(new Color(109, 87, 78));

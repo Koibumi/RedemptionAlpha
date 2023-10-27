@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Redemption.Base;
 using Redemption.Buffs.Minions;
+using Redemption.Globals;
 using Redemption.Projectiles.Minions;
 using Terraria;
 using Terraria.DataStructures;
@@ -13,9 +14,9 @@ namespace Redemption.Items.Weapons.HM.Summon
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Tesla Field Generator");
-            Tooltip.SetDefault("Summons a small generator with a tesla field around it");
-            SacrificeTotal = 1;
+            // DisplayName.SetDefault("Tesla Field Generator");
+            // Tooltip.SetDefault("Summons a small generator with a tesla field around it");
+            Item.ResearchUnlockCount = 1;
 
             ItemID.Sets.GamepadWholeScreenUseRange[Item.type] = true;
             ItemID.Sets.LockOnIgnoresCollision[Item.type] = true;
@@ -26,8 +27,8 @@ namespace Redemption.Items.Weapons.HM.Summon
             Item.damage = 95;
             Item.DamageType = DamageClass.Summon;
             Item.sentry = true;
-            Item.width = 30;
-            Item.height = 50;
+            Item.width = 38;
+            Item.height = 38;
             Item.useTime = 36;
             Item.useAnimation = 36;
             Item.useStyle = ItemUseStyleID.Swing;
@@ -39,6 +40,7 @@ namespace Redemption.Items.Weapons.HM.Summon
             Item.autoReuse = false;
             Item.buffType = ModContent.BuffType<TeslaGeneratorBuff>();
             Item.shoot = ModContent.ProjectileType<TeslaGenerator_Proj>();
+            Item.ExtraItemShoot(ModContent.ProjectileType<TeslaGenerator_Lightning>());
             Item.mana = 10;
         }
         public override bool CanUseItem(Player player)

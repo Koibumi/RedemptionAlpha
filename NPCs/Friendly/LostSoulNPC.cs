@@ -6,10 +6,10 @@ using Redemption.Items.Materials.PreHM;
 using Redemption.Globals;
 using Terraria.Audio;
 using Terraria.GameContent.Bestiary;
-using Terraria.DataStructures;
 using Redemption.BaseExtension;
 using ParticleLibrary;
 using Redemption.Particles;
+using Terraria.Localization;
 
 namespace Redemption.NPCs.Friendly
 {
@@ -23,12 +23,9 @@ namespace Redemption.NPCs.Friendly
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Lost Soul");
+            // DisplayName.SetDefault("Lost Soul");
             NPCID.Sets.CountsAsCritter[NPC.type] = true;
-            NPCID.Sets.DebuffImmunitySets.Add(Type, new NPCDebuffImmunityData
-            {
-                ImmuneToAllBuffsThatAreNotWhips = true
-            });
+            NPCID.Sets.ImmuneToRegularBuffs[Type] = true;
             NPCID.Sets.NPCBestiaryDrawModifiers value = new(0)
             {
                 Velocity = 1f
@@ -53,7 +50,13 @@ namespace Redemption.NPCs.Friendly
             NPC.noTileCollide = true;
             NPC.catchItem = (short)ModContent.ItemType<LostSoul>();
         }
-        public override void HitEffect(int hitDirection, double damage)
+        public override bool? CanBeCaughtBy(Item item, Player player)
+        {
+            if (player.RedemptionAbility().SpiritwalkerActive)
+                return null;
+            return false;
+        }
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (NPC.life <= 0)
             {
@@ -66,18 +69,11 @@ namespace Redemption.NPCs.Friendly
                 }
             }
         }
-        public override bool? CanBeHitByItem(Player player, Item item)
-        {
-            return player.RedemptionAbility().SpiritwalkerActive || ItemLists.Arcane.Contains(item.type) || ItemLists.Celestial.Contains(item.type) || ItemLists.Holy.Contains(item.type) || ItemLists.Psychic.Contains(item.type) || RedeConfigClient.Instance.ElementDisable ? null : false;
-        }
-        public override bool? CanBeHitByProjectile(Projectile projectile)
-        {
-            Player player = Main.player[projectile.owner];
-            return player.RedemptionAbility().SpiritwalkerActive || ProjectileLists.Arcane.Contains(projectile.type) || ProjectileLists.Celestial.Contains(projectile.type) || ProjectileLists.Holy.Contains(projectile.type) || ProjectileLists.Psychic.Contains(projectile.type) || RedeConfigClient.Instance.ElementDisable;
-        }
+        public override bool? CanBeHitByItem(Player player, Item item) => RedeHelper.CanHitSpiritCheck(player, item);
+        public override bool? CanBeHitByProjectile(Projectile projectile) => RedeHelper.CanHitSpiritCheck(projectile);
         public override void AI()
         {
-            ParticleManager.NewParticle(RedeHelper.RandAreaInEntity(NPC) + (NPC.velocity * 10), Vector2.Zero, new SpiritParticle(), Color.White, 0.6f * NPC.scale, 0, 1);
+            ParticleManager.NewParticle(NPC.RandAreaInEntity() + (NPC.velocity * 10), Vector2.Zero, new SpiritParticle(), Color.White, 0.6f * NPC.scale, 0, 1);
 
             NPC.scale = 1 + Scale;
             NPC.rotation = NPC.velocity.ToRotation() + MathHelper.Pi;
@@ -87,10 +83,10 @@ namespace Redemption.NPCs.Friendly
 
             if (--ThrowTimer <= 0)
             {
-                if (NPC.velocity.Length() < 2)
-                    NPC.velocity = RedeHelper.PolarVector(3, Main.rand.NextFloat(0, MathHelper.TwoPi));
+                if (NPC.velocity.Length() < 1)
+                    NPC.velocity = RedeHelper.PolarVector(2, RedeHelper.RandomRotation());
 
-                NPC.velocity = NPC.velocity.RotatedBy(Main.rand.NextFloat(-0.3f, 0.3f));
+                NPC.velocity = NPC.velocity.RotatedBy(Main.rand.NextFloat(-0.2f, 0.2f));
             }
 
             if (++AITimer > 600 && !Main.LocalPlayer.RedemptionAbility().SpiritwalkerActive)
@@ -105,7 +101,7 @@ namespace Redemption.NPCs.Friendly
             Item.NewItem(NPC.GetSource_Loot(), NPC.getRect(), ModContent.ItemType<LostSoul>(), 1 + dropAmount);
         }
         public override bool CanHitPlayer(Player target, ref int cooldownSlot) => false;
-        public override bool? CanHitNPC(NPC target) => false;
+        public override bool CanHitNPC(NPC target) => false;
         public override float SpawnChance(NPCSpawnInfo spawnInfo)
         {
             if (spawnInfo.Player.RedemptionAbility().SpiritwalkerActive && !spawnInfo.Player.ZoneTowerNebula && !spawnInfo.Player.ZoneTowerSolar && !spawnInfo.Player.ZoneTowerStardust && !spawnInfo.Player.ZoneTowerVortex)
@@ -119,8 +115,7 @@ namespace Redemption.NPCs.Friendly
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Times.NightTime,
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Biomes.Caverns,
 
-                new FlavorTextBestiaryInfoElement(
-                    "Lost Souls search around the world to look for corpses to infuse with. They roam catacombs and graveyards, sometimes taking many days to find a compatible vessel.")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.LostSoul"))
             });
         }
     }

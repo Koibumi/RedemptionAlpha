@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Redemption.Buffs.Minions;
+using Redemption.Globals;
 using Redemption.Projectiles.Minions;
 using Terraria;
 using Terraria.DataStructures;
@@ -12,9 +13,9 @@ namespace Redemption.Items.Weapons.HM.Summon
 	{
 		public override void SetStaticDefaults()
 		{
-            Tooltip.SetDefault("Summons a little Android to fight for you");
-            Main.RegisterItemAnimation(Item.type, new DrawAnimationVertical(5, 2));
-            SacrificeTotal = 1;
+            // Tooltip.SetDefault("Summons a little Android to fight for you");
+            Main.RegisterItemAnimation(Item.type, new DrawAnimationVertical(5, 20));
+            Item.ResearchUnlockCount = 1;
 
             ItemID.Sets.GamepadWholeScreenUseRange[Item.type] = true;
             ItemID.Sets.LockOnIgnoresCollision[Item.type] = true;
@@ -25,18 +26,19 @@ namespace Redemption.Items.Weapons.HM.Summon
             Item.damage = 75;
             Item.DamageType = DamageClass.Summon;
             Item.mana = 15;
-            Item.width = 40;
-            Item.height = 30;
+            Item.width = 46;
+            Item.height = 32;
             Item.useTime = 20;
             Item.useAnimation = 20;
             Item.useStyle = ItemUseStyleID.Swing;
             Item.noMelee = true;
-            Item.rare = ItemRarityID.Cyan;
+            Item.rare = ItemRarityID.LightPurple;
             Item.noUseGraphic = true;
             Item.knockBack = 2;
             Item.value = Item.sellPrice(0, 10, 0, 0);
             Item.UseSound = SoundID.Item44;
             Item.shoot = ModContent.ProjectileType<AndroidMinion_Proj>();
+            Item.ExtraItemShoot(ModContent.ProjectileType<AndroidMinion_Fist>());
             Item.buffType = ModContent.BuffType<AndroidMinionBuff>();
 		}
         public override void ModifyShootStats(Player player, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)

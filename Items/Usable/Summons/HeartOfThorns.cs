@@ -3,6 +3,8 @@ using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Redemption.NPCs.Bosses.Thorn;
+using Redemption.WorldGeneration.Soulless;
+using SubworldLibrary;
 
 namespace Redemption.Items.Usable.Summons
 {
@@ -10,13 +12,13 @@ namespace Redemption.Items.Usable.Summons
 	{
 		public override void SetStaticDefaults()
 		{
-			DisplayName.SetDefault("Heart of Thorns");
-			Tooltip.SetDefault("Summons an unfortunate curse-bearer" 
+			// DisplayName.SetDefault("Heart of Thorns");
+			/* Tooltip.SetDefault("Summons an unfortunate curse-bearer"
 				+ "\nOnly usable at day"
 				+ "\nNot consumable" +
-				"\n[i:" + ModContent.ItemType<GoodRoute>() + "]");
+				"\n[i:" + ModContent.ItemType<GoodRoute>() + "][c/bbf160: This item may have a positive impact onto the world]"); */
 
-			SacrificeTotal = 1;
+			Item.ResearchUnlockCount = 1;
 			ItemID.Sets.SortingPriorityBossSpawns[Type] = 12;
 		}
 
@@ -35,7 +37,7 @@ namespace Redemption.Items.Usable.Summons
 
 		public override bool CanUseItem(Player player)
 		{
-			return Main.dayTime && !NPC.AnyNPCs(ModContent.NPCType<Thorn>());
+			return !SubworldSystem.IsActive<SoullessSub>() && Main.dayTime && !NPC.AnyNPCs(ModContent.NPCType<Thorn>());
 		}
 
 		public override bool? UseItem(Player player)
@@ -52,7 +54,7 @@ namespace Redemption.Items.Usable.Summons
 				}
 				else
 				{
-					NetMessage.SendData(MessageID.SpawnBoss, number: player.whoAmI, number2: type);
+					NetMessage.SendData(MessageID.SpawnBossUseLicenseStartEvent, number: player.whoAmI, number2: type);
 				}
 			}
 			return true;

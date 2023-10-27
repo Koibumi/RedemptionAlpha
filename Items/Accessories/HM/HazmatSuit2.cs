@@ -30,15 +30,17 @@ namespace Redemption.Items.Accessories.HM
                 ArmorIDs.Body.Sets.HidesTopSkin[equipSlotBody] = true;
                 ArmorIDs.Body.Sets.HidesArms[equipSlotBody] = true;
                 ArmorIDs.Legs.Sets.HidesBottomSkin[equipSlotLegs] = true;
+                ArmorIDs.Legs.Sets.HidesTopSkin[equipSlotLegs] = true;
             }
         }
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Hazmat Suit");
-            Tooltip.SetDefault("Grants immunity to the Abandoned Lab and Wasteland water"
+            // DisplayName.SetDefault("Hazmat Suit");
+            /* Tooltip.SetDefault("Grants immunity to the Abandoned Lab and Wasteland water"
                 + "\nGreatly extends underwater breathing"
-                + "\nGrants protection against low-level radiation");
-            SacrificeTotal = 1;
+                + "\nGrants protection against low-level radiation"); */
+            Item.ResearchUnlockCount = 1;
+            ItemID.Sets.ShimmerTransformToItem[Type] = ModContent.ItemType<HazmatSuit3>();
             SetupDrawing();
         }
 
@@ -47,11 +49,10 @@ namespace Redemption.Items.Accessories.HM
             Item.width = 26;
             Item.height = 38;
             Item.value = Item.buyPrice(1, 0, 0, 0);
-            Item.rare = ItemRarityID.Cyan;
+            Item.rare = ItemRarityID.Pink;
             Item.accessory = true;
-            Item.canBePlacedInVanityRegardlessOfConditions = true;
+            Item.hasVanityEffects = true;
         }
-
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
             var p = player.GetModPlayer<HazmatSuit2Player>();

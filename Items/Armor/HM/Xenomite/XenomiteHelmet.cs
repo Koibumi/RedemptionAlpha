@@ -1,7 +1,7 @@
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ID;
-using Redemption.Items.Materials.HM;
+using Terraria.Localization;
 using Redemption.BaseExtension;
 using Redemption.Globals.Player;
 
@@ -12,12 +12,12 @@ namespace Redemption.Items.Armor.HM.Xenomite
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("7% increased damage\n" +
-            "10% increased critical strike chance");
+            /* Tooltip.SetDefault("7% increased damage\n" +
+            "10% increased critical strike chance"); */
 
             ArmorIDs.Head.Sets.DrawHead[EquipLoader.GetEquipSlot(Mod, Name, EquipType.Head)] = false;
 
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -25,8 +25,8 @@ namespace Redemption.Items.Armor.HM.Xenomite
             Item.width = 24;
             Item.height = 26;
             Item.sellPrice(silver: 50);
-            Item.rare = ItemRarityID.Lime;
-            Item.defense = 10;
+            Item.rare = ItemRarityID.Pink;
+            Item.defense = 12;
         }
 
         public override void UpdateEquip(Player player)
@@ -49,26 +49,23 @@ namespace Redemption.Items.Armor.HM.Xenomite
         {
             CreateRecipe()
                 .AddIngredient(ItemID.TitaniumBar, 5)
-                .AddIngredient(ModContent.ItemType<XenomiteItem>(), 15)
+                .AddIngredient(ModContent.ItemType<Materials.HM.Xenomite>(), 15)
                 .AddTile(TileID.MythrilAnvil)
                 .Register();
             CreateRecipe()
                 .AddIngredient(ItemID.AdamantiteBar, 5)
-                .AddIngredient(ModContent.ItemType<XenomiteItem>(), 15)
+                .AddIngredient(ModContent.ItemType<Materials.HM.Xenomite>(), 15)
                 .AddTile(TileID.MythrilAnvil)
                 .Register();
         }
 
         public override void UpdateArmorSet(Player player)
         {
-            player.setBonus = "6% increased damage\n" +
-                "Increased Energy regeneration if an Energy Pack is in your inventory\n" +
-                "Select a keybind for [Special Ability Key] in Controls";
+            player.setBonus = Language.GetTextValue("Mods.Redemption.GenericTooltips.ArmorSetBonus.Xenomite.Keybind");
             foreach (string key in Redemption.RedeSpecialAbility.GetAssignedKeys())
             {
-                player.setBonus = "6% increased damage\n" + 
-                    "Increased Energy regeneration if an Energy Pack is in your inventory" +
-                    "\nPress " + key + " to unleash toxic gas in a radius around the player, inflicting Burning Acid";
+                player.setBonus = Language.GetTextValue("Mods.Redemption.GenericTooltips.ArmorSetBonus.Xenomite.Bonus1") +
+                    Language.GetTextValue("Mods.Redemption.GenericTooltips.ArmorSetBonus.Xenomite.Press") + key + Language.GetTextValue("Mods.Redemption.GenericTooltips.ArmorSetBonus.Xenomite.Bonus2");
             }
             player.GetDamage<GenericDamageClass>() += .06f;
             player.GetModPlayer<EnergyPlayer>().energyRegen += 10;

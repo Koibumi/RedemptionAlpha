@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using Redemption.Globals;
 using Redemption.Items.Materials.PreHM;
 using System;
 using System.Collections.Generic;
@@ -13,13 +14,13 @@ namespace Redemption.Items.Weapons.PreHM.Melee
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Zweihander");
-            Tooltip.SetDefault("Parries weak physical projectiles" +
+            // DisplayName.SetDefault("Zweihander");
+            /* Tooltip.SetDefault("Parries weak physical projectiles" +
                 "\nDeals more damage at the tip of the blade\n" +
-                "'Parry this you filthy casual!'");
+                "'Parry this you filthy casual!'"); */
 
             ItemID.Sets.SkipsInitialUseSound[Item.type] = true;
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -65,7 +66,7 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             CreateRecipe()
                 .AddIngredient(ModContent.ItemType<ZweihanderFragment1>())
                 .AddIngredient(ModContent.ItemType<ZweihanderFragment2>())
-                .AddCondition(new Recipe.Condition(NetworkText.FromLiteral("Repaired by the Fallen"), _ => false))
+                .AddCondition(RedeConditions.RepairedByFallen)
                 .Register();
         }
         private static readonly int[] unwantedPrefixes = new int[] { PrefixID.Terrible, PrefixID.Dull, PrefixID.Shameful, PrefixID.Annoying, PrefixID.Broken, PrefixID.Damaged, PrefixID.Shoddy, PrefixID.Weak };
@@ -79,9 +80,7 @@ namespace Redemption.Items.Weapons.PreHM.Melee
         {
             if (Main.keyState.PressingShift())
             {
-                TooltipLine line = new(Mod, "Lore",
-                    "'A famous greatsword of Madmount. A lot of strength is needed to use such a grand weapon,\n" +
-                    "but for most Warriors of the Iron Realm this was a trivial issue.'")
+                TooltipLine line = new(Mod, "Lore", Language.GetTextValue("Mods.Redemption.Items.Zweihander.Lore"))
                 {
                     OverrideColor = Color.LightGray
                 };
@@ -89,15 +88,14 @@ namespace Redemption.Items.Weapons.PreHM.Melee
             }
             else
             {
-                TooltipLine line = new(Mod, "HoldShift", "Hold [Shift] to view lore")
+                TooltipLine line = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.SpecialTooltips.Viewer"))
                 {
                     OverrideColor = Color.Gray,
                 };
                 tooltips.Add(line);
             }
-
-            TooltipLine axeLine = new(Mod, "SharpBonus", "Slash Bonus: Small chance to decapitate skeletons, killing them instantly") { OverrideColor = Colors.RarityOrange };
-            tooltips.Add(axeLine);
+            TooltipLine slashLine = new(Mod, "SharpBonus", Language.GetTextValue("Mods.Redemption.GenericTooltips.Bonuses.SlashBonus")) { OverrideColor = Colors.RarityOrange };
+            tooltips.Add(slashLine);
         }
     }
 }

@@ -14,6 +14,7 @@ using Terraria.ModLoader;
 using Terraria.ModLoader.Utilities;
 using Redemption.BaseExtension;
 using Terraria.DataStructures;
+using Terraria.Localization;
 
 namespace Redemption.NPCs.Critters
 {
@@ -40,8 +41,9 @@ namespace Redemption.NPCs.Critters
 
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Gold Chicken");
+            // DisplayName.SetDefault("Gold Chicken");
             Main.npcFrameCount[Type] = 21;
+            NPCID.Sets.ShimmerTransformToNPC[NPC.type] = NPCID.Shimmerfly;
             NPCID.Sets.CountsAsCritter[Type] = true;
             NPCID.Sets.DontDoHardmodeScaling[Type] = true;
             NPCID.Sets.TakesDamageFromHostilesWithoutBeingFriendly[Type] = true;
@@ -78,21 +80,21 @@ namespace Redemption.NPCs.Critters
         {
             npcLoot.Add(ItemDropRule.ByCondition(new OnFireCondition(), ModContent.ItemType<FriedChicken>()));
         }
-        public override void OnHitByItem(Player player, Item item, int damage, float knockback, bool crit)
+        public override void OnHitByItem(Player player, Item item, NPC.HitInfo hit, int damageDone)
         {
             if (NPC.life <= 0)
             {
-                if (ItemLists.Fire.Contains(item.type))
+                if (item.HasElement(ElementID.Fire))
                     Item.NewItem(NPC.GetSource_Loot(), NPC.getRect(), ModContent.ItemType<FriedChicken>());
                 else if (NPC.FindBuffIndex(BuffID.OnFire) != -1 || NPC.FindBuffIndex(BuffID.OnFire3) != -1)
                     Item.NewItem(NPC.GetSource_Loot(), NPC.getRect(), ModContent.ItemType<FriedChicken>());
             }
         }
-        public override void OnHitByProjectile(Projectile projectile, int damage, float knockback, bool crit)
+        public override void OnHitByProjectile(Projectile projectile, NPC.HitInfo hit, int damageDone)
         {
             if (NPC.life <= 0)
             {
-                if (ProjectileLists.Fire.Contains(projectile.type))
+                if (projectile.HasElement(ElementID.Fire))
                     Item.NewItem(NPC.GetSource_Loot(), NPC.getRect(), ModContent.ItemType<FriedChicken>());
                 else if (NPC.FindBuffIndex(BuffID.OnFire) != -1 || NPC.FindBuffIndex(BuffID.OnFire3) != -1)
                     Item.NewItem(NPC.GetSource_Loot(), NPC.getRect(), ModContent.ItemType<FriedChicken>());
@@ -148,7 +150,7 @@ namespace Redemption.NPCs.Critters
                     Point tileBelow = NPC.Bottom.ToTileCoordinates();
                     Tile tile = Framing.GetTileSafely(tileBelow.X, tileBelow.Y);
 
-                    if ((NPC.collideY || NPC.velocity.Y == 0) && Main.rand.NextBool(100) && tile.TileType == TileID.HayBlock && 
+                    if ((NPC.collideY || NPC.velocity.Y == 0) && Main.rand.NextBool(100) && tile.TileType == TileID.HayBlock &&
                         tile is { HasUnactuatedTile: true } && Main.tileSolid[tile.TileType])
                     {
                         AITimer = 0;
@@ -162,6 +164,13 @@ namespace Redemption.NPCs.Critters
                 case ActionState.Peck:
                     if (NPC.velocity.Y == 0)
                         NPC.velocity.X = 0;
+
+                    if (NPC.frame.Y > 20 * 28)
+                    {
+                        NPC.frame.Y = 0;
+                        AIState = ActionState.Idle;
+                        NPC.netUpdate = true;
+                    }
 
                     SightCheck();
                     break;
@@ -210,7 +219,7 @@ namespace Redemption.NPCs.Critters
                         AIState = ActionState.Idle;
                     }
 
-                    RedeHelper.HorizontallyMove(NPC, moveTo * 16, 0.2f, 1, 6, 6, false);
+                    NPCHelper.HorizontallyMove(NPC, moveTo * 16, 0.2f, 1, 6, 6, false);
                     break;
 
                 case ActionState.Alert:
@@ -231,8 +240,7 @@ namespace Redemption.NPCs.Critters
                     if (Main.rand.NextBool(20) && NPC.velocity.Length() >= 2)
                         Dust.NewDust(NPC.position, NPC.width, NPC.height, ModContent.DustType<ChickenFeatherDust5>());
 
-                    RedeHelper.HorizontallyMove(NPC, new Vector2(globalNPC.attacker.Center.X < NPC.Center.X ? NPC.Center.X + 100
-                        : NPC.Center.X - 100, NPC.Center.Y), 0.2f, 2.5f, 8, 8, NPC.Center.Y > globalNPC.attacker.Center.Y);
+                    NPCHelper.HorizontallyMove(NPC, new Vector2(NPC.Center.X + (100 * NPC.RightOfDir(globalNPC.attacker)), NPC.Center.Y), 0.2f, 2.5f, 8, 8, NPC.Center.Y > globalNPC.attacker.Center.Y, globalNPC.attacker);
                     break;
             }
 
@@ -260,10 +268,7 @@ namespace Redemption.NPCs.Critters
                     NPC.frameCounter = 0;
                     NPC.frame.Y += frameHeight;
                     if (NPC.frame.Y > 20 * frameHeight)
-                    {
-                        NPC.frame.Y = 0;
-                        AIState = ActionState.Idle;
-                    }
+                        NPC.frame.Y = 20 * frameHeight;
                 }
                 return;
             }
@@ -280,9 +285,7 @@ namespace Redemption.NPCs.Critters
                     NPC.frameCounter = 0;
                     NPC.frame.Y += frameHeight;
                     if (NPC.frame.Y > 13 * frameHeight)
-                    {
                         NPC.frame.Y = 13 * frameHeight;
-                    }
                 }
                 return;
             }
@@ -339,7 +342,7 @@ namespace Redemption.NPCs.Critters
 
         public override void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry)
         {
-            bestiaryEntry.UIInfoProvider = new GoldCritterUICollectionInfoProvider(new int[] { ModContent.NPCType<Chicken>() }, 
+            bestiaryEntry.UIInfoProvider = new GoldCritterUICollectionInfoProvider(new int[] { ModContent.NPCType<Chicken>() },
                 ContentSamples.NpcBestiaryCreditIdsByNpcNetIds[NPC.type]);
 
             bestiaryEntry.Info.AddRange(new IBestiaryInfoElement[]
@@ -347,12 +350,11 @@ namespace Redemption.NPCs.Critters
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Biomes.Surface,
                 BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions.Times.DayTime,
 
-                new FlavorTextBestiaryInfoElement(
-                    "A chicken with golden feathers. Best not to kill it, for it can lay golden eggs!")
+                new FlavorTextBestiaryInfoElement(Language.GetTextValue("Mods.Redemption.FlavorTextBestiary.ChickenGold"))
             });
         }
 
-        public override void HitEffect(int hitDirection, double damage)
+        public override void HitEffect(NPC.HitInfo hit)
         {
             if (AIState is not ActionState.Alert)
             {

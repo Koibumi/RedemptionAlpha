@@ -14,8 +14,10 @@ namespace Redemption.Projectiles.Magic
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Digestive Acid");
+            // DisplayName.SetDefault("Digestive Acid");
             Main.projFrames[Projectile.type] = 3;
+            ElementID.ProjWater[Type] = true;
+            ElementID.ProjPoison[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -24,6 +26,7 @@ namespace Redemption.Projectiles.Magic
             Projectile.penetrate = 3;
             Projectile.hostile = false;
             Projectile.friendly = true;
+            Projectile.DamageType = DamageClass.Magic;
             Projectile.tileCollide = true;
             Projectile.ignoreWater = false;
             Projectile.timeLeft = 200;
@@ -36,11 +39,11 @@ namespace Redemption.Projectiles.Magic
             if (Main.rand.NextBool(4))
                 Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.ToxicBubble, Alpha: 100);
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(ModContent.BuffType<StomachAcidDebuff>(), 800);
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(SoundID.NPCDeath1, Projectile.position);
             if (Projectile.owner == Main.myPlayer)
@@ -59,7 +62,7 @@ namespace Redemption.Projectiles.Magic
         public override string Texture => "Redemption/Textures/IceMist";
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Acid Mist");
+            // DisplayName.SetDefault("Acid Mist");
         }
 
         public override void SetDefaults()
@@ -74,7 +77,7 @@ namespace Redemption.Projectiles.Magic
             Projectile.alpha = 255;
             Projectile.timeLeft = 240;
             Projectile.scale = Main.rand.NextFloat(0.5f, 1f);
-            Projectile.rotation = Main.rand.NextFloat(0, MathHelper.TwoPi);
+            Projectile.rotation = RedeHelper.RandomRotation();
         }
         public override void AI()
         {

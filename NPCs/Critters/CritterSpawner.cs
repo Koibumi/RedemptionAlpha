@@ -7,6 +7,7 @@ using Terraria.Utilities;
 using Microsoft.Xna.Framework;
 using Terraria.DataStructures;
 using static Redemption.NPCs.Critters.Chicken;
+using System;
 
 namespace Redemption.NPCs.Critters
 {
@@ -32,9 +33,9 @@ namespace Redemption.NPCs.Critters
         public override bool PreAI()
         {
             WeightedRandom<SpawnType> SpawnChoice = new(Main.rand);
-            SpawnChoice.Add(SpawnType.Single, 10);
-            SpawnChoice.Add(SpawnType.Small, 5);
-            SpawnChoice.Add(SpawnType.Big, 1);
+            SpawnChoice.Add(SpawnType.Single, 10); // 62.5%
+            SpawnChoice.Add(SpawnType.Small, 5); // 31%
+            SpawnChoice.Add(SpawnType.Big, 1); // 6.2%
 
             Vector2 pos = Vector2.Zero;
             switch ((SpawnType)SpawnChoice)
@@ -52,7 +53,7 @@ namespace Redemption.NPCs.Critters
                 case SpawnType.Small:
                     for (int i = 0; i < 2; i++)
                     {
-                        pos = RedeHelper.FindGround(NPC, 6);
+                        pos = NPCHelper.FindGround(NPC, 6);
                         RedeHelper.SpawnNPC(new EntitySource_SpawnNPC(), (int)pos.X * 16, (int)pos.Y * 16, ModContent.NPCType<Chicken>());
                     }
                     NPC.active = false;
@@ -60,7 +61,7 @@ namespace Redemption.NPCs.Critters
                 case SpawnType.Big:
                     for (int i = 0; i < Main.rand.Next(3, 5); i++)
                     {
-                        pos = RedeHelper.FindGround(NPC, 8);
+                        pos = NPCHelper.FindGround(NPC, 8);
                         RedeHelper.SpawnNPC(new EntitySource_SpawnNPC(), (int)pos.X * 16, (int)pos.Y * 16, ModContent.NPCType<Chicken>());
                     }
                     NPC.active = false;
@@ -71,9 +72,10 @@ namespace Redemption.NPCs.Critters
         public override float SpawnChance(NPCSpawnInfo spawnInfo)
         {
             float baseChance = SpawnCondition.OverworldDay.Chance;
-            float multiplier = Main.tile[spawnInfo.SpawnTileX, spawnInfo.SpawnTileY].TileType == TileID.Grass ? 0.12f : 0f;
+            float townChance = SpawnCondition.OverworldDayGrassCritter.Chance;
+            float multiplier = Framing.GetTileSafely(spawnInfo.SpawnTileX, spawnInfo.SpawnTileY).TileType is TileID.Grass or TileID.JungleGrass ? 0.12f : 0f;
 
-            return baseChance * multiplier;
+            return Math.Max(baseChance, townChance) * multiplier;
         }
     }
     public class KabucraSpawner : ModNPC
@@ -112,7 +114,7 @@ namespace Redemption.NPCs.Critters
                 case SpawnType.Small:
                     for (int i = 0; i < 2; i++)
                     {
-                        pos = RedeHelper.FindGround(NPC, 5);
+                        pos = NPCHelper.FindGround(NPC, 5);
                         RedeHelper.SpawnNPC(new EntitySource_SpawnNPC(), (int)pos.X * 16, (int)pos.Y * 16, ModContent.NPCType<Kabucra>());
                     }
                     NPC.active = false;
@@ -120,7 +122,7 @@ namespace Redemption.NPCs.Critters
                 case SpawnType.Big:
                     for (int i = 0; i < Main.rand.Next(3, 5); i++)
                     {
-                        pos = RedeHelper.FindGround(NPC, 8);
+                        pos = NPCHelper.FindGround(NPC, 8);
                         RedeHelper.SpawnNPC(new EntitySource_SpawnNPC(), (int)pos.X * 16, (int)pos.Y * 16, ModContent.NPCType<Kabucra>());
                     }
                     NPC.active = false;

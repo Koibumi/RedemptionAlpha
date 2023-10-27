@@ -12,7 +12,7 @@ namespace Redemption.Projectiles.Pets
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Mini Gigapora");
+            // DisplayName.SetDefault("Mini Gigapora");
             Main.projPet[Projectile.type] = true;
             ProjectileID.Sets.DontAttachHideToAlpha[Type] = true;
         }
@@ -90,13 +90,14 @@ namespace Redemption.Projectiles.Pets
             {
                 Projectile.timeLeft = 2;
             }
+            else Projectile.active = false;
         }
     }
     public class MiniGigapora_Body : ModProjectile
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Mini Gigapora");
+            // DisplayName.SetDefault("Mini Gigapora");
             Main.projPet[Projectile.type] = true;
             ProjectileID.Sets.DontAttachHideToAlpha[Type] = true;
         }
@@ -158,7 +159,7 @@ namespace Redemption.Projectiles.Pets
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Mini Gigapora");
+            // DisplayName.SetDefault("Mini Gigapora");
             Main.projPet[Projectile.type] = true;
             ProjectileID.Sets.DontAttachHideToAlpha[Type] = true;
         }
@@ -182,7 +183,7 @@ namespace Redemption.Projectiles.Pets
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Mini Gigapora");
+            // DisplayName.SetDefault("Mini Gigapora");
             Main.projPet[Projectile.type] = true;
             ProjectileID.Sets.DontAttachHideToAlpha[Type] = true;
         }

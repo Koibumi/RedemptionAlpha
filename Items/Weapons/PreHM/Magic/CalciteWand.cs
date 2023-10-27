@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Redemption.Globals;
+using Redemption.Items.Materials.PreHM;
 using Redemption.Projectiles.Magic;
 using Terraria;
 using Terraria.ID;
@@ -11,11 +12,11 @@ namespace Redemption.Items.Weapons.PreHM.Magic
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Drops stalagmites at cursor point" +
-                "\nIncreased damage the higher they fall");
+            /* Tooltip.SetDefault("Drops stalagmites at cursor point" +
+                "\nIncreased damage the higher they fall"); */
             Item.staff[Item.type] = true;
 
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -45,7 +46,15 @@ namespace Redemption.Items.Weapons.PreHM.Magic
 
             return true;
         }
-
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                .AddIngredient<GraveSteelAlloy>(8)
+                .AddRecipeGroup(RedeRecipe.GathicStoneRecipeGroup, 8)
+                .AddIngredient(ItemID.Topaz, 4)
+                .AddTile(TileID.Anvils)
+                .Register();
+        }
         public override void ModifyShootStats(Player player, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
         {
             position = Main.MouseWorld + RedeHelper.Spread(20);

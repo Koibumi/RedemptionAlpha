@@ -15,10 +15,13 @@ namespace Redemption.Projectiles.Magic
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Rockslide");
+            // DisplayName.SetDefault("Rockslide");
             Main.projFrames[Projectile.type] = 4;
+            ProjectileID.Sets.DontCancelChannelOnKill[Type] = true;
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 6;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjEarth[Type] = true;
+            ElementID.ProjPsychic[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -31,12 +34,12 @@ namespace Redemption.Projectiles.Magic
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.timeLeft = 60;
-            Projectile.rotation = Main.rand.NextFloat(0, MathHelper.TwoPi);
+            Projectile.rotation = RedeHelper.RandomRotation();
             Projectile.alpha = 255;
             Projectile.frame = Main.rand.Next(4);
             Rand = Main.rand.Next(50, 100);
             Projectile.spriteDirection = Main.rand.NextBool() ? 1 : -1;
-
+            Projectile.extraUpdates = 1;
             double angle = Main.rand.NextDouble() * 2d * Math.PI;
             MoveVector2.X = (float)(Math.Sin(angle) * Rand);
             MoveVector2.Y = (float)(Math.Cos(angle) * Rand);
@@ -46,6 +49,7 @@ namespace Redemption.Projectiles.Magic
         public Vector2 MoveVector2;
         public Vector2 pos = new(0, -5);
         public ref float Rand => ref Projectile.localAI[0];
+        private bool shoot;
         public override void AI()
         {
             Player player = Main.player[Projectile.owner];
@@ -76,7 +80,7 @@ namespace Redemption.Projectiles.Magic
                     Projectile.timeLeft = 200;
                     Projectile.position = player.Center + MoveVector2;
                     MoveVector2 += pos;
-                    if (!player.channel && Main.rand.NextBool(10) && Projectile.alpha <= 0)
+                    if (shoot && Main.rand.NextBool(10) && Projectile.alpha <= 0)
                     {
                         Projectile.tileCollide = true;
                         SoundEngine.PlaySound(SoundID.Item70, Projectile.position);
@@ -85,8 +89,10 @@ namespace Redemption.Projectiles.Magic
                     }
                 }
             }
+            if (!player.channel)
+                shoot = true;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             Main.LocalPlayer.RedemptionScreen().ScreenShakeOrigin = Projectile.Center;
             Main.LocalPlayer.RedemptionScreen().ScreenShakeIntensity += 4;
@@ -136,9 +142,10 @@ namespace Redemption.Projectiles.Magic
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Pebble");
+            // DisplayName.SetDefault("Pebble");
             ProjectileID.Sets.TrailCacheLength[Projectile.type] = 3;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
+            ElementID.ProjEarth[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -157,7 +164,7 @@ namespace Redemption.Projectiles.Magic
             Projectile.rotation += Projectile.velocity.X / 40 * Projectile.direction;
             Projectile.velocity.Y += 0.35f;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             for (int i = 0; i < 3; i++)
                 Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.Stone);

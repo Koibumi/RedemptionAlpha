@@ -1,10 +1,11 @@
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ID;
 using Terraria.ObjectData;
+using Terraria.Enums;
 using Redemption.Items.Placeable.Furniture.PetrifiedWood;
-using Terraria.DataStructures;
 
 namespace Redemption.Tiles.Furniture.PetrifiedWood
 {
@@ -17,11 +18,16 @@ namespace Redemption.Tiles.Furniture.PetrifiedWood
             Main.tileLighted[Type] = true;
             Main.tileLavaDeath[Type] = true;
             TileObjectData.newTile.CopyFrom(TileObjectData.Style2x2);
+            TileObjectData.newTile.WaterDeath = true;
+            TileObjectData.newTile.WaterPlacement = LiquidPlacement.NotAllowed;
+            TileObjectData.newTile.LavaPlacement = LiquidPlacement.NotAllowed;
             TileObjectData.newTile.DrawYOffset = 2;
+            TileObjectData.newTile.StyleLineSkip = 2;
             TileObjectData.addTile(Type);
-			ModTranslation name = CreateMapEntryName();
-			name.SetDefault("Petrified Wood Candelabra");
+			LocalizedText name = CreateMapEntryName();
+			// name.SetDefault("Petrified Wood Candelabra");
             AddMapEntry(new Color(100, 100, 100), name);
+            RegisterItemDrop(ModContent.ItemType<PetrifiedWoodCandelabra>());
             AddToArray(ref TileID.Sets.RoomNeeds.CountsAsTorch);
             AdjTiles = new int[]{ TileID.Candelabras };
             DustType = DustID.Ash;
@@ -62,6 +68,5 @@ namespace Redemption.Tiles.Furniture.PetrifiedWood
                 b = 0.7f;
             }
         }
-        public override void KillMultiTile(int i, int j, int frameX, int frameY) => Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 32, 32, ModContent.ItemType<PetrifiedWoodCandelabra>());
     }
 }

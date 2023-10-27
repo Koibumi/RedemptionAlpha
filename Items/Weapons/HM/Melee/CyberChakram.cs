@@ -10,7 +10,7 @@ namespace Redemption.Items.Weapons.HM.Melee
 	{
         public override void SetStaticDefaults()
         {
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
         public override void SetDefaults()
 		{
@@ -24,14 +24,14 @@ namespace Redemption.Items.Weapons.HM.Melee
             Item.noMelee = true;
             Item.knockBack = 4;
             Item.value = Item.sellPrice(0, 6, 0, 0);
-            Item.rare = ItemRarityID.Cyan;
+            Item.rare = ItemRarityID.LightPurple;
             Item.UseSound = SoundID.Item15;
             Item.autoReuse = true;
             Item.noUseGraphic = true;
             Item.shoot = ModContent.ProjectileType<CyberChakram_Proj>();
             Item.shootSpeed = 18;
             if (!Main.dedServ)
-                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Item.ModItem.Texture + "_Glow").Value;
+                Item.RedemptionGlow().glowTexture = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
         }
         public override bool CanUseItem(Player player)
         {

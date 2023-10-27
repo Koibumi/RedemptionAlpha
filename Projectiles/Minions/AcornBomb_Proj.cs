@@ -12,8 +12,10 @@ namespace Redemption.Projectiles.Minions
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Acorn Bomb");
+            // DisplayName.SetDefault("Acorn Bomb");
             ProjectileID.Sets.MinionShot[Projectile.type] = true;
+            ElementID.ProjNature[Type] = true;
+            ElementID.ProjExplosive[Type] = true;
         }
         public override void SetDefaults()
         {
@@ -75,14 +77,14 @@ namespace Redemption.Projectiles.Minions
                         continue;
 
                     target.immune[Projectile.whoAmI] = 20;
-                    int hitDirection = Projectile.Center.X > target.Center.X ? -1 : 1;
+                    int hitDirection = target.RightOfDir(Projectile);
                     BaseAI.DamageNPC(target, Projectile.damage, Projectile.knockBack, hitDirection, Projectile, crit: Projectile.HeldItemCrit());
                 }
             }
             if (Projectile.localAI[0] == 182)
                 Projectile.friendly = false;
         }
-        public override void OnHitNPC(NPC target, int damage, float knockback, bool crit)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.immune[Projectile.whoAmI] = 20;
             if (Projectile.localAI[0] < 180)

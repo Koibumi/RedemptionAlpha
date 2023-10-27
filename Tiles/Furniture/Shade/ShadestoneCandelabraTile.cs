@@ -3,8 +3,9 @@ using Microsoft.Xna.Framework.Graphics;
 using Redemption.Dusts.Tiles;
 using Redemption.Items.Placeable.Furniture.Shade;
 using Terraria;
-using Terraria.DataStructures;
+using Terraria.Enums;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 
@@ -20,11 +21,16 @@ namespace Redemption.Tiles.Furniture.Shade
             Main.tileLavaDeath[Type] = true;
             TileObjectData.newTile.CopyFrom(TileObjectData.Style2x2);
             TileObjectData.newTile.DrawYOffset = 2;
+            TileObjectData.newTile.WaterDeath = true;
+            TileObjectData.newTile.WaterPlacement = LiquidPlacement.NotAllowed;
+            TileObjectData.newTile.LavaPlacement = LiquidPlacement.NotAllowed;
+            TileObjectData.newTile.StyleLineSkip = 2;
             TileObjectData.addTile(Type);
-            ModTranslation name = CreateMapEntryName();
-            name.SetDefault("Shadestone Candelabra");
+            LocalizedText name = CreateMapEntryName();
+            // name.SetDefault("Shadestone Candelabra");
             AddMapEntry(new Color(59, 61, 87), name);
             AddToArray(ref TileID.Sets.RoomNeeds.CountsAsTorch);
+            RegisterItemDrop(ModContent.ItemType<ShadestoneCandelabra>());
             AdjTiles = new int[] { TileID.Candelabras };
             DustType = ModContent.DustType<ShadestoneDust>();
             AnimationFrameHeight = 36;
@@ -76,24 +82,25 @@ namespace Redemption.Tiles.Furniture.Shade
                 b = 0.8f;
             }
         }
-        public override void KillMultiTile(int i, int j, int frameX, int frameY) => Item.NewItem(new EntitySource_TileBreak(i, j), i * 16, j * 16, 32, 32, ModContent.ItemType<ShadestoneCandelabra>());
-
         public override void PostDraw(int i, int j, SpriteBatch spriteBatch)
         {
             Tile tile = Framing.GetTileSafely(i, j);
             Vector2 zero = new(Main.offScreenRange, Main.offScreenRange);
             if (Main.drawToScreen)
                 zero = Vector2.Zero;
+            int height = tile.TileFrameY % AnimationFrameHeight >= 16 ? 18 : 16;
+            int animate = Main.tileFrame[Type] * AnimationFrameHeight;
 
-            int height = tile.TileFrameY == 36 ? 18 : 16;
-            ulong randSeed = Main.TileFrameSeed ^ (ulong)((long)j << 32 | (long)(uint)i);
+            Texture2D texture = ModContent.Request<Texture2D>(Texture + "_Glow").Value;
+            Rectangle frame = new(tile.TileFrameX, tile.TileFrameY + animate, 16, height);
+            ulong randSeed = Main.TileFrameSeed ^ (ulong)((long)j << 32 | (uint)i);
             Color color = new(100, 100, 100, 0);
             for (int k = 0; k < 7; k++)
             {
                 float xx = Utils.RandomInt(ref randSeed, -10, 11) * 0.15f;
                 float yy = Utils.RandomInt(ref randSeed, -10, 1) * 0.35f;
-
-                Main.spriteBatch.Draw(ModContent.Request<Texture2D>("Redemption/Tiles/Furniture/Shade/ShadestoneCandelabraTile_Glow").Value, new Vector2((i * 16) - (int)Main.screenPosition.X + xx, (j * 16) - (int)Main.screenPosition.Y + yy) + zero, new Rectangle(tile.TileFrameX, tile.TileFrameY, 16, height), color, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+                Vector2 drawPosition = new Vector2(i * 16 - (int)Main.screenPosition.X + xx, j * 16 - (int)Main.screenPosition.Y + yy) + zero;
+                spriteBatch.Draw(texture, drawPosition, frame, color, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
             }
         }
     }

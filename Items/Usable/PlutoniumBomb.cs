@@ -13,15 +13,15 @@ namespace Redemption.Items.Usable
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Falls from the sky, turns the small blast radius into plutonium");
-            SacrificeTotal = 5;
+            // Tooltip.SetDefault("Falls from the sky, turns the small blast radius into plutonium");
+            Item.ResearchUnlockCount = 5;
         }
 
         public override void SetDefaults()
         {
             Item.width = 24;
             Item.height = 14;
-            Item.maxStack = 9999;
+            Item.maxStack = Item.CommonMaxStack;
             Item.consumable = true;
             Item.useStyle = ItemUseStyleID.Swing;
             Item.UseSound = SoundID.Item1;
@@ -38,7 +38,7 @@ namespace Redemption.Items.Usable
         {
             CreateRecipe()
                 .AddIngredient(ItemID.LunarBar, 5)
-                .AddIngredient(ModContent.ItemType<Capacitator>())
+                .AddIngredient(ModContent.ItemType<Capacitor>())
                 .AddIngredient(ModContent.ItemType<Plating>(), 3)
                 .AddTile(TileID.LunarCraftingStation)
                 .Register();
@@ -101,7 +101,7 @@ namespace Redemption.Items.Usable
             Projectile.velocity.Y += 0.2f;
             return;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(SoundID.Item14, Projectile.position);
             for (int i = 0; i < 30; i++)
@@ -133,7 +133,7 @@ namespace Redemption.Items.Usable
         public override string Texture => Redemption.EMPTY_TEXTURE;
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Plutonium Boom");
+            // DisplayName.SetDefault("Plutonium Boom");
         }
 
         public override void SetDefaults()

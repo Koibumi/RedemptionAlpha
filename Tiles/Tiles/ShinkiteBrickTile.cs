@@ -1,9 +1,7 @@
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
-using Terraria.ID;
 using Redemption.Dusts.Tiles;
-using Redemption.Items.Placeable.Tiles;
 
 namespace Redemption.Tiles.Tiles
 {
@@ -17,11 +15,10 @@ namespace Redemption.Tiles.Tiles
             Main.tileBlockLight[Type] = true;
             Main.tileBrick[Type] = true;
             DustType = ModContent.DustType<ShinkiteDust>();
-            ItemDrop = ModContent.ItemType<ShinkiteBrick>();
             MinPick = 200;
             MineResist = 4f;
-            HitSound = SoundID.Tink;
-            AddMapEntry(new Color(93, 62, 65));
+            HitSound = CustomSounds.BrickHit;
+            AddMapEntry(new Color(121, 46, 46));
 		}
         public override void NumDust(int i, int j, bool fail, ref int num)
 		{

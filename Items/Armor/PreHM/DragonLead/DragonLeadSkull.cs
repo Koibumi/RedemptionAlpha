@@ -1,10 +1,12 @@
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ID;
+using Terraria.Localization;
 using Redemption.Items.Materials.PreHM;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Redemption.BaseExtension;
+using Redemption.Globals;
 
 namespace Redemption.Items.Armor.PreHM.DragonLead
 {
@@ -13,11 +15,11 @@ namespace Redemption.Items.Armor.PreHM.DragonLead
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Dragon-Lead Skull");
-            Tooltip.SetDefault("7% increased damage");
+            // DisplayName.SetDefault("Dragon-Lead Skull");
+            // Tooltip.SetDefault("7% increased damage");
             ArmorIDs.Head.Sets.DrawHead[EquipLoader.GetEquipSlot(Mod, Name, EquipType.Head)] = false;
 
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
         }
 
         public override void SetDefaults()
@@ -41,10 +43,9 @@ namespace Redemption.Items.Armor.PreHM.DragonLead
 
         public override void UpdateArmorSet(Player player)
         {
-            player.setBonus = "20% increased Ice elemental resistance\n" +
-                "33% chance for weapons to inflict Dragonblaze\n" +
-                "100% chance for all Dragon-Lead weapons to inflict Dragonblaze";
-            player.RedemptionPlayerBuff().ElementalResistance[3] += 0.2f;
+            player.setBonus = Language.GetTextValue("Mods.Redemption.GenericTooltips.ArmorSetBonus.DragonLead.20Increased") + ElementID.IceS + Language.GetTextValue("Mods.Redemption.GenericTooltips.ArmorSetBonus.VanillaArmor.Resistance") +
+                Language.GetTextValue("Mods.Redemption.GenericTooltips.ArmorSetBonus.DragonLead.Bonus");
+            player.RedemptionPlayerBuff().ElementalResistance[ElementID.Ice] += 0.2f;
             player.RedemptionPlayerBuff().dragonLeadBonus = true;
             player.RedemptionPlayerBuff().MetalSet = true;
         }
@@ -62,11 +63,7 @@ namespace Redemption.Items.Armor.PreHM.DragonLead
         {
             if (Main.keyState.PressingShift())
             {
-                TooltipLine line = new(Mod, "Lore",
-                    "'A horned helmet forged from melted dragon bone and metal, made to look like a dragon's skull. It is said\n" +
-                    "to be used by the ancient warlords of Dragonrest.\n" +
-                    "The warlords were famous dragon slayers who used the bones of their victims for weaponry and armour,\n" +
-                    "nearly bringing the dragons to extinction. That was until every single one was wiped out by Goliathon, the Dragon God.'")
+                TooltipLine line = new(Mod, "Lore", Language.GetTextValue("Mods.Redemption.SpecialTooltips.DragonLead.DragonLeadSkull"))
                 {
                     OverrideColor = Color.LightGray
                 };
@@ -74,7 +71,7 @@ namespace Redemption.Items.Armor.PreHM.DragonLead
             }
             else
             {
-                TooltipLine line = new(Mod, "HoldShift", "Hold [Shift] to view lore")
+                TooltipLine line = new(Mod, "HoldShift", Language.GetTextValue("Mods.Redemption.SpecialTooltips.Viewer"))
                 {
                     OverrideColor = Color.Gray,
                 };

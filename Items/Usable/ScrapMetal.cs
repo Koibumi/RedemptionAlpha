@@ -9,19 +9,19 @@ namespace Redemption.Items.Usable
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Scrap Metal");
-            Tooltip.SetDefault("'Surely I can get something useful from this scrap...'"
-                + "\n{$CommonItemTooltip.RightClickToOpen}");
+            // DisplayName.SetDefault("Scrap Metal");
+            /* Tooltip.SetDefault("'Surely I can get something useful from this scrap...'"
+                + "\n{$CommonItemTooltip.RightClickToOpen}"); */
 
-            SacrificeTotal = 10;
+            Item.ResearchUnlockCount = 10;
         }
 
         public override void SetDefaults()
         {
-            Item.maxStack = 9999;
+            Item.maxStack = Item.CommonMaxStack;
             Item.consumable = true;
-            Item.width = 42;
-            Item.height = 28;
+            Item.width = 52;
+            Item.height = 40;
             Item.rare = -1;
         }
 
@@ -36,7 +36,7 @@ namespace Redemption.Items.Usable
                 player.QuickSpawnItem(player.GetSource_OpenItem(Type), ModContent.ItemType<Plating>(), Main.rand.Next(1, 2));
 
             if (Main.rand.NextBool(2))
-                player.QuickSpawnItem(player.GetSource_OpenItem(Type), ModContent.ItemType<Capacitator>(), Main.rand.Next(1, 2));
+                player.QuickSpawnItem(player.GetSource_OpenItem(Type), ModContent.ItemType<Capacitor>(), Main.rand.Next(1, 2));
 
             if (Main.rand.NextBool(75))
                 player.QuickSpawnItem(player.GetSource_OpenItem(Type), ItemID.EmptyBucket);
@@ -59,7 +59,7 @@ namespace Redemption.Items.Usable
             if (Main.rand.NextBool(100))
                 player.QuickSpawnItem(player.GetSource_OpenItem(Type), ItemID.FlareGun);
 
-            if (NPC.downedMechBoss1 && NPC.downedMechBoss2 && NPC.downedMechBoss3 && Main.rand.NextBool(75))
+            if (NPC.downedPlantBoss && Main.rand.NextBool(75))
                 player.QuickSpawnItem(player.GetSource_OpenItem(Type), ItemID.ProximityMineLauncher);
 
             if (NPC.downedMechBossAny)

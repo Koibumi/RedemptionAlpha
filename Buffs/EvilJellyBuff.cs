@@ -1,6 +1,5 @@
 using Terraria;
 using Terraria.ModLoader;
-using Redemption.BaseExtension;
 
 namespace Redemption.Buffs
 {
@@ -8,8 +7,8 @@ namespace Redemption.Buffs
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Devilishly Delicious");
-            Description.SetDefault("Increased drop rate of Shadow Fuel");
+            // DisplayName.SetDefault("Devilishly Delicious");
+            // Description.SetDefault("Increased drop rate of Shadow Fuel");
             Main.buffNoTimeDisplay[Type] = false;
         }
     }

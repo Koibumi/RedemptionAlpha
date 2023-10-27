@@ -3,6 +3,8 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Redemption.NPCs.Minibosses.EaglecrestGolem;
 using Microsoft.Xna.Framework;
+using Redemption.WorldGeneration.Soulless;
+using SubworldLibrary;
 
 namespace Redemption.Items.Usable.Summons
 {
@@ -10,10 +12,10 @@ namespace Redemption.Items.Usable.Summons
     {
         public override void SetStaticDefaults()
         {
-            Tooltip.SetDefault("Calls upon Eaglecrest Golem"
-                + "\nSold by Zephos/Daerel after Eater of Worlds/Brain of Cthulhu is defeated");
+            /* Tooltip.SetDefault("Calls upon Eaglecrest Golem"
+                + "\nSold by Zephos/Daerel after Eater of Worlds/Brain of Cthulhu is defeated"); */
 
-            SacrificeTotal = 1;
+            Item.ResearchUnlockCount = 1;
             ItemID.Sets.SortingPriorityBossSpawns[Type] = 12;
         }
 
@@ -26,15 +28,15 @@ namespace Redemption.Items.Usable.Summons
             Item.useAnimation = 17;
             Item.useTime = 17;
             Item.consumable = true;
-            Item.width = 24;
-            Item.height = 38;
+            Item.width = 38;
+            Item.height = 40;
             Item.maxStack = 1;
             Item.value = Item.buyPrice(0, 10, 0, 0);
             Item.rare = ItemRarityID.Orange;
         }
         public override bool CanUseItem(Player player)
         {
-            return !NPC.AnyNPCs(ModContent.NPCType<EaglecrestGolem>()) && !NPC.AnyNPCs(ModContent.NPCType<EaglecrestGolem_Sleep>());
+            return !SubworldSystem.IsActive<SoullessSub>() && !NPC.AnyNPCs(ModContent.NPCType<EaglecrestGolem>()) && !NPC.AnyNPCs(ModContent.NPCType<EaglecrestGolem_Sleep>());
         }
         public override bool? UseItem(Player player)
         {
@@ -47,7 +49,7 @@ namespace Redemption.Items.Usable.Summons
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                     NPC.SpawnOnPlayer(player.whoAmI, type);
                 else
-                    NetMessage.SendData(MessageID.SpawnBoss, number: player.whoAmI, number2: type);
+                    NetMessage.SendData(MessageID.SpawnBossUseLicenseStartEvent, number: player.whoAmI, number2: type);
 
                 int golem = NPC.FindFirstNPC(type);
                 if (golem > -1)

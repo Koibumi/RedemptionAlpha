@@ -1,14 +1,14 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using System;
 using Microsoft.Xna.Framework.Graphics;
 using Redemption.Globals;
-using Terraria.Audio;
 using Redemption.UI;
 using Terraria.GameContent;
 using Redemption.BaseExtension;
+using Terraria.Localization;
 
 namespace Redemption.NPCs.Bosses.Neb.Phase2
 {
@@ -16,7 +16,7 @@ namespace Redemption.NPCs.Bosses.Neb.Phase2
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Nebuleus, Angel of the Cosmos");
+            // DisplayName.SetDefault("Nebuleus, Angel of the Cosmos");
             Main.projFrames[Projectile.type] = 4;
         }
 
@@ -34,6 +34,9 @@ namespace Redemption.NPCs.Bosses.Neb.Phase2
         public float fadeAlpha = 255;
         public override void AI()
         {
+            RedeSystem.Silence = true;
+            if (Main.windSpeedTarget < 1)
+                Main.windSpeedTarget = 1;
             Player player = Main.player[Projectile.owner];
             if (++Projectile.frameCounter >= 20)
             {
@@ -59,44 +62,35 @@ namespace Redemption.NPCs.Bosses.Neb.Phase2
                 {
                     if (Projectile.localAI[0] == 180)
                     {
-                        SoundEngine.PlaySound(SoundID.MenuTick);
-                        RedeSystem.Instance.DialogueUIElement.DisplayDialogue("... That was all I had.", 150, 1, 0.6f, "Nebuleus:", 1, RedeColor.NebColour, null, null, Projectile.Center, 0, 0, true);
-                        RedeSystem.Silence = true;
+                        RedeSystem.Instance.DialogueUIElement.DisplayDialogue(Language.GetTextValue("Mods.Redemption.Cutscene.Nebuleus.Defeat.1"), 150, 1, 0.6f, Language.GetTextValue("Mods.Redemption.Cutscene.Nebuleus.Name"), 1, RedeColor.NebColour, null, null, Projectile.Center, 0, 0, true);
                     }
                     if (Projectile.localAI[0] == 330)
                     {
-                        SoundEngine.PlaySound(SoundID.MenuTick);
-                        RedeSystem.Instance.DialogueUIElement.DisplayDialogue("And yet I still lost...", 150, 1, 0.6f, "Nebuleus:", 1, RedeColor.NebColour, null, null, Projectile.Center, 0, 0, true);
+                        RedeSystem.Instance.DialogueUIElement.DisplayDialogue(Language.GetTextValue("Mods.Redemption.Cutscene.Nebuleus.Defeat.2"), 150, 1, 0.6f, Language.GetTextValue("Mods.Redemption.Cutscene.Nebuleus.Name"), 1, RedeColor.NebColour, null, null, Projectile.Center, 0, 0, true);
                     }
                     if (Projectile.localAI[0] == 480)
                     {
-                        SoundEngine.PlaySound(SoundID.MenuTick);
-                        RedeSystem.Instance.DialogueUIElement.DisplayDialogue("Fighting you and that traitor have confirmed my suspicions.", 200, 1, 0.6f, "Nebuleus:", 1, RedeColor.NebColour, null, null, Projectile.Center, 0, 0, true);
+                        RedeSystem.Instance.DialogueUIElement.DisplayDialogue(Language.GetTextValue("Mods.Redemption.Cutscene.Nebuleus.Defeat.3"), 200, 1, 0.6f, Language.GetTextValue("Mods.Redemption.Cutscene.Nebuleus.Name"), 1, RedeColor.NebColour, null, null, Projectile.Center, 0, 0, true);
                     }
                     if (Projectile.localAI[0] == 680)
                     {
-                        SoundEngine.PlaySound(SoundID.MenuTick);
-                        RedeSystem.Instance.DialogueUIElement.DisplayDialogue("I'm weak.", 140, 1, 0.6f, "Nebuleus:", 1, RedeColor.NebColour, null, null, Projectile.Center, 0, 0, true);
+                        RedeSystem.Instance.DialogueUIElement.DisplayDialogue(Language.GetTextValue("Mods.Redemption.Cutscene.Nebuleus.Defeat.4"), 140, 1, 0.6f, Language.GetTextValue("Mods.Redemption.Cutscene.Nebuleus.Name"), 1, RedeColor.NebColour, null, null, Projectile.Center, 0, 0, true);
                     }
                     if (Projectile.localAI[0] == 820)
                     {
-                        SoundEngine.PlaySound(SoundID.MenuTick);
-                        RedeSystem.Instance.DialogueUIElement.DisplayDialogue("I don't deserve being part of their group. I was only a burden.", 200, 1, 0.6f, "Nebuleus:", 1, RedeColor.NebColour, null, null, Projectile.Center, 0, 0, true);
+                        RedeSystem.Instance.DialogueUIElement.DisplayDialogue(Language.GetTextValue("Mods.Redemption.Cutscene.Nebuleus.Defeat.5"), 200, 1, 0.6f, Language.GetTextValue("Mods.Redemption.Cutscene.Nebuleus.Name"), 1, RedeColor.NebColour, null, null, Projectile.Center, 0, 0, true);
                     }
                     if (Projectile.localAI[0] == 1020)
                     {
-                        SoundEngine.PlaySound(SoundID.MenuTick);
-                        RedeSystem.Instance.DialogueUIElement.DisplayDialogue("If the Demigod ever comes for you, don't let him know I'm still alive.", 240, 1, 0.6f, "Nebuleus:", 1, RedeColor.NebColour, null, null, Projectile.Center, 0, 0, true);
+                        RedeSystem.Instance.DialogueUIElement.DisplayDialogue(Language.GetTextValue("Mods.Redemption.Cutscene.Nebuleus.Defeat.6"), 240, 1, 0.6f, Language.GetTextValue("Mods.Redemption.Cutscene.Nebuleus.Name"), 1, RedeColor.NebColour, null, null, Projectile.Center, 0, 0, true);
                     }
                     if (Projectile.localAI[0] == 1260)
                     {
-                        SoundEngine.PlaySound(SoundID.MenuTick);
-                        RedeSystem.Instance.DialogueUIElement.DisplayDialogue("I fear what he might think of me, and I don't want to face him.", 240, 1, 0.6f, "Nebuleus:", 1, RedeColor.NebColour, null, null, Projectile.Center, 0, 0, true);
+                        RedeSystem.Instance.DialogueUIElement.DisplayDialogue(Language.GetTextValue("Mods.Redemption.Cutscene.Nebuleus.Defeat.7"), 240, 1, 0.6f, Language.GetTextValue("Mods.Redemption.Cutscene.Nebuleus.Name"), 1, RedeColor.NebColour, null, null, Projectile.Center, 0, 0, true);
                     }
                     if (Projectile.localAI[0] == 1500)
                     {
-                        SoundEngine.PlaySound(SoundID.MenuTick);
-                        RedeSystem.Instance.DialogueUIElement.DisplayDialogue("I don't expect sympathy from you, but I'll be gone for good now. Goodbye.", 260, 1, 0.6f, "Nebuleus:", 1, RedeColor.NebColour, null, null, Projectile.Center, 0, 0, true);
+                        RedeSystem.Instance.DialogueUIElement.DisplayDialogue(Language.GetTextValue("Mods.Redemption.Cutscene.Nebuleus.Defeat.8"), 260, 1, 0.6f, Language.GetTextValue("Mods.Redemption.Cutscene.Nebuleus.Name"), 1, RedeColor.NebColour, null, null, Projectile.Center, 0, 0, true);
                     }
                 }
                 if (Projectile.localAI[0] >= 1760)
@@ -133,7 +127,7 @@ namespace Redemption.NPCs.Bosses.Neb.Phase2
             Main.spriteBatch.Draw(glowMask, Projectile.Center - Main.screenPosition, new Microsoft.Xna.Framework.Rectangle?(new Rectangle(0, y7, texture.Width, num215)), RedeColor.NebColour * ((255 - fadeAlpha) / 255f), Projectile.rotation, new Vector2(texture.Width / 2f, num215 / 2f), Projectile.scale, effects, 0f);
             return false;
         }
-        public override void Kill(int timeLeft)
+        public override void OnKill(int timeLeft)
         {
             for (int i = 0; i < 50; i++)
             {

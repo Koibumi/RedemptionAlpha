@@ -6,6 +6,8 @@ using Redemption.Base;
 using Microsoft.Xna.Framework;
 using Terraria.Audio;
 using Redemption.Globals;
+using Redemption.WorldGeneration.Soulless;
+using SubworldLibrary;
 
 namespace Redemption.Items.Usable.Summons
 {
@@ -13,14 +15,12 @@ namespace Redemption.Items.Usable.Summons
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Forbidden Ritual");
-            Tooltip.SetDefault("May draw unwanted attention\n" +
+            // DisplayName.SetDefault("Forbidden Ritual");
+            /* Tooltip.SetDefault("May draw unwanted attention\n" +
                 "Requires the user to have at least 140 max life"
                 + "\nNot consumable" +
-                "\n[i:" + ModContent.ItemType<BadRoute>() + "]");
-
-
-            SacrificeTotal = 1;
+                "\n[i:" + ModContent.ItemType<BadRoute>() + "][c/ff5533: This item may have a negative impact onto the world]"); */
+            Item.ResearchUnlockCount = 1;
             ItemID.Sets.SortingPriorityBossSpawns[Type] = 12;
         }
 
@@ -40,7 +40,7 @@ namespace Redemption.Items.Usable.Summons
         }
         public override bool CanUseItem(Player player)
         {
-            return player.statLifeMax2 >= 140 && !NPC.AnyNPCs(ModContent.NPCType<PalebatImp>()) && !NPC.AnyNPCs(ModContent.NPCType<Erhan>()) && !NPC.AnyNPCs(ModContent.NPCType<ErhanSpirit>());
+            return !SubworldSystem.IsActive<SoullessSub>() && (player.statLifeMax2 >= 140 || player.statLifeMax2 == 1) && !NPC.AnyNPCs(ModContent.NPCType<PalebatImp>()) && !NPC.AnyNPCs(ModContent.NPCType<Erhan>()) && !NPC.AnyNPCs(ModContent.NPCType<ErhanSpirit>());
         }
         public override bool? UseItem(Player player)
         {
@@ -51,9 +51,9 @@ namespace Redemption.Items.Usable.Summons
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                     NPC.SpawnOnPlayer(player.whoAmI, type);
                 else
-                    NetMessage.SendData(MessageID.SpawnBoss, number: player.whoAmI, number2: type);
+                    NetMessage.SendData(MessageID.SpawnBossUseLicenseStartEvent, number: player.whoAmI, number2: type);
 
-                if (RedeBossDowned.erhanDeath > 0)
+                if (RedeBossDowned.erhanDeath > 0 || player.statLifeMax2 == 1)
                     return true;
 
                 for (int i = 0; i < 10; i++)
